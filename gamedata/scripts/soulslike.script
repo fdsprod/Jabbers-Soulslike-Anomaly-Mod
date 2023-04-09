@@ -386,6 +386,7 @@ function dream_callback()
 	SendScriptCallback("actor_on_sleep",hours)
 end
 
+-- TODO: Reactor this into a class
 local function rescuer_initial_msg_factory() 
     local messages = {
         "Hey hope you are feeling better. You were in pretty bad shape when I found you!"   
@@ -444,6 +445,7 @@ local function send_resuer_message(gave_food_or_water)
         end
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
     else
+        -- TODO: Reactor this into a factory class
         local msg = "When you wake up you find yourself in a familiar place but with no idea how you got here."
         if gave_food_or_water then
             msg = msg.." Looking for your things you find someone left you something to eat and drink."
@@ -462,7 +464,7 @@ function save_and_wake_callback()
 
 	exec_console_cmd("snd_volume_music "..tostring(_G.mus_vol))
 	exec_console_cmd("snd_volume_eff "..tostring(_G.amb_vol))
-	--exec_console_cmd("save " .. "soulslike_"..(user_name() or "") .. " - respawn")
+	exec_console_cmd("save " .. "soulslike_"..(user_name() or "") .. " - respawn")
 
 	_G.amb_vol = 0
 	_G.mus_vol = 0
