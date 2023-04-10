@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
 
-	<string id="st_save_only_when_sleeping">
-		<text>Saves only occur when sleeping.</text>
-	</string>
+<string id="st_save_only_when_sleeping">
+	<text>Hardcore Saving is enabled. Saves automatically occur when sleeping and respawning.</text>
+</string>
 
 <string id="st_soulslike_rescuer_initial_generic">
 	<text>When you wake up you find yourself in a familiar place but with no idea how you got here.</text>

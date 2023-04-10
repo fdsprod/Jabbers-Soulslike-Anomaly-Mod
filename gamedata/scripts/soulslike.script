@@ -4,11 +4,9 @@
 	05APR2023
 	Jabbers' Soulslike Anomaly Mod
 --]]
-local config = {
-    is_enabled = true,
-}
 
 local m_data = {
+    uuid = nil,
     spawn_location = {
         level = nil,
         position = {
@@ -41,6 +39,42 @@ local ignore_list = {
     ["device_pda_3"] = true,
     ["wpn_knife"] = true,
 }
+
+----------------------------------------
+-- MCM Config Values
+----------------------------------------
+
+local function is_hardcore_save_enabled() 
+    return soulslike_mcm.get_config("is_hardcore_save_enabled", true)
+end
+
+local function is_enabled() 
+    return soulslike_mcm.get_config("is_enabled", true)
+end
+
+local function is_debug_enabled() 
+    return soulslike_mcm.get_config("debug", true)
+end
+
+local function get_item_loss_chance()
+    return soulslike_mcm.get_config("item_loss_chance", 0.2)
+end
+
+local function item_condition_loss_percent()
+    return soulslike_mcm.get_config("item_condition_loss_percent", 0.2)
+end
+
+local function get_health_loss_on_respawn()
+    return soulslike_mcm.get_config("health_loss_on_respawn", 0.75)
+end
+
+local function override_campfire_hardcore_saves() 
+    return soulslike_mcm.get_config("override_campfire_hardcore_saves", false)
+end
+
+----------------------------------------
+-- DEBUG
+----------------------------------------
 
 local function print_table (tbl, indent)
     if not indent then
@@ -80,6 +114,9 @@ local function print_table (tbl, indent)
 end
 
 local function debug(output)
+    if not output then
+        utils_data.debug_write("[Soulslike] ".."(nil)")
+    end
     if (type(output) == "table") then
         utils_data.debug_write("[Soulslike] ")
         print_table(output)
@@ -105,20 +142,6 @@ local function save_spawn_location()
     debug(m_data.spawn_location)
 end
 
-local function save_state(data)
-    if IsHardcoreMode() then
-        return
-    end
-    
-    debug('save_state')
-
-    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
-        save_spawn_location()
-    end
-
-    data.soulslike = m_data
-end
-
 local function respawn_actor()    
     debug("Respawning actor at last sleep location")
       
@@ -129,8 +152,6 @@ local function respawn_actor()
     level.add_pp_effector("black_infinite.ppe", 5606, true)
     m_data.is_changing_levels = true
     actor_status.deactivate_hud()
-
-	UnregisterScriptCallback("save_state", save_state)
 
     local function respawn()
         ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
@@ -172,7 +193,8 @@ local function transfer_loot_to_backpack(se_pack)
          slot_backpack_id = slot_backpack:id()
     end 
 
-    local item_loss_chance = (soulslike_mcm.get_config("item_loss_chance", 0.2) * 100)
+    local item_condition_loss_percent = item_condition_loss_percent()
+    local item_loss_chance = (get_item_loss_chance() * 100)
     local backpack = level.object_by_id(se_pack.id)
     local function release_actor_item(temp, item)
         local sec = item:section()
@@ -194,6 +216,24 @@ local function transfer_loot_to_backpack(se_pack)
             alife_release(item)
             m_data.last_death_state.items_lost = true
             return   
+        end
+
+        if item_condition_loss_percent > 0 then
+            local cond = item:condition()
+            local degrade_factor = cond * item_condition_loss_percent
+            local cls = item:clsid()    
+            local is_weapon = (IsWeapon(item) and  not(cls == clsid.wpn_grenade_rgd5_s or cls == clsid.wpn_grenade_f1_s))
+            local is_outfit = IsOutfit(item) 
+            local is_headgear = IsHeadgear(item)
+            local use_condition = utils_item.is_degradable(item, sec)
+	        local has_cond = use_condition or is_weapon or is_outfit or is_headgear
+
+            debug("Checking item sec="..tostring(sec).." cls="..tostring(cls).." is_weapon="..tostring(is_weapon).." is_outfit="..tostring(is_outfit).." is_headgear="..tostring(is_headgear).." use_condition="..tostring(use_condition))
+                
+            if has_cond then
+                debug("Degrading ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+                utils_item.degrade(item, degrade_factor)
+            end
         end
             
         debug("Transfering item "..sec)
@@ -250,7 +290,52 @@ local function drop_backpack_and_respawn()
 
 end
 
-local function force_save()
+local function remove_prior_saves(last_save_file_name)    
+    last_save_file_name = string.lower(last_save_file_name)
+
+    debug("Don't delete: ".. last_save_file_name)
+
+	local uuid = m_data.uuid	
+	local fs = getFS()
+	local flist = fs:file_list_open_ex("$game_saves$",bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*.scoc")
+	local f_cnt = flist:Size()
+
+	for	it=0, f_cnt-1 	do
+		local file = flist:GetAt(it)
+		local file_name = string.sub(file:NameFull(), 0, (string.len(file:NameFull()) - string.len(".scoc")))
+		local scoc_path = fs:update_path('$game_saves$', '')..file_name..".scoc"
+		local scop_path = fs:update_path('$game_saves$', '')..file_name..".scop"
+		local dds_path = fs:update_path('$game_saves$', '')..file_name..".dds"
+		local f = io.open(scoc_path,"rb")
+
+		if (f) then
+			local data = f:read("*all")
+			f:close()
+
+			if (data) then
+				local decoded = alife_storage_manager.decode(data)
+				local d_soulslike = decoded and decoded.soulslike
+                
+				if (d_soulslike and (d_soulslike.uuid == uuid)) then
+					debug("/ Soulslike mode | file: "..file_name)
+                    file_name = string.lower(file_name)
+					if file_name ~= last_save_file_name then
+						debug("~ Soulslike mode | delete save file: "..file_name)
+                        local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
+                        local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
+                        local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
+                        fs:file_copy(scoc_path, scoc_path_bak)
+                        fs:file_copy(scop_path, scop_path_bak)
+                        fs:file_copy(dds_path, dds_path_bak)
+						ui_load_dialog.delete_save_game(file_name)			
+					end
+				end
+			end
+		end
+	end
+end
+
+local function force_save(type)
 	--if game isn't already paused, then force a pause here
 	local force_pause
 	if not (device():is_paused()) then 
@@ -258,36 +343,19 @@ local function force_save()
 		force_pause = true
 	end
 	
-	-- get list of savegames with most recently modified first.
-	local flist = getFS():file_list_open_ex("$game_saves$",	bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*".. ui_load_dialog.saved_game_extension)
-	local f_cnt = flist and flist:Size() or 0
-   
-	local inc = 0
-	if (f_cnt > 0) then
-		flist:Sort(FS.FS_sort_by_modif_down)
-		
-		for it=0, f_cnt-1 do
-			local file_name = flist:GetAt(it):NameFull():sub(0,-6):lower()
-			local d = tonumber( string.match(file_name,"soulslike_(%d+)") )
+    local file_name = "soulslike_" .. (user_name() or "").." - "..type
 
-			if (d) then
-				inc = d
-				break 
-			end
-		end
-	end
-	
-	inc = (inc >= 20) and 1 or inc + 1
-	
-	exec_console_cmd("save soulslike_" .. (user_name() or "") .. " - sleep" .. inc)
-	
+	exec_console_cmd("save ".. file_name)
+    
 	if (force_pause) then 
 		device():pause(false)
 	end
 end
 
 local function heal()
-	db.actor:set_health_ex(0.25)
+    local heath = 1 - get_health_loss_on_respawn()
+
+	db.actor:set_health_ex(heath)
 	db.actor.power = 1
 	db.actor.radiation = 0
 	db.actor.bleeding = 1
@@ -301,6 +369,10 @@ local function actor_on_before_death(who, flags)
         return
     end
 
+    if not is_enabled() then
+        return
+    end
+    
 	flags.ret_value = false
 
     debug('Actor died')
@@ -316,7 +388,23 @@ local function on_before_save_input(flags, type, text)
     if IsHardcoreMode() then
         return
     end
+
+    if not is_enabled() then
+        return
+    end    
+
+    -- No hardcore save setting, allow saving
+    if not is_hardcore_save_enabled() then 
+        return
+    end
+
+    -- Hardcore save is enabled, but we still want to save at campfires
+    -- We just return to let the regular saving work.
+    if override_campfire_hardcore_saves() then        
+        return
+    end
     
+    -- All other scenarios flow through here and we just disallow saving
     if not level_weathers.valid_levels[level.name()] then
         return
     end
@@ -327,6 +415,20 @@ local function on_before_save_input(flags, type, text)
     actor_menu.set_msg(1, str, 4)
     exec_console_cmd("main_menu off")
     flags.ret = true
+end
+
+local function save_state(data)
+    if IsHardcoreMode() then
+        return
+    end
+    
+    debug('save_state')
+
+    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
+        save_spawn_location()
+    end
+
+    data.soulslike = m_data
 end
 
 local function load_state(data)
@@ -348,10 +450,14 @@ local function actor_on_sleep(hours)
         return
     end
     
+    if not is_enabled() then
+        return
+    end
+    
     debug('actor_on_sleep')
 
     if not m_data.is_advancing_time then 
-        force_save()
+        force_save("sleep")
     end
 end
 
@@ -360,6 +466,10 @@ local function on_level_changing()
         return
     end
 
+    if not is_enabled() then
+        return
+    end
+    
     if IsTestMode() then
         debug('actor_on_first_update called in test mode')
         return
@@ -542,7 +652,8 @@ function save_and_wake_callback()
 
 	exec_console_cmd("snd_volume_music "..tostring(_G.mus_vol))
 	exec_console_cmd("snd_volume_eff "..tostring(_G.amb_vol))
-	exec_console_cmd("save " .. "soulslike_"..(user_name() or "") .. " - respawn")
+
+    force_save("respawn")
 
 	_G.amb_vol = 0
 	_G.mus_vol = 0
@@ -619,10 +730,18 @@ local function advance_time()
 end
 
 local function on_game_load()    
+    if not is_enabled() then
+        return
+    end
+
     debug('on_game_load')
     
     if ui_mcm then
 	    on_option_change()
+    end
+
+    if not m_data.uuid then        
+        m_data.uuid = GAME_VERSION .. "_" .. tostring(math.random(100)) .. tostring(math.random()) .. tostring(math.random(1000))
     end
 
     if m_data.is_changing_levels then
@@ -631,12 +750,14 @@ local function on_game_load()
 
         heal()    
         advance_time()
-
-        RegisterScriptCallback("save_state", save_state)
     end
 end
 
 local function actor_on_item_take_from_box(box,obj)
+    if not is_enabled() then
+        return
+    end
+    
 	if (box:section() == "inv_backpack") then
 		if (box:is_inv_box_empty()) then
 			hide_hud_inventory()
@@ -652,30 +773,40 @@ local function actor_on_item_take_from_box(box,obj)
 end
 
 local function actor_on_stash_remove(data)
+    if not is_enabled() then
+        return
+    end
+
     if m_data.created_stashes[data.stash_id] then
         data.cancel = true
     end
 end
 
+local function on_console_execute(name, ...)
+    if not is_enabled() then
+        return
+    end
+
+    if(name == "save") then
+        debug(name)
+
+        local extraArgs = {...}
+
+        if extraArgs then
+            local file_name = table.concat(extraArgs," ")
+            debug(file_name)
+            if is_hardcore_save_enabled() then
+                remove_prior_saves(file_name)
+            end
+        end
+    end
+end
+
 function on_option_change()
-    local get_config = soulslike_mcm.get_config
-
-    debug("is_enabled = "..tostring(get_config("is_enabled", true)))
-    debug("debug = "..tostring(get_config("debug", false)))
+    debug("is_enabled = "..tostring(is_enabled()))
+    debug("is_hardcore_save_enabled = "..tostring(is_hardcore_save_enabled()))
+    debug("debug = "..tostring(is_debug_enabled()))
 end
-
-function append_mcm_options(gr)    
-    table.insert(gr, {
-        id = "item_loss_chance",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 1,
-        step = 0.20,
-        def = 0.20
-    })
-end
-
 
 function on_game_start()
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
@@ -687,4 +818,5 @@ function on_game_start()
     RegisterScriptCallback("load_state", load_state)
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
     RegisterScriptCallback("on_game_load",on_game_load)
+	RegisterScriptCallback("on_console_execute",on_console_execute)
 end

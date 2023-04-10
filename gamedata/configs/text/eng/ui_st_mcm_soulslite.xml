@@ -7,6 +7,12 @@
     <string id="ui_mcm_soulslike_title">
         <text>Jabbers' Soulslike Settings</text>
     </string>
+    <string id="ui_mcm_soulslike_description">
+        <text>The Soulslike mod brings elements souls style games to Stalker. Upon death your are saved by a random Stalker in the zone.  They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place.</text>
+     </string>
+    <string id="ui_mcm_soulslike_disclaimer">
+        <text>DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of this it's 100% possible to get yourself into a situation where you unexpectedly lose your gear. Random item loss on death means you could lose your weapons or armor, dying in the middle of an anomaly and not being able to get your gear back is possible and expected.  Always stock a backup kit, plan for the worst, hope for the best.</text>
+    </string>
     <string id="ui_mcm_soulslike_global_description">
         <text>Global Settings</text>
     </string>
@@ -15,6 +21,33 @@
     </string>
     <string id="ui_mcm_soulslike_item_loss_chance">
         <text>Item loss % chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_item_condition_loss_percent">
+        <text>Item condition loss % respawn</text>
+    </string>
+    <string id="ui_mcm_soulslike_item_condition_loss_percent_desc">
+        <text>Maybe you like being pegged, we wont judge you. Defines the amount of condition loss applied to all applicable items in your inventory on death</text>
+    </string>
+    <string id="ui_mcm_soulslike_health_loss_on_respawn">
+        <text>Health loss % on respawn</text>
+    </string>
+    <string id="ui_mcm_soulslike_health_loss_on_respawn_desc">
+        <text>Because you like getting your testicals twisted, this add a bit more difficulty to your playthrough. This is the amount of health that will be removed when you respawn.  Example: 25% means you will have 75% health when you respawn.  The concept here is that you would still be slightly injured and requires you to keep some meds around to heal yourself before trying to continue and retrieve your items from where you died.</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_global_description">
+        <text>Hardcore Settings</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_save_description">
+        <text>Kind of like slamming your dick in a hard cover book, Hardcore Saves means manual, quick and campfire saves are all disabled and only one save file will ever exist.  Hardcore Saves only allows saving during sleeping and when respawning.  Keep in mind that because only 1 save file will ever exist, its possible to get stuck in a position where progression is tough if you lose all your gear and have no money to heal or eat.</text>
+     </string>
+    <string id="ui_mcm_soulslike_is_hardcore_save_enabled">
+        <text>Enable Hardcore Saves</text>
+    </string>
+    <string id="ui_mcm_soulslike_override_campfire_hardcore_saves">
+        <text>Allow Campfire Saves w/Hardcore Saves</text>
+    </string>
+    <string id="ui_mcm_soulslike_override_campfire_hardcore_saves_desc">
+        <text>Sometimes you need that warm fuzzy feeling of comfort you get by saving often.  This allow saving at campfires, even though hardcore saves is enabled.  Keep in mind that when respawning or sleeping your campfire saves will still be deleted if Hardcore Saves is enabled.</text>
     </string>
 	<string id="ui_mcm_soulslike_item_loss_chance_desc">
 		<text>This is the % chance to lose an item when you "die".  Example: 25% chance means every item on you get's a dice roll and has a 25% chance to be lost.</text>

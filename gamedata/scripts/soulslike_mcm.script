@@ -11,12 +11,24 @@ function on_mcm_load()
                 size = {512,50},
                 spacing = 20
             },    
-            --Global Settings
             {
                 id = "desc_mcm",
                 type = "desc",
-                text = "ui_mcm_soulslike_global_description",
+                text = "ui_mcm_soulslike_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_disclaimer",
                 clr = {255, 255 ,255 ,0},
+            },
+            --Global Settings
+            {
+                id = "desc_mcm",
+                type = "slide",
+                text = "ui_mcm_soulslike_global_description",
+                clr = {255, 255 ,255 ,255},
             },
             {
                 id = "is_enabled",
@@ -27,14 +39,61 @@ function on_mcm_load()
         }
     }
 
-    soulslike.append_mcm_options(op.gr)
-
-    table.insert(op.gr, { id = "line" , type = "line" })
     table.insert(op.gr, {
+        id = "item_loss_chance",
+        type = "track",
+        val = 2,
+        min = 0,
+        max = 0.9,
+        step = 0.01,
+        def = 0.20
+    })
+
+    table.insert(op.gr, {
+        id = "item_condition_loss_percent",
+        type = "track",
+        val = 2,
+        min = 0,
+        max = 0.9,
+        step = 0.01,
+        def = 0.05
+    })
+
+    table.insert(op.gr, 
+    {
+        id = "desc_mcm",
+        type = "slide",
+        text = "ui_mcm_soulslike_hardcore_global_description",
+        clr = {255, 255 ,255 ,255},
+    })
+
+    table.insert(op.gr, 
+    {
         id = "desc_mcm",
         type = "desc",
-        text = "ui_mcm_soulslike_debug_description",
+        text = "ui_mcm_soulslike_hardcore_save_description",
         clr = {255, 255 ,255 ,0},
+    })
+
+    table.insert(op.gr, {
+        id = "is_hardcore_save_enabled",
+        type = "check",
+        val = 1,
+        def = true
+    })
+
+    table.insert(op.gr, {
+        id = "override_campfire_hardcore_saves",
+        type = "check",
+        val = 1,
+        def = false
+    })
+
+    table.insert(op.gr, {
+        id = "desc_mcm",
+        type = "slide",
+        text = "ui_mcm_soulslike_debug_description",
+        clr = {255, 255 ,255 ,255},
     })
     table.insert(op.gr, {
         id = "debug",
