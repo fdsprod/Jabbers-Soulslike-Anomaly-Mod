@@ -1,0 +1,29 @@
+<string_table>
+	<string id="ui_mcm_menu_soulslike">
+		<text>Soulslike</text>
+	</string>
+
+    <!--Global Settings-->
+    <string id="ui_mcm_soulslike_title">
+        <text>Jabbers' Soulslike Settings</text>
+    </string>
+    <string id="ui_mcm_soulslike_global_description">
+        <text>Global Settings</text>
+    </string>
+    <string id="ui_mcm_soulslike_is_enabled">
+        <text>Enabled</text>
+    </string>
+    <string id="ui_mcm_soulslike_item_loss_chance">
+        <text>Item loss % chance</text>
+    </string>
+	<string id="ui_mcm_soulslike_item_loss_chance_desc">
+		<text>This is the % chance to lose an item when you "die".  Example: 25% chance means every item on you get's a dice roll and has a 25% chance to be lost.</text>
+	</string>
+
+    <string id="ui_mcm_soulslike_debug_description">
+        <text>Debug Settings</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug">
+        <text>Debug</text>
+    </string>
+</string_table>

@@ -26,6 +26,7 @@ local m_data = {
     },
     last_death_state = {
         dropped_backpack_id = nil,
+        items_lost = nil,
     },    
     is_changing_levels = nil,    
     is_advancing_time = nil,
@@ -176,6 +177,7 @@ local function transfer_loot_to_backpack(se_pack)
     --     alife_release(slot_backpack)
     -- end 
 
+    local item_loss_chance = (soulslike_mcm.get_config("item_loss_chance", 0.2) * 100)
     local backpack = level.object_by_id(se_pack.id)
     local function release_actor_item(temp, item)
         local sec = item:section()
@@ -195,6 +197,14 @@ local function transfer_loot_to_backpack(se_pack)
             return
         end
         
+        local loss_chance_dice_roll = math.random(0, 100)
+
+        if loss_chance_dice_roll < item_loss_chance then
+            debug("Item lost "..sec)
+            m_data.last_death_state.items_lost = true
+            return   
+        end
+            
         debug("Transfering item "..sec)
         db.actor:transfer_item(item, backpack)
     end     
@@ -389,26 +399,105 @@ end
 -- TODO: Reactor this into a class
 local function rescuer_initial_msg_factory() 
     local messages = {
-        "Hey hope you are feeling better. You were in pretty bad shape when I found you!"   
+        "st_soulslike_rescuer_initial_1",
+        "st_soulslike_rescuer_initial_2",
+        "st_soulslike_rescuer_initial_3",
+        "st_soulslike_rescuer_initial_4",
+        "st_soulslike_rescuer_initial_5",
+        "st_soulslike_rescuer_initial_6",
+        "st_soulslike_rescuer_initial_7",
+        "st_soulslike_rescuer_initial_8",
+        "st_soulslike_rescuer_initial_9",
+        "st_soulslike_rescuer_initial_10",
+        "st_soulslike_rescuer_initial_11",
+        "st_soulslike_rescuer_initial_12",
+        "st_soulslike_rescuer_initial_13",
+        "st_soulslike_rescuer_initial_14",
+        "st_soulslike_rescuer_initial_15",
+        "st_soulslike_rescuer_initial_16",
     }
 
-    return messages[math.random(0, #messages)]
+    return game.translate_string(messages[math.random(0, #messages)])
 end
 
 local function rescuer_eat_drink_msg_factory() 
     local messages = {
-        " I left something for you to eat and drink for when you wake up." 
+        "st_soulslike_rescuer_food_1",
+        "st_soulslike_rescuer_food_2",
+        "st_soulslike_rescuer_food_3",
+        "st_soulslike_rescuer_food_4",
+        "st_soulslike_rescuer_food_5",
     }
 
-    return messages[math.random(0, #messages)]
+    return game.translate_string(messages[math.random(0, #messages)])
 end
 
 local function rescuer_pda_marker_msg_factory()
     local messages = {
-        " I added a marker where I found you to your PDA. Hopefully you can get back some of your things."
+        "st_soulslike_rescuer_pda_1",
+        "st_soulslike_rescuer_pda_2",
+        "st_soulslike_rescuer_pda_3",
+        "st_soulslike_rescuer_pda_4",
+        "st_soulslike_rescuer_pda_5",
+        "st_soulslike_rescuer_pda_6",
+        "st_soulslike_rescuer_pda_7",
+        "st_soulslike_rescuer_pda_8",
+        "st_soulslike_rescuer_pda_9",
+        "st_soulslike_rescuer_pda_10",
+        "st_soulslike_rescuer_pda_11",
+        "st_soulslike_rescuer_pda_12",
+        "st_soulslike_rescuer_pda_13",
+        "st_soulslike_rescuer_pda_14",
+        "st_soulslike_rescuer_pda_15",
+        "st_soulslike_rescuer_pda_16",
     }
 
-    return messages[math.random(0, #messages)]    
+    return game.translate_string(messages[math.random(0, #messages)])
+end
+
+local function rescuer_used_items_msg_factory()
+    local messages = {
+        "st_soulslike_rescuer_used_items_1",
+        "st_soulslike_rescuer_used_items_2",
+        "st_soulslike_rescuer_used_items_3",
+        "st_soulslike_rescuer_used_items_4",
+        "st_soulslike_rescuer_used_items_5",
+        "st_soulslike_rescuer_used_items_6",
+        "st_soulslike_rescuer_used_items_7",
+        "st_soulslike_rescuer_used_items_8",
+        "st_soulslike_rescuer_used_items_9",
+        "st_soulslike_rescuer_used_items_10",
+        "st_soulslike_rescuer_used_items_11",
+        "st_soulslike_rescuer_used_items_12",
+        "st_soulslike_rescuer_used_items_13",
+        "st_soulslike_rescuer_used_items_14",
+        "st_soulslike_rescuer_used_items_15",
+        "st_soulslike_rescuer_used_items_16",
+    }
+
+    return game.translate_string(messages[math.random(0, #messages)])
+end
+
+local function rescuer_stay_safe_msg_factory()
+    local messages = {
+        "st_soulslike_rescuer_stay_safe_1",
+        "st_soulslike_rescuer_stay_safe_2",
+        "st_soulslike_rescuer_stay_safe_3",
+        "st_soulslike_rescuer_stay_safe_4",
+        "st_soulslike_rescuer_stay_safe_5",
+        "st_soulslike_rescuer_stay_safe_6",
+        "st_soulslike_rescuer_stay_safe_7",
+        "st_soulslike_rescuer_stay_safe_8",
+        "st_soulslike_rescuer_stay_safe_9",
+        "st_soulslike_rescuer_stay_safe_10",
+        "st_soulslike_rescuer_stay_safe_11",
+        "st_soulslike_rescuer_stay_safe_12",
+        "st_soulslike_rescuer_stay_safe_13",
+        "st_soulslike_rescuer_stay_safe_14",
+        "st_soulslike_rescuer_stay_safe_15",
+    }
+
+    return game.translate_string(messages[math.random(0, #messages)])
 end
 
 local function send_resuer_message(gave_food_or_water)
@@ -443,15 +532,19 @@ local function send_resuer_message(gave_food_or_water)
         if m_data.last_death_state.dropped_backpack_id then
             msg = msg..rescuer_pda_marker_msg_factory()
         end
+        if m_data.last_death_state.items_lost then
+            msg = msg..rescuer_used_items_msg_factory()            
+        end
+        msg = msg..rescuer_stay_safe_msg_factory()
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
     else
         -- TODO: Reactor this into a factory class
-        local msg = "When you wake up you find yourself in a familiar place but with no idea how you got here."
+        local msg = game.translate_string("st_soulslike_rescuer_initial_generic")
         if gave_food_or_water then
-            msg = msg.." Looking for your things you find someone left you something to eat and drink."
+            msg = msg..game.translate_string("st_soulslike_rescuer_food_generic")
         end
         if m_data.last_death_state.dropped_backpack_id then
-            msg = msg.." There appears to be a marker on your PDA where you were found."
+            msg = msg..game.translate_string("st_soulslike_rescuer_pda_generic")
         end
 		local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
@@ -483,6 +576,13 @@ function save_and_wake_callback()
     satiety = normalize(satiety, red_icon_satiety, 1)
     satiety = clamp( satiety / 5.65 , 0, 0.185)
 
+    debug({satiety = satiety})
+    if satiety < 0.5 then
+        gave_food_or_water = true  
+        --debug("HACK updating satiety.")
+	    db.actor.satiety = 0.5
+    end
+
 	-- Thirst
 	local thirst = 1 - actor_status_thirst.get_water_deprivation()		-- 1 full
 	local red_icon_thirst = 5760
@@ -491,17 +591,7 @@ function save_and_wake_callback()
     thirst = normalize(thirst, red_icon_thirst, 1)
     thirst = clamp(thirst / 5.65, 0, 0.185)
 
-    debug({satiety = satiety})
     debug({thirst = thirst})
-
-    -- Food
-    if satiety < 0.5 then
-        gave_food_or_water = true  
-        --debug("HACK updating satiety.")
-	    db.actor.satiety = 0.5
-    end
-
-    -- Thirst
     if thirst < 0.5 then
         gave_food_or_water = true
         -- HACK... deal with it :shades:
@@ -521,6 +611,7 @@ function save_and_wake_callback()
     actor_status.activate_hud()
         
     m_data.last_death_state.dropped_backpack_id = nil
+    m_data.last_death_state.items_lost = nil
     m_data.is_advancing_time = true
 end
 
@@ -544,6 +635,10 @@ end
 
 local function on_game_load()    
     debug('on_game_load')
+    
+    if ui_mcm then
+	    on_option_change()
+    end
 
     if m_data.is_changing_levels then
         m_data.is_changing_levels = nil
@@ -583,6 +678,26 @@ local function actor_on_stash_remove(data)
         data.cancel = true
     end
 end
+
+function on_option_change()
+    local get_config = soulslike_mcm.get_config
+
+    debug("is_enabled = "..tostring(get_config("is_enabled", true)))
+    debug("debug = "..tostring(get_config("debug", false)))
+end
+
+function append_mcm_options(gr)    
+    table.insert(gr, {
+        id = "item_loss_chance",
+        type = "track",
+        val = 2,
+        min = 0,
+        max = 1,
+        step = 0.20,
+        def = 0.20
+    })
+end
+
 
 function on_game_start()
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
