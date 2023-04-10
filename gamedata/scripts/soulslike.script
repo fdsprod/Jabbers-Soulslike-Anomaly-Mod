@@ -167,15 +167,10 @@ end
 local function transfer_loot_to_backpack(se_pack)
     local slot_backpack_id = nil
     
-    -- COMMENT OUT FOR NOW, WEIRD CRASH OCCURING WITH THIS IDEA
-    -- Release the players current backpack since it is being used
-    -- as the stash on the floor for where the player died
-    -- if m_data.last_death_state.dropped_backpack_id then 
-    --     debug("Releasing backpack...")
-    --     local slot_backpack = db.actor:item_in_slot(13)
-    --     slot_backpack_id = slot_backpack:id()
-    --     alife_release(slot_backpack)
-    -- end 
+    if m_data.last_death_state.dropped_backpack_id then 
+         local slot_backpack = db.actor:item_in_slot(13)
+         slot_backpack_id = slot_backpack:id()
+    end 
 
     local item_loss_chance = (soulslike_mcm.get_config("item_loss_chance", 0.2) * 100)
     local backpack = level.object_by_id(se_pack.id)
@@ -185,13 +180,6 @@ local function transfer_loot_to_backpack(se_pack)
             debug("Item is in ignore list: "..sec)
             return
         end
-
-        -- COMMENT OUT FOR NOW, WEIRD CRASH OCCURING WITH THIS IDEA
-        -- if item:id() == slot_backpack_id then
-        --     debug("Ignoring backpack "..sec)
-        --     return
-        -- end
-
         if ini_sys:r_bool_ex(sec,"quest_item",false) then
             debug("Item quest item: "..sec)
             return
@@ -199,8 +187,11 @@ local function transfer_loot_to_backpack(se_pack)
         
         local loss_chance_dice_roll = math.random(0, 100)
 
-        if loss_chance_dice_roll < item_loss_chance then
+        -- We never want to delete the players backpack
+        -- since it makes up the created stash
+        if item:id() ~= slot_backpack_id and loss_chance_dice_roll < item_loss_chance then
             debug("Item lost "..sec)
+            alife_release(item:id())
             m_data.last_death_state.items_lost = true
             return   
         end
@@ -212,12 +203,6 @@ local function transfer_loot_to_backpack(se_pack)
     debug("Transfering items")
     db.actor:iterate_inventory(release_actor_item)
 end
-
--- local function add_quest_item_to_corpse(se_corpse)
---     debug("HACK: Adding quest item to corpse to prevent cleanup")
---     local se_quest_item = alife_create("sl_ht_walkie_talkie", se_corpse.position, se_corpse.m_level_vertex_id, se_corpse.m_game_vertex_id, se_corpse.id, false)
---     alife():register(se_quest_item)    
--- end
 
 local function add_backpack_marker_to_pda(se_pack)
     debug("Adding backpack marker to PDA")
@@ -417,7 +402,7 @@ local function rescuer_initial_msg_factory()
         "st_soulslike_rescuer_initial_16",
     }
 
-    return game.translate_string(messages[math.random(0, #messages)])
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function rescuer_eat_drink_msg_factory() 
@@ -429,7 +414,7 @@ local function rescuer_eat_drink_msg_factory()
         "st_soulslike_rescuer_food_5",
     }
 
-    return game.translate_string(messages[math.random(0, #messages)])
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function rescuer_pda_marker_msg_factory()
@@ -452,7 +437,7 @@ local function rescuer_pda_marker_msg_factory()
         "st_soulslike_rescuer_pda_16",
     }
 
-    return game.translate_string(messages[math.random(0, #messages)])
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function rescuer_used_items_msg_factory()
@@ -475,7 +460,7 @@ local function rescuer_used_items_msg_factory()
         "st_soulslike_rescuer_used_items_16",
     }
 
-    return game.translate_string(messages[math.random(0, #messages)])
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function rescuer_stay_safe_msg_factory()
@@ -497,7 +482,7 @@ local function rescuer_stay_safe_msg_factory()
         "st_soulslike_rescuer_stay_safe_15",
     }
 
-    return game.translate_string(messages[math.random(0, #messages)])
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function send_resuer_message(gave_food_or_water)
@@ -527,24 +512,24 @@ local function send_resuer_message(gave_food_or_water)
     if rescuer then
         local msg = rescuer_initial_msg_factory()
         if gave_food_or_water then
-            msg = msg..rescuer_eat_drink_msg_factory()
+            msg = msg.." " + rescuer_eat_drink_msg_factory()
         end
         if m_data.last_death_state.dropped_backpack_id then
-            msg = msg..rescuer_pda_marker_msg_factory()
+            msg = msg.." " + rescuer_pda_marker_msg_factory()
         end
         if m_data.last_death_state.items_lost then
-            msg = msg..rescuer_used_items_msg_factory()            
+            msg = msg.." " + rescuer_used_items_msg_factory()            
         end
-        msg = msg..rescuer_stay_safe_msg_factory()
+        msg = msg.." " + rescuer_stay_safe_msg_factory()
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
     else
         -- TODO: Reactor this into a factory class
         local msg = game.translate_string("st_soulslike_rescuer_initial_generic")
         if gave_food_or_water then
-            msg = msg..game.translate_string("st_soulslike_rescuer_food_generic")
+            msg = msg.." " + game.translate_string("st_soulslike_rescuer_food_generic")
         end
         if m_data.last_death_state.dropped_backpack_id then
-            msg = msg..game.translate_string("st_soulslike_rescuer_pda_generic")
+            msg = msg.." " + game.translate_string("st_soulslike_rescuer_pda_generic")
         end
 		local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
@@ -662,13 +647,6 @@ local function actor_on_item_take_from_box(box,obj)
 			if se_obj then
 				alife_release(se_obj)
 			end
-			
-            -- COMMENT OUT FOR NOW, WEIRD CRASH OCCURING WITH THIS IDEA
-			-- if (m_data.created_stashes and m_data.created_stashes[id]) then 
-			-- 	local section = m_data.created_stashes[id]
-			-- 	alife_create_item(section, db.actor)
-			-- 	m_data.created_stashes[id] = nil
-			-- end
 		end
 	end
 end
