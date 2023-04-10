@@ -38,10 +38,10 @@ Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
 **Q**: Doesn't this already exist with the Azazel game mode?  
 **A**: Sorta, while Azazel does allows you to continue as a new stalker after dieing, You cannot play story mode at the same time, with Soulslike you can.
 
-**Q**: I died in the middle of and I cannot get my gear back what do I do? 
+**Q**: I died in the middle of and I cannot get my gear back what do I do?  
 **A**: First you can stop crying about it, that's the whole point of this mod... An actual consiquence for dying.  If you died in a shit location, well... that sucks, go get some new gear and continue playing or start over, choice is yours.
 
-**Q**: I decided to play with Hardcore Saves and my save location is awful and I cannot continue.
+**Q**: I decided to play with Hardcore Saves and my save location is awful and I cannot continue.  
 **A**: Yup, that can happen, awful, im so sad for you... see the DISCLAIMER above.  OK so I'm not a total fucking jackass.. if you have to you can restore a save from the "appdata\savedgames\soulslike-backup" folder, yes, I backed up some, if not all the saves that are deleted.
 
 **Q**: I have an idea for progression that isnt included in this mod, how do I contact you.  
