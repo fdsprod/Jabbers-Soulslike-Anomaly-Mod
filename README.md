@@ -1,4 +1,7 @@
-# Jabbers-Soulslike-Anomaly-Mod
+
+
+![Jabbers Soulslike Anomaly Mod]https://cdn.discordapp.com/attachments/415664512981794818/1095127013150445680/Soulslike_Logo_-_Compressed.gif)  
+
 
 **Jabbers' Soulslike Anomaly Mod**  
 **Discord**: https://discord.gg/HRyCGesuXq  
