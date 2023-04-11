@@ -455,6 +455,8 @@ local function actor_on_sleep(hours)
     end
     
     debug('actor_on_sleep')
+    
+    save_spawn_location();
 
     if not m_data.is_advancing_time then 
         force_save("sleep")
