@@ -53,3 +53,6 @@ Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
 **TODO**
 - Allow saving a spawn location without having to sleep.
 - Offset the radius of the PDA death location 
+- Create an item that needs to be used to set a respawn point (optional with mcm)
+- Adjust rate of item loss based on rank (change mcm option to instead be a scalar of that rate)
+

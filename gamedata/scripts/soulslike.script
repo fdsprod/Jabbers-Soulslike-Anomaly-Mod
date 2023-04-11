@@ -6,6 +6,7 @@
 --]]
 
 local m_data = {
+    last_spawn_set_time = nil,
     uuid = nil,
     spawn_location = {
         level = nil,
@@ -125,7 +126,7 @@ local function debug(output)
     end
 end
 
-local function save_spawn_location()
+local function save_spawn_location(show_message)
 	local se_actor = alife():actor()
 
 	m_data.spawn_location.level = level.name()
@@ -139,7 +140,12 @@ local function save_spawn_location()
 	m_data.spawn_location.game_vertex_id = se_actor.m_game_vertex_id
     
     debug("Saved spawn location data:")
-    debug(m_data.spawn_location)
+    debug(m_data.spawn_location)    
+            
+    if show_message then
+        local str = game.translate_string("st_soulslike_spawn_location_set")
+        actor_menu.set_msg(1, str, 4)
+    end
 end
 
 local function respawn_actor()    
@@ -175,9 +181,13 @@ local function drop_backpack()
         local se_pack = alife_create("inv_backpack", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
 
         if (se_pack) then
-            debug("pack created")
+            debug("Pack created "..tostring(se_pack.id))
 
-            m_data.created_stashes[se_pack.id] = se_pack:section_name()
+            m_data.created_stashes[se_pack.id] = {
+                section = se_pack:section_name(),
+                lost_items = {},
+                examine = false
+            } 
         end
 
         m_data.last_death_state.dropped_backpack_id = backpack:id()
@@ -212,9 +222,10 @@ local function transfer_loot_to_backpack(se_pack)
         -- We never want to delete the players backpack
         -- since it makes up the created stash
         if item:id() ~= slot_backpack_id and loss_chance_dice_roll < item_loss_chance then
-            debug("Item lost "..sec)
+            debug("Item lost "..sec)            
             alife_release(item)
             m_data.last_death_state.items_lost = true
+            table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
             return   
         end
 
@@ -232,7 +243,13 @@ local function transfer_loot_to_backpack(se_pack)
                 
             if has_cond then
                 debug("Degrading ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
-                utils_item.degrade(item, degrade_factor)
+                local condition = utils_item.degrade(item, degrade_factor)
+
+                if condition == 0 then
+                    debug("Item ".. sec.. " was degraded into oblivion")
+                    m_data.last_death_state.items_lost = true
+                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+                end
             end
         end
             
@@ -342,8 +359,17 @@ local function force_save(type)
 		device():pause(true)
 		force_pause = true
 	end
-	
-    local file_name = "soulslike_" .. (user_name() or "").." - "..type
+	local Y, M, D, h
+    Y, M, D, h = game.get_game_time():get(Y, M, D, h)
+    
+    local m = level.get_time_minutes()
+    if m < 10 then
+        m = ("0"..m)
+    end
+    
+    local comm = utils_xml.get_special_txt(db.actor:character_community())
+    local map = utils_xml.get_special_txt(level.name())
+    local file_name = "soulslike_" .. comm .. " - " .. map .. " - hardsave - " .. string.format("%d.%d.%d %d-%d", D, M, Y, h, m)" - "..type
 
 	exec_console_cmd("save ".. file_name)
     
@@ -425,7 +451,7 @@ local function save_state(data)
     debug('save_state')
 
     if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
-        save_spawn_location()
+        save_spawn_location(false)
     end
 
     data.soulslike = m_data
@@ -456,8 +482,6 @@ local function actor_on_sleep(hours)
     
     debug('actor_on_sleep')
     
-    save_spawn_location();
-
     if not m_data.is_advancing_time then 
         force_save("sleep")
     end
@@ -478,7 +502,7 @@ local function on_level_changing()
     end
 
     if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
-        save_spawn_location()
+        save_spawn_location(false)
     end
 end
 
@@ -755,22 +779,79 @@ local function on_game_load()
     end
 end
 
+local function tablelength(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
+end
+
+local function try_send_inventory_examined_message(stash_id)    
+    local stash_data = m_data.created_stashes[stash_id]
+    if not stash_data.examine then        
+        debug('Stash not yet examined.')
+        local lost_items = stash_data.lost_items
+
+        debug(lost_items)
+        debug('Item lost count = '..tostring(#lost_items))
+        debug('Item lost count = '..tostring(tablelength(lost_items)))
+
+        if #lost_items > 0 then
+
+            local msg = "You examine your belongings and find that you were missing the following items: "
+            local item_groups = {}
+            
+            for k, sec in pairs(lost_items) do
+                if not item_groups[sec] then 
+                    item_groups[sec] = {
+                        section = sec,
+                        count = 1
+                    }
+                else
+                    item_groups[sec].count = item_groups[sec].count + 1
+                end
+            end
+
+            local item_names = {}
+            
+            for k, group in pairs(item_groups) do
+                local inv_name = ui_item.get_sec_name(group.section)
+                if group.count > 1 then
+                    table.insert(item_names, tostring(group.count).." x "..inv_name)                    
+                else
+                    table.insert(item_names, inv_name)                    
+                end
+            end
+            
+            msg = msg..table.concat(item_names, ", ")
+
+            local ui_sender = news_manager.tips_icons['default']
+            db.actor:give_game_news("", msg, ui_sender, 0, 20000)
+            
+            stash_data.examine = true
+        end
+    end
+end
+
 local function actor_on_item_take_from_box(box,obj)
+    local id = box:id()
+    debug('Player opened stash id '..tostring(id))
+
     if not is_enabled() then
         return
     end
     
 	if (box:section() == "inv_backpack") then
-		if (box:is_inv_box_empty()) then
-			hide_hud_inventory()
-			
-			local id = box:id()
-			local se_obj = alife_object(id)
+        if (box:is_inv_box_empty()) then
+            hide_hud_inventory()
+            
+            local se_obj = alife_object(id)
 
-			if se_obj then
-				alife_release(se_obj)
-			end
-		end
+            if se_obj then
+                alife_release(se_obj)
+                try_send_inventory_examined_message(id)
+                m_data.created_stashes[id] = nil
+            end
+        end
 	end
 end
 
@@ -780,7 +861,8 @@ local function actor_on_stash_remove(data)
     end
 
     if m_data.created_stashes[data.stash_id] then
-        data.cancel = true
+        data.cancel = true    
+        try_send_inventory_examined_message(data.stash_id)
     end
 end
 
@@ -821,4 +903,51 @@ function on_game_start()
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
     RegisterScriptCallback("on_game_load",on_game_load)
 	RegisterScriptCallback("on_console_execute",on_console_execute)
+end
+
+---------------------------------------------
+-- Detours
+---------------------------------------------
+
+local detour_sleep = ui_sleep_dialog.sleep
+local detour_sleep_bag = ui_sleep_dialog.sleep_bag
+
+local function try_set_spawn_point()
+    local now = game.get_game_time()
+
+    if m_data.last_spawn_set_time then
+        local tf = level.get_time_factor()
+	    local diff_seconds = tonumber(now:diffSec(m_data.last_spawn_set_time)/tf)
+
+        debug(tostring(diff_seconds))
+        
+        if diff_seconds > 60 then
+            m_data.last_spawn_set_time = now
+            save_spawn_location(true);
+            return true    
+        end 
+    else
+        m_data.last_spawn_set_time = now
+        save_spawn_location(true);
+        return true
+    end
+    return false
+end
+
+ui_sleep_dialog.sleep = function(force)
+    if try_set_spawn_point() then
+		disable_info("sleep_active")
+        return
+    end
+
+    detour_sleep()
+end
+
+ui_sleep_dialog.sleep_bag = function(ph_sleepbag_id, sec)
+    if try_set_spawn_point() then
+		disable_info("sleep_active")
+        return
+    end
+
+    detour_sleep_bag()
 end

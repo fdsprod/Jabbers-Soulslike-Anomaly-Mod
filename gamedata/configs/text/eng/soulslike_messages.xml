@@ -5,6 +5,10 @@
 	<text>Hardcore Saving is enabled. Saves automatically occur when sleeping and respawning.</text>
 </string>
 
+<string id="st_soulslike_spawn_location_set">
+	<text>Spawn location has been set.  Press again to sleep.</text>
+</string>
+
 <string id="st_soulslike_rescuer_initial_generic">
 	<text>When you wake up you find yourself in a familiar place but with no idea how you got here.</text>
 </string>
