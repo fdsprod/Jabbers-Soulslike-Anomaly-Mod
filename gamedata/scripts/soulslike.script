@@ -46,7 +46,7 @@ local ignore_list = {
 ----------------------------------------
 
 local function is_hardcore_save_enabled() 
-    return soulslike_mcm.get_config("is_hardcore_save_enabled", true)
+    return soulslike_mcm.get_config("is_hardcore_save_enabled", false)
 end
 
 local function is_enabled() 
@@ -57,12 +57,12 @@ local function is_debug_enabled()
     return soulslike_mcm.get_config("debug", true)
 end
 
-local function get_item_loss_chance()
-    return soulslike_mcm.get_config("item_loss_chance", 0.2)
+local function get_item_loss_scalar()
+    return soulslike_mcm.get_config("item_loss_scalar", 0.2)
 end
 
-local function item_condition_loss_percent()
-    return soulslike_mcm.get_config("item_condition_loss_percent", 0.2)
+local function get_item_condition_loss_percent()
+    return soulslike_mcm.get_config("item_condition_loss_scalar", 0.05)
 end
 
 local function get_health_loss_on_respawn()
@@ -195,6 +195,12 @@ local function drop_backpack()
     end
 end
 
+function math.clamp(x, min, max)
+    if x < min then return min end
+    if x > max then return max end
+    return x
+end
+
 local function transfer_loot_to_backpack(se_pack)
     local slot_backpack_id = nil
     
@@ -203,8 +209,11 @@ local function transfer_loot_to_backpack(se_pack)
          slot_backpack_id = slot_backpack:id()
     end 
 
-    local item_condition_loss_percent = item_condition_loss_percent()
-    local item_loss_chance = (get_item_loss_chance() * 100)
+    local rank = db.actor:character_rank()
+    local ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank)/math.log(1000) * 1.5, 0, 50) / 66;
+    
+    local item_condition_loss_percent = get_item_condition_loss_percent()
+    local item_loss_scalar = get_item_loss_scalar()
     local backpack = level.object_by_id(se_pack.id)
     local function release_actor_item(temp, item)
         local sec = item:section()
@@ -218,10 +227,15 @@ local function transfer_loot_to_backpack(se_pack)
         end
         
         local loss_chance_dice_roll = math.random(0, 100)
+        local loss_chance = math.floor(ranked_chance * item_loss_scalar * 100)
+        
+        loss_chance = math.clamp(loss_chance, 0, 100)
+
+        debug("item_loss_scalar: "..item_loss_scalar.." loss_chance_dice_roll: "..loss_chance_dice_roll.." rank: "..rank.." ranked_chance: "..ranked_chance.." loss_chance: "..loss_chance);
 
         -- We never want to delete the players backpack
         -- since it makes up the created stash
-        if item:id() ~= slot_backpack_id and loss_chance_dice_roll < item_loss_chance then
+        if item:id() ~= slot_backpack_id and loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then
             debug("Item lost "..sec)            
             alife_release(item)
             m_data.last_death_state.items_lost = true
@@ -231,7 +245,11 @@ local function transfer_loot_to_backpack(se_pack)
 
         if item_condition_loss_percent > 0 then
             local cond = item:condition()
-            local degrade_factor = cond * item_condition_loss_percent
+            local condition_loss_percent = math.clamp(ranked_chance * item_condition_loss_percent, 0, 1)
+            local degrade_factor = cond * condition_loss_percent
+            
+            debug("condition_loss_percent: "..condition_loss_percent.." rank: "..rank.." ranked_chance: "..ranked_chance.." degrade_factor: "..degrade_factor);
+
             local cls = item:clsid()    
             local is_weapon = (IsWeapon(item) and  not(cls == clsid.wpn_grenade_rgd5_s or cls == clsid.wpn_grenade_f1_s))
             local is_outfit = IsOutfit(item) 
@@ -259,6 +277,10 @@ local function transfer_loot_to_backpack(se_pack)
     
     debug("Transfering items")
     db.actor:iterate_inventory(release_actor_item)
+end
+
+local function random_float(min_value, max_value)
+    return min_value + math.random() * (max_value - min_value)
 end
 
 local function add_backpack_marker_to_pda(se_pack)
@@ -369,7 +391,8 @@ local function force_save(type)
     
     local comm = utils_xml.get_special_txt(db.actor:character_community())
     local map = utils_xml.get_special_txt(level.name())
-    local file_name = "soulslike_" .. comm .. " - " .. map .. " - hardsave - " .. string.format("%d.%d.%d %d-%d", D, M, Y, h, m)" - "..type
+    local date = string.format("%d.%d.%d %d-%d", D, M, Y, h, m)
+    local file_name = "soulslike_"..comm.." - "..map.." "..date.." - "..type
 
 	exec_console_cmd("save ".. file_name)
     

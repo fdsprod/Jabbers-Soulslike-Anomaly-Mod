@@ -39,8 +39,16 @@ function on_mcm_load()
         }
     }
 
+    table.insert(op.gr, 
+    {
+        id = "desc_mcm",
+        type = "desc",
+        text = "ui_mcm_soulslike_scalar_description",
+        clr = {255, 255 ,255 ,255},
+    })
+
     table.insert(op.gr, {
-        id = "item_loss_chance",
+        id = "item_loss_scalar",
         type = "track",
         val = 2,
         min = 0,
@@ -50,11 +58,11 @@ function on_mcm_load()
     })
 
     table.insert(op.gr, {
-        id = "item_condition_loss_percent",
+        id = "item_condition_loss_scalar",
         type = "track",
         val = 2,
         min = 0,
-        max = 0.9,
+        max = 0.25,
         step = 0.01,
         def = 0.05
     })
@@ -74,12 +82,12 @@ function on_mcm_load()
         text = "ui_mcm_soulslike_hardcore_save_description",
         clr = {255, 255 ,255 ,0},
     })
-
+    
     table.insert(op.gr, {
         id = "is_hardcore_save_enabled",
         type = "check",
         val = 1,
-        def = true
+        def = false
     })
 
     table.insert(op.gr, {

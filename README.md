@@ -10,7 +10,7 @@
 
 **DESCRIPTION**
 
-This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upon death your are saved by a random Stalker in the zone.  They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place.
+This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upon death your are rescued by a random Stalker in the zone. They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place.
 
 DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of this it's 100% possible to get yourself into a situation where you unexpectedly lose your gear. Random item loss on death means you could lose your weapons or armor, dying in the middle of an anomaly and not being able to get your gear back is possible and expected.  Always stock a backup kit, plan for the worst, hope for the best.
 
@@ -51,8 +51,8 @@ Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
 **A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODO**
-- Allow saving a spawn location without having to sleep.
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
-- Adjust rate of item loss based on rank (change mcm option to instead be a scalar of that rate)
+- Spawn lost weapons/armor on enemy stalkers in the area rather than just losing the gear completely
+- Add a possibility to lose weapon parts
 
