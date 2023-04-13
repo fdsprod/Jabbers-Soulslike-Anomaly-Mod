@@ -308,7 +308,7 @@ local function transfer_loot_to_backpack(se_pack)
 
             -- I call this The Tarkov Looter... 
             -- This shit is going to be funny as fuck for me to know that there is a 5% chance for this to happen 
-            if loss_chance_dice_roll <= 5 and is_weapon then
+            if loss_chance_dice_roll <= 5 and is_weapon and item_parts then
                 local parts = item_parts.get_parts_con(item)
                 if parts then
                     local keys = {}
@@ -327,7 +327,7 @@ local function transfer_loot_to_backpack(se_pack)
                 return       
             else
                 local allow_npc_looting = lost_items_looted_by_npcs()
-                
+
                 if(allow_npc_looting and (is_weapon or is_outfit or is_headgear) and enemy_looter) then   
                     debug("Transfering item to enemy: "..sec)   
                     table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)                
