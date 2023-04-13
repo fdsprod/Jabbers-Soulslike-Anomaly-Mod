@@ -35,8 +35,6 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
  - Hardcore save mode only keeps around 1 save file.
  - Ability to use campfires to save (configurable)
 
-In order to incorportate some rhyme and reason as to why you do not die, each time you respawn a stalker from your faction will message you about how they found you and rescued you, leaving you information about where you died and possibly leaving you some food and water if your sateity and thirst are low. d
-
 **INSTALLATION**
 
 Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
@@ -48,6 +46,9 @@ Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
 
 **Q**: I died in the middle of and I cannot get my gear back what do I do?  
 **A**: First you can stop crying about it, that's the whole point of this mod... An actual consiquence for dying.  If you died in a shit location, well... that sucks, go get some new gear and continue playing or start over, choice is yours.
+
+**Q**: I died and my weapon or armor is gone, how am I suppose to progress now?  
+**A**: First grow a pair...next, deep breath, now use that big brain of yours and think.  Listen, I am not going to play this game for you but here's a possible tip, find some companions.  Also, if you have "Lost items found on NPCs" turned on, go look for that bitch, he's around.  Also I used he, the females in Stalker told me their pronouns are he/him.
 
 **Q**: I decided to play with Hardcore Saves and my save location is awful and I cannot continue.  
 **A**: Yup, that can happen, awful, im so sad for you... see the DISCLAIMER above.  OK so I'm not a total fucking jackass.. if you have to you can restore a save from the "appdata\savedgames\soulslike-backup" folder, yes, I backed up some, if not all the saves that are deleted.
