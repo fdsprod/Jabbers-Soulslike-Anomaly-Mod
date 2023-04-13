@@ -26,6 +26,8 @@ local m_data = {
     last_death_state = {
         dropped_backpack_id = nil,
         items_lost = nil,
+        enemy_looter_name = nil,
+        enemy_looter_comm= nil,
     },    
     is_changing_levels = nil,    
     is_advancing_time = nil,
@@ -71,6 +73,10 @@ end
 
 local function override_campfire_hardcore_saves() 
     return soulslike_mcm.get_config("override_campfire_hardcore_saves", false)
+end
+
+local function lost_items_looted_by_npcs() 
+    return soulslike_mcm.get_config("lost_items_looted_by_npcs", true)
 end
 
 ----------------------------------------
@@ -201,6 +207,58 @@ function math.clamp(x, min, max)
     return x
 end
 
+local relations = { 
+    FRIENDS = 1000,    
+    BUDDIES = 500,
+    NEUTRALS = 0,
+    ENEMIES = -1000
+}
+
+local function find_enemy()
+    local enemy = nil
+	for i=1, #db.OnlineStalkers do
+		local id = db.OnlineStalkers[i]
+		enemy = level.object_by_id(id)
+        if enemy then
+            local is_enemy = enemy:general_goodwill(db.actor) <= relations.ENEMIES
+            if enemy:alive() and   
+                (not get_object_story_id(id)) and
+                is_enemy then
+                local comm = enemy:character_community()
+                debug("Found enemy "..enemy:name().." from the "..comm.." community.")
+                return enemy
+            end
+        end
+    end
+end
+
+local function find_actor_community_friendly()  
+    local friend = nil
+    local actor_comm = db.actor:character_community():sub(7) -- removes "actor_"
+
+    debug("Actor community "..actor_comm)
+
+	for i=1, #db.OnlineStalkers do
+		local id = db.OnlineStalkers[i]
+		friend = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+        if friend then
+			local comm = friend:character_community()
+            debug("Found friend "..friend:name().." from the "..comm.." community.")  
+
+            if friend:alive() and   
+               comm == actor_comm and
+               (not get_object_story_id(id)) then
+                debug("Found friend "..friend:name().." from the "..comm.." community.")
+                break
+            end
+        else 
+            friend = nil
+        end
+    end
+
+    return friend
+end
+
 local function transfer_loot_to_backpack(se_pack)
     local slot_backpack_id = nil
     
@@ -211,16 +269,20 @@ local function transfer_loot_to_backpack(se_pack)
 
     local rank = db.actor:character_rank()
     local ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank)/math.log(1000) * 1.5, 0, 50) / 66;
-    
     local item_condition_loss_percent = get_item_condition_loss_percent()
     local item_loss_scalar = get_item_loss_scalar()
     local backpack = level.object_by_id(se_pack.id)
+    local enemy_looter = find_enemy()
+    local enemy_looted = false
+
     local function release_actor_item(temp, item)
         local sec = item:section()
+
         if ignore_list[sec] then
             debug("Item is in ignore list: "..sec)
             return
         end
+
         if ini_sys:r_bool_ex(sec,"quest_item",false) then
             debug("Item quest item: "..sec)
             return
@@ -233,13 +295,51 @@ local function transfer_loot_to_backpack(se_pack)
 
         debug("item_loss_scalar: "..item_loss_scalar.." loss_chance_dice_roll: "..loss_chance_dice_roll.." rank: "..rank.." ranked_chance: "..ranked_chance.." loss_chance: "..loss_chance);
 
+        local is_grenade = IsGrenade(item)
+        local is_weapon = (IsWeapon(item) and not is_grenade)
+        local is_outfit = IsOutfit(item) 
+        local is_headgear = IsHeadgear(item)
+
         -- We never want to delete the players backpack
         -- since it makes up the created stash
         if item:id() ~= slot_backpack_id and loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then
-            debug("Item lost "..sec)            
-            alife_release(item)
-            m_data.last_death_state.items_lost = true
-            table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+            m_data.last_death_state.items_lost = true                
+            loss_chance_dice_roll = math.random(0, 100)
+
+            -- I call this The Tarkov Looter... 
+            -- This shit is going to be funny as fuck for me to know that there is a 5% chance for this to happen 
+            if loss_chance_dice_roll <= 5 and is_weapon then
+                local parts = item_parts.get_parts_con(item)
+                if parts then
+                    local keys = {}
+                    local numitems = 0 
+                    for k,v in pairs(parts) do
+                        numitems = numitems + 1
+                        table.insert(keys, k)
+                    end
+                    local index = math.random(1, numitems)
+                    parts[keys[index]] = -1 -- KEKW
+                    enemy_looted = true     
+                end    
+                
+                debug("Transfering item "..sec)
+                db.actor:transfer_item(item, backpack)
+                return       
+            else
+                local allow_npc_looting = lost_items_looted_by_npcs()
+                
+                if(allow_npc_looting and (is_weapon or is_outfit or is_headgear) and enemy_looter) then   
+                    debug("Transfering item to enemy: "..sec)   
+                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)                
+                    db.actor:transfer_item(item, enemy_looter)
+                    enemy_looted = true
+                else
+                    debug("Item lost "..sec)            
+                    alife_release(item)
+                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+                end
+            end
+            
             return   
         end
 
@@ -249,24 +349,23 @@ local function transfer_loot_to_backpack(se_pack)
             local degrade_factor = cond * condition_loss_percent
             
             debug("condition_loss_percent: "..condition_loss_percent.." rank: "..rank.." ranked_chance: "..ranked_chance.." degrade_factor: "..degrade_factor);
-
-            local cls = item:clsid()    
-            local is_weapon = (IsWeapon(item) and  not(cls == clsid.wpn_grenade_rgd5_s or cls == clsid.wpn_grenade_f1_s))
-            local is_outfit = IsOutfit(item) 
-            local is_headgear = IsHeadgear(item)
+   
             local use_condition = utils_item.is_degradable(item, sec)
 	        local has_cond = use_condition or is_weapon or is_outfit or is_headgear
 
-            debug("Checking item sec="..tostring(sec).." cls="..tostring(cls).." is_weapon="..tostring(is_weapon).." is_outfit="..tostring(is_outfit).." is_headgear="..tostring(is_headgear).." use_condition="..tostring(use_condition))
+            debug("Checking item sec="..tostring(sec).." is_weapon="..tostring(is_weapon).." is_outfit="..tostring(is_outfit).." is_headgear="..tostring(is_headgear).." use_condition="..tostring(use_condition))
                 
             if has_cond then
                 debug("Degrading ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+
+                -- utils_item.degrade releases the item if the condition is 0
                 local condition = utils_item.degrade(item, degrade_factor)
 
                 if condition == 0 then
                     debug("Item ".. sec.. " was degraded into oblivion")
                     m_data.last_death_state.items_lost = true
                     table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+                    return;
                 end
             end
         end
@@ -277,10 +376,11 @@ local function transfer_loot_to_backpack(se_pack)
     
     debug("Transfering items")
     db.actor:iterate_inventory(release_actor_item)
-end
 
-local function random_float(min_value, max_value)
-    return min_value + math.random() * (max_value - min_value)
+    if enemy_looter and enemy_looted then        
+        m_data.last_death_state.enemy_looter_name = enemy_looter:character_name()
+        m_data.last_death_state.enemy_looter_comm = enemy_looter:character_community()
+    end
 end
 
 local function add_backpack_marker_to_pda(se_pack)
@@ -342,9 +442,11 @@ local function remove_prior_saves(last_save_file_name)
 	for	it=0, f_cnt-1 	do
 		local file = flist:GetAt(it)
 		local file_name = string.sub(file:NameFull(), 0, (string.len(file:NameFull()) - string.len(".scoc")))
+        
 		local scoc_path = fs:update_path('$game_saves$', '')..file_name..".scoc"
 		local scop_path = fs:update_path('$game_saves$', '')..file_name..".scop"
 		local dds_path = fs:update_path('$game_saves$', '')..file_name..".dds"
+
 		local f = io.open(scoc_path,"rb")
 
 		if (f) then
@@ -360,12 +462,15 @@ local function remove_prior_saves(last_save_file_name)
                     file_name = string.lower(file_name)
 					if file_name ~= last_save_file_name then
 						debug("~ Soulslike mode | delete save file: "..file_name)
+
                         local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
                         local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
                         local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
+
                         fs:file_copy(scoc_path, scoc_path_bak)
                         fs:file_copy(scop_path, scop_path_bak)
                         fs:file_copy(dds_path, dds_path_bak)
+
 						ui_load_dialog.delete_save_game(file_name)			
 					end
 				end
@@ -460,7 +565,7 @@ local function on_before_save_input(flags, type, text)
 
     debug('User tried to save')
 
-    local str = strformat(game.translate_string("st_save_only_when_sleeping"), text)
+    local str = game.translate_string("st_save_only_when_sleeping")
     actor_menu.set_msg(1, str, 4)
     exec_console_cmd("main_menu off")
     flags.ret = true
@@ -644,34 +749,41 @@ local function rescuer_stay_safe_msg_factory()
     return game.translate_string(messages[math.random(#messages)])
 end
 
-local function send_resuer_message(gave_food_or_water)
-    local actor_comm = db.actor:character_community():sub(7) -- removes "actor_"
-    local rescuer
+local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
+    local messages = {
+        "st_soulslike_rescuer_enemy_looter_1",
+        "st_soulslike_rescuer_enemy_looter_2",
+        "st_soulslike_rescuer_enemy_looter_3",
+        "st_soulslike_rescuer_enemy_looter_4",
+        "st_soulslike_rescuer_enemy_looter_5",
+        "st_soulslike_rescuer_enemy_looter_6",
+        "st_soulslike_rescuer_enemy_looter_7",
+        "st_soulslike_rescuer_enemy_looter_8",
+        "st_soulslike_rescuer_enemy_looter_9",
+        "st_soulslike_rescuer_enemy_looter_10",
+        "st_soulslike_rescuer_enemy_looter_11",
+        "st_soulslike_rescuer_enemy_looter_12",
+        "st_soulslike_rescuer_enemy_looter_13",
+        "st_soulslike_rescuer_enemy_looter_14",
+        "st_soulslike_rescuer_enemy_looter_15",
+    }
+    
+    return strformat(game.translate_string(messages[math.random(#messages)]), enemy_comm, enemy_name)
+end
 
-    debug("Actor community "..actor_comm)
-
-	for i=1, #db.OnlineStalkers do
-		local id = db.OnlineStalkers[i]
-		rescuer = db.storage[id] and db.storage[id].object or level.object_by_id(id)
-        if rescuer then
-			local comm = rescuer:character_community()
-            debug("Found rescuer "..rescuer:name().." from the "..comm.." community.")  
-
-            if rescuer:alive() and   
-               comm == actor_comm and
-               (not get_object_story_id(id)) then
-                debug("Found rescuer "..rescuer:name().." from the "..comm.." community.")
-                break
-            end
-        else 
-            rescuer = nil
-        end
-    end
+local function send_rescuer_message(gave_food_or_water)
+    local rescuer = find_actor_community_friendly()
 
     if rescuer then
         local msg = rescuer_initial_msg_factory()
+        local enemy_name = m_data.last_death_state.enemy_looter_name
+        local enemy_comm = m_data.last_death_state.enemy_looter_comm
+        debug({enemy_name, enemy_comm})
         if gave_food_or_water then
             msg = msg.." "..rescuer_eat_drink_msg_factory()
+        end
+        if enemy_name and enemy_comm then
+            msg = msg.." "..rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
         end
         if m_data.last_death_state.dropped_backpack_id then
             msg = msg.." "..rescuer_pda_marker_msg_factory()
@@ -693,7 +805,6 @@ local function send_resuer_message(gave_food_or_water)
 		local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
     end  
-
 end
 
 function save_and_wake_callback()
@@ -737,6 +848,7 @@ function save_and_wake_callback()
     thirst = clamp(thirst / 5.65, 0, 0.185)
 
     debug({thirst = thirst})
+
     if thirst < 0.5 then
         gave_food_or_water = true
         -- HACK... deal with it :shades:
@@ -751,12 +863,14 @@ function save_and_wake_callback()
         alife_create_item('water_drink', db.actor)
     end
 
-    send_resuer_message(gave_food_or_water)
+    send_rescuer_message(gave_food_or_water)
 
     actor_status.activate_hud()
         
-    m_data.last_death_state.dropped_backpack_id = nil
     m_data.last_death_state.items_lost = nil
+    m_data.last_death_state.dropped_backpack_id = nil
+    m_data.last_death_state.enemy_looter_name = nil
+    m_data.last_death_state.enemy_looter_comm = nil
     m_data.is_advancing_time = true
 end
 

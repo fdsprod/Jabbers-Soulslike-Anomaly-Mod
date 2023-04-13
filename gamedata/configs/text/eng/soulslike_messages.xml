@@ -299,4 +299,65 @@
     <text>Stay safe and stay alive, Stalker.</text>
 </string>
 
+<string id="st_soulslike_rescuer_enemy_looter_1">
+    <text>When I first found you I saw a %s member named %s, he grabbed some of your things and ran, hopefully you can find him and get whatever he took back.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_2">
+    <text>When I first came across you, a %s member named %s was present. He took some of your belongings and ran off. Hopefully, you can locate him and retrieve your items.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_3">
+    <text>My first sighting of you involved a %s member named %s who took some of your possessions and fled. I hope you can track him down and recover your belongings.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_4">
+    <text>When I first stumbled upon you, there was a %s member named %s who took some of your belongings and escaped. Hopefully, you can find him and get back what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_5">
+    <text>As I stumbled upon you, there was another %s member nearby named %s who was rifling through your belongings. I hope you can track him down and retrieve what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_6">
+    <text>When I first discovered you, there was a %s member named %s who was taking some of your possessions. Hopefully, you can find him and recover your things.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_7">
+    <text>As I approached, I noticed a %s member named %s rifling through your belongings. He took some of your things and ran off. I hope you can retrieve what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_8">
+    <text>The first time I saw you, there was another %s member nearby named %s who was stealing some of your belongings. I hope you can track him down and recover what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_9">
+    <text>When I found you, there was a %s member named %s taking some of your things. He quickly grabbed them and ran off. I hope you can retrieve them.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_10">
+    <text>As I approached you, I noticed a %s member named %s taking some of your belongings. Hopefully, you can locate him and get your possessions back.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_11">
+    <text>As I first came across you, there was a %s member named %s who was taking some of your possessions. I hope you can track him down and retrieve what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_12">
+    <text>The first time I saw you, there was another %s member named %s taking some of your things. He quickly grabbed them and ran off. I hope you can locate him and recover what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_13">
+    <text>When I first discovered you, there was a %s member named %s taking some of your possessions. I hope you can locate him and get your possessions back.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_14">
+    <text>As I stumbled upon you, there was another %s member nearby named %s taking some of your possessions. Hopefully, you can track him down and retrieve what he took.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_looter_15">
+    <text>When I first found you, there was a %s member named %s who was taking some of your possessions. I hope you can track him down and recover what he took.</text>
+</string>
+
+
 </string_table>
