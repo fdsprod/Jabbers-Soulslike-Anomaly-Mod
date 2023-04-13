@@ -20,7 +20,7 @@
         <text>Enabled</text>
     </string>
     <string id="ui_mcm_soulslike_scalar_description">
-        <text>Maybe you are into being pegged... it's not my job to kink shame. Item and condition loss are based on your rank. When you die, they higher rank you are the more likely the chance to lose an item or have the condition reduced.  The SCALAR value below is the maxumum % chance of item or condition loss at max rank.  As an example: At rank 1000 you would have a 4.24% chance to lose each item, but if the item loss scalar is set to 0.2 it would only be 1.69%.</text>
+        <text>Maybe you are into being pegged... it's not my job to kink shame. Item and condition loss are based on your rank. When you die, the higher rank you are the more likely the chance to lose an item or have the condition reduced.  The SCALAR value below is the maxumum % chance of item or condition loss at max rank.  As an example: At rank 1000 you would have a 4.24% chance to lose each item, but if the item loss scalar is set to 0.2 it would only be 1.69%.</text>
      </string>
     <string id="ui_mcm_soulslike_item_loss_scalar">
         <text>Item loss scalar</text>
