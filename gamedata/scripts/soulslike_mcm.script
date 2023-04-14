@@ -74,6 +74,13 @@ function on_mcm_load()
         def = true
     })
 
+    table.insert(op.gr, {
+        id = "looter_npcs_marked",
+        type = "check",
+        val = 1,
+        def = false
+    })
+    
     table.insert(op.gr, 
     {
         id = "desc_mcm",

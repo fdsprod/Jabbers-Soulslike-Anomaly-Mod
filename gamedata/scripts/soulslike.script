@@ -79,6 +79,10 @@ local function lost_items_looted_by_npcs()
     return soulslike_mcm.get_config("lost_items_looted_by_npcs", true)
 end
 
+local function are_looter_npcs_marked()
+    return soulslike_mcm.get_config("looter_npcs_marked", false)
+end
+
 ----------------------------------------
 -- DEBUG
 ----------------------------------------
@@ -380,6 +384,10 @@ local function transfer_loot_to_backpack(se_pack)
     if enemy_looter and enemy_looted then        
         m_data.last_death_state.enemy_looter_name = enemy_looter:character_name()
         m_data.last_death_state.enemy_looter_comm = enemy_looter:character_community()
+
+        if are_looter_npcs_marked() then
+            level.map_add_object_spot_ser(enemy_looter.id, "circle_target", m_data.last_death_state.enemy_looter_name)            
+        end
     end
 end
 
