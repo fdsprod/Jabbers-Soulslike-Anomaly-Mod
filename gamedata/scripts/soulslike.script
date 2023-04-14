@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.9-beta"
+local version = "0.10-beta"
 
 local m_data = {
     last_spawn_set_time = nil,
