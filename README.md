@@ -14,6 +14,8 @@ This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upo
 
 DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of this it's 100% possible to get yourself into a situation where you unexpectedly lose your gear. Random item loss on death means you could lose your weapons or armor, dying in the middle of an anomaly and not being able to get your gear back is possible and expected.  Always stock a backup kit, plan for the worst, hope for the best.
 
+__**THIS IS INTENTED TO BE USED ON NEW GAMES, I CANNOT PREDICT WHAT THE CONCIQUENCES WILL BE IF YOU USE THIS ON AN EXISTING GAME**__
+
 **FEATURES**
 
 - 100% Customizable experience through MCM
