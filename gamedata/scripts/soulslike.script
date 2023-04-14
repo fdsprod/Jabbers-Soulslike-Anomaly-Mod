@@ -5,6 +5,8 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
+local version = "0.9-beta"
+
 local m_data = {
     last_spawn_set_time = nil,
     uuid = nil,
@@ -905,7 +907,7 @@ local function on_game_load()
         return
     end
 
-    debug('on_game_load')
+    debug('Version: '..version)
     
     if ui_mcm then
 	    on_option_change()
