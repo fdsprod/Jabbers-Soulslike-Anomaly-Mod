@@ -31,7 +31,7 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
  - Time will pass to simulate recovery.
  - The player will be hungry and/or thirsty at respawn based on the time passed.
  - Your PDA will be updated to show where the relative position is of your corpse
- - Dynamic message from your rescuer will be sent to you to explain what happene and information about your gear
+ - Dynamic message from your rescuer will be sent to you to explain what happened and information about your gear
  - Player does an inventory check and lists everything missing upon retrieving your gear
 - Hardcore save mode where you can only save by sleeping (sometimes requiring sleeping pills) and respawning.
  - Hardcore save mode only keeps around 1 save file.
@@ -41,13 +41,13 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
 
 Simply extract into your S.T.A.L.K.E.R. Anomaly installation folder.
 
-**MY THOUGHTS ON GAMEPLAY ADJUSTMENTS**
+**MY THOUGHTS ON GAMEPLAY ADJUSTMENTS**  
 Based on having played about 10 hours in total into a new game with this mod I can tell you the following... Your initial focus should be to stockpile some food/meds/weapons and a flashlight at your starting location. This way when you respawn you will have something to use to go try and get your gear back.  Another thing to try is grabbing a few companions to help you when you respawn, this makes things a slight bit easier in the case where you have some really crap gear.  As you progress through the world, think about stashing items in the static stashes or if you are using the hideout stash mod, those stashes in various locations.  Maybe rather then just selling everything, you hold on to it for those just incase scenarios.  It tool me a few deaths to kind of get the hang of things, but the adventures of retrieving your gear with a couple of companions and a knife really made for some entertainment and a different style of gameplay along the way.
 
 **FAQ**
 
 **Q**: Doesn't this already exist with the Azazel game mode?  
-**A**: Sorta, while Azazel does allows you to continue as a new stalker after dieing, You cannot play story mode at the same time, with Soulslike you can.
+**A**: Sorta, while Azazel does allows you to continue as a new stalker after dying, You cannot play story mode at the same time, with Soulslike you can.
 
 **Q**: Does this mod work with G.A.M.M.A.?    
 **A**: Yes, this mod is actually intended to be used with G.A.M.M.A.
@@ -59,7 +59,7 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: No, but I guess you can also say.. Not yet? I don't know what could be done that could help other than give extra minimalistic gear on respawn to help with things like radiation. This isn't exactly ideal, but I'm also open to suggestions.  This mod should change how you play the game some, making an immediate focus on collecting some backup gear rather than progressing, so if you die to soon and can't seem to get a footing after due to how much harder norther starts can be, that' could be why.
 
 **Q**: I died in the middle of and anomaly I cannot get my gear back what do I do?  
-**A**: First you can stop crying about it, that's the whole point of this mod... An actual consiquence for dying.  If you died in a shit location, well... that sucks, go get some new gear and continue playing or start over, choice is yours.
+**A**: First you can stop crying about it, that's the whole point of this mod... An actual consequence for dying.  If you died in a shit location, well... that sucks, go get some new gear and continue playing or start over, choice is yours.
 
 **Q**: I died and my weapon or armor is gone, how am I suppose to progress now?  
 **A**: First grow a pair...next, deep breath, now use that big brain of yours and think.  Listen, I am not going to play this game for you but here's a possible tip, find some companions.  Also, if you have "Lost items found on NPCs" turned on, go look for that bitch, he's around.  Also I used he, the females in Stalker told me their pronouns are he/him.
