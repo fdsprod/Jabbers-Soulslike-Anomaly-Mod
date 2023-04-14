@@ -34,6 +34,12 @@
     <string id="ui_mcm_soulslike_lost_items_looted_by_npcs_desc">
         <text>Items you lose from death have a chance to appear on enemy stalkers in the area.  Keep in mind that if no enemy stalkers exist in the level you have died in, the item will instead be lost.</text>
     </string>
+    <string id="ui_mcm_soulslike_looter_npcs_marked">
+        <text>Mark looting NPCs on the PDA</text>
+    </string>
+    <string id="ui_mcm_soulslike_looter_npcs_marked_desc">
+        <text>If an NPC loots your gear they will be highlighted on your PDA.</text>
+    </string>
     <string id="ui_mcm_soulslike_health_loss_on_respawn">
         <text>Health loss % on respawn</text>
     </string>
