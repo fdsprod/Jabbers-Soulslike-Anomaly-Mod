@@ -8,7 +8,7 @@
         <text>Jabbers' Soulslike Settings</text>
     </string>
     <string id="ui_mcm_soulslike_description">
-        <text>The Soulslike mod brings elements souls style games to Stalker. Upon death your are saved by a random Stalker in the zone.  They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place.</text>
+        <text>The Soulslike mod brings elements souls style games to Stalker. Upon death your are saved by a random Stalker in the zone. They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place. The items that were on your character must be retrieved, some can be lost and condition degraded all depending on settings.</text>
      </string>
     <string id="ui_mcm_soulslike_disclaimer">
         <text>DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of this it's 100% possible to get yourself into a situation where you unexpectedly lose your gear. Random item loss on death means you could lose your weapons or armor, dying in the middle of an anomaly and not being able to get your gear back is possible and expected.  Always stock a backup kit, plan for the worst, hope for the best.</text>
@@ -20,32 +20,44 @@
         <text>Enabled</text>
     </string>
     <string id="ui_mcm_soulslike_scalar_description">
-        <text>Maybe you are into being pegged... it's not my job to kink shame. Item and condition loss are based on your rank. When you die, the higher rank you are the more likely the chance to lose an item or have the condition reduced.  The SCALAR value below is the maxumum % chance of item or condition loss at max rank.  As an example: At rank 1000 you would have a 4.24% chance to lose each item, but if the item loss scalar is set to 0.2 it would only be 1.69%.</text>
+        <text>Item and condition loss are based on your rank. When you die, the higher rank you are the more likely the chance to lose an item or have the condition reduced. This is to make it easier at the beginning of a new game but as you progress the conciquence of death becomes more and more severe.  See the tooltip on each setting for a more detailed explination.</text>
      </string>
+
     <string id="ui_mcm_soulslike_item_loss_scalar">
         <text>Item loss scalar</text>
     </string>
-    <string id="ui_mcm_soulslike_item_condition_loss_scalar">
-        <text>Item condition loss % respawn</text>
+    <string id="ui_mcm_soulslike_item_loss_scalar_desc">
+        <text>At max rank your character has a 75% chance to lose each item on death.  The Item loss scalar allows you to manage that loss to your liking.  At the default value of 0.20 (or 20%) your maximum loss chance per item would be 15%.  You should set this to a value that suits your accetable level of item loss. Examples: 0.10 = 7.5%, 0.20 = 15%, 0.30 = 22%, 0.40 = 30%... you get the idea yet?</text>
     </string>
+    
+    <string id="ui_mcm_soulslike_item_condition_loss_scalar">
+        <text>Item condition loss scalar</text>
+    </string>
+    <string id="ui_mcm_soulslike_item_condition_loss_scalar_desc">
+        <text>At max rank your character will lose 18 condition on each item on death.  The Item condition loss scalar allows you to manage that loss to your liking.  At the default value of 0.05 (or 5%) your maximum condition loss per item would be 3.7.  You should set this to a value that suits your accetable level of item condition loss. Examples: 0.05 = 3.7, 0.10 = 7.4, 0.15 = 11... you get the idea yet?</text>
+    </string>
+
     <string id="ui_mcm_soulslike_lost_items_looted_by_npcs">
         <text>Lost items found on NPCs</text>
     </string>
     <string id="ui_mcm_soulslike_lost_items_looted_by_npcs_desc">
         <text>Items you lose from death have a chance to appear on enemy stalkers in the area.  Keep in mind that if no enemy stalkers exist in the level you have died in, the item will instead be lost.</text>
     </string>
+
     <string id="ui_mcm_soulslike_looter_npcs_marked">
         <text>Mark looting NPCs on the PDA</text>
     </string>
     <string id="ui_mcm_soulslike_looter_npcs_marked_desc">
         <text>If an NPC loots your gear they will be highlighted on your PDA.</text>
     </string>
+
     <string id="ui_mcm_soulslike_health_loss_on_respawn">
         <text>Health loss % on respawn</text>
     </string>
     <string id="ui_mcm_soulslike_health_loss_on_respawn_desc">
-        <text>Because you like getting your testicals twisted, this add a bit more difficulty to your playthrough. This is the amount of health that will be removed when you respawn.  Example: 25% means you will have 75% health when you respawn.  The concept here is that you would still be slightly injured and requires you to keep some meds around to heal yourself before trying to continue and retrieve your items from where you died.</text>
+        <text>This add a bit more difficulty to your playthrough. This is the amount of health that will be removed when you respawn.  Example: 25% means you will have 75% health when you respawn.  The concept here is that you would still be slightly injured and requires you to keep some meds around to heal yourself before trying to continue and retrieve your items from where you died.</text>
     </string>
+
     <string id="ui_mcm_soulslike_hardcore_global_description">
         <text>Hardcore Settings</text>
     </string>
@@ -55,6 +67,7 @@
     <string id="ui_mcm_soulslike_is_hardcore_save_enabled">
         <text>Enable Hardcore Saves</text>
     </string>
+    
     <string id="ui_mcm_soulslike_override_campfire_hardcore_saves">
         <text>Allow Campfire Saves w/Hardcore Saves</text>
     </string>

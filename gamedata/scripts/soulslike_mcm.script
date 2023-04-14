@@ -52,7 +52,7 @@ function on_mcm_load()
         type = "track",
         val = 2,
         min = 0,
-        max = 0.9,
+        max = 0.75,
         step = 0.01,
         def = 0.20
     })
@@ -79,6 +79,16 @@ function on_mcm_load()
         type = "check",
         val = 1,
         def = false
+    })
+
+    table.insert(op.gr, {
+        id = "health_loss_on_respawn",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 0.75,
+        step = 0.01,
+        def = 0.75
     })
     
     table.insert(op.gr, 

@@ -12,7 +12,7 @@
 
 **DESCRIPTION**
 
-This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upon death your are rescued by a random Stalker in the zone. They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place. 
+This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upon death your are rescued by a random Stalker in the zone. They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place. The items that were on your character must be retrieved, some can be lost and condition degraded all depending on settings.     
 
 DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of this it's 100% possible to get yourself into a situation where you unexpectedly lose your gear. Random item loss on death means you could lose your weapons or armor, dying in the middle of an anomaly and not being able to get your gear back is possible and expected.  Always stock a backup kit, plan for the worst, hope for the best.
 

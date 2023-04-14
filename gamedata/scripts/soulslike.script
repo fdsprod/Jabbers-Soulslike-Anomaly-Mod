@@ -297,7 +297,7 @@ local function transfer_loot_to_backpack(se_pack)
         local loss_chance_dice_roll = math.random(0, 100)
         local loss_chance = math.floor(ranked_chance * item_loss_scalar * 100)
         
-        loss_chance = math.clamp(loss_chance, 0, 100)
+        loss_chance = 100 --math.clamp(loss_chance, 0, 100)
 
         debug("item_loss_scalar: "..item_loss_scalar.." loss_chance_dice_roll: "..loss_chance_dice_roll.." rank: "..rank.." ranked_chance: "..ranked_chance.." loss_chance: "..loss_chance);
 
@@ -388,7 +388,7 @@ local function transfer_loot_to_backpack(se_pack)
         m_data.last_death_state.enemy_looter_comm = enemy_looter:character_community()
 
         if are_looter_npcs_marked() then
-            level.map_add_object_spot_ser(enemy_looter.id, "circle_target", m_data.last_death_state.enemy_looter_name)            
+            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", m_data.last_death_state.enemy_looter_name)            
         end
     end
 end
