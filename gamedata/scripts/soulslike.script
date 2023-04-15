@@ -545,6 +545,8 @@ local function heal()
 	db.actor.radiation = 0
 	db.actor.bleeding = 1
 	db.actor.psy_health = 1
+
+    save_var(db.actor,'grw_in_water',nil)
 	
     arszi_psy.set_psy_health(1.0)
 end
