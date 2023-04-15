@@ -280,6 +280,10 @@ local function transfer_loot_to_backpack(se_pack)
     local backpack = level.object_by_id(se_pack.id)
     local enemy_looter = find_enemy()
     local enemy_looted = false
+    
+    local is_magazine					= magazine_binder and magazine_binder.is_magazine
+    local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
+    local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
 
     local function release_actor_item(temp, item)
         local sec = item:section()
@@ -305,6 +309,13 @@ local function transfer_loot_to_backpack(se_pack)
         local is_weapon = (IsWeapon(item) and not is_grenade)
         local is_outfit = IsOutfit(item) 
         local is_headgear = IsHeadgear(item)
+
+        if is_magazine and is_magazine(sec) and is_carried_mag(item:id()) then
+            debug("Toggling carried mag: "..sec)
+            local result = toggle_carried_mag(item:id())
+            debug("Mag toggled to: "..tostring(result))
+
+        end
 
         -- We never want to delete the players backpack
         -- since it makes up the created stash
