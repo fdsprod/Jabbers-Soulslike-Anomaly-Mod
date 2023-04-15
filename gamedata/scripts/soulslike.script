@@ -38,6 +38,8 @@ local m_data = {
 
 local ignore_list = {
     ["bolt"] = true,
+    -- Quick Release
+    ["itm_actor_backpack"] = true,
     ["device_pda"] = true,
     ["device_pda_1"] = true,
     ["device_pda_2"] = true,
@@ -45,6 +47,12 @@ local ignore_list = {
     ["wpn_knife"] = true,
 }
 
+local relations = { 
+    FRIENDS = 1000,    
+    BUDDIES = 500,
+    NEUTRALS = 0,
+    ENEMIES = -1000
+}
 ----------------------------------------
 -- MCM Config Values
 ----------------------------------------
@@ -212,13 +220,6 @@ function math.clamp(x, min, max)
     if x > max then return max end
     return x
 end
-
-local relations = { 
-    FRIENDS = 1000,    
-    BUDDIES = 500,
-    NEUTRALS = 0,
-    ENEMIES = -1000
-}
 
 local function find_enemy()
     local enemy = nil
