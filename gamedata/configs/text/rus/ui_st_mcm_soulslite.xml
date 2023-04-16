@@ -41,6 +41,14 @@
         <text>Allow Tools Loss</text>
     </string>
 
+    <string id="ui_mcm_soulslike_rank_loss_percent">
+        <text>Rank Loss %</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_rep_loss_percent">
+        <text>Reputation Loss %</text>
+    </string>
+
     <string id="ui_mcm_soulslike_scalar_description">
         <text>������ ��������� � ������� ������� �� ������ �����. ����� �� ��������, ��� ���� ��� ����, ��� ������ ����������� �������� ������� ��� ��������� ���������. ��� ������� ��� ����, ����� ��������� ���� � ������, �� �� ���� ����������� ����������� ������ ���������� ��� ����� ����������.  ����� ��������� ���������� ��. � ��������� � ������� ���������.</text>
      </string>

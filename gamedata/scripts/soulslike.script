@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.11-beta"
+local version = "0.12-beta"
 
 local m_data = {
     last_spawn_set_time = nil,
@@ -126,6 +126,14 @@ end
 
 local function allow_weapon_loss()
     return soulslike_mcm.get_config("allow_weapon_loss", true)
+end 
+
+local function rank_loss_percent()
+    return soulslike_mcm.get_config("rank_loss_percent", 0.05)
+end 
+
+local function rep_loss_percent()
+    return soulslike_mcm.get_config("rep_loss_percent", 0.02)
 end 
 
 local function debug_hidden_stashes()
@@ -678,6 +686,28 @@ local function heal()
     arszi_psy.set_psy_health(1.0)
 end
 
+local function lose_rank()
+    local rank = db.actor:character_rank()
+    local loss_percent = rank_loss_percent()
+    local rank_loss = math.abs(rank * loss_percent)
+
+    debug("Player has lost "..tostring(rank_loss).." rank.")
+
+	db.actor:set_character_rank(db.actor:character_rank() + (-rank_loss or 0))
+	game_statistics.check_for_rank_change()
+end
+
+local function lose_rep()
+    local rep = db.actor:character_reputation()
+    local loss_percent = rep_loss_percent()
+    local rep_loss = math.abs(rep * loss_percent)
+
+    debug("Player has lost "..tostring(rep_loss).." repuation.")
+
+	db.actor:set_character_reputation(db.actor:character_reputation() + (-rep_loss or 0))
+	game_statistics.check_for_reputation_change()
+end
+
 local function actor_on_before_death(who, flags)
     if IsHardcoreMode() then
         return
@@ -687,11 +717,20 @@ local function actor_on_before_death(who, flags)
         return
     end
     
+    -- Pretty sure this fixes arena fights, still need to test
+	if has_alife_info("bar_arena_fight") then
+        debug('Actor was in an arena fight, ignoring death.')
+		return
+	end
+
 	flags.ret_value = false
 
     debug('Actor died')
     
 	heal()
+    lose_rank()
+    lose_rep();
+
 	bind_stalker_ext.invulnerable_time = time_global() + 30000 
     level.add_pp_effector("black_infinite.ppe", 5606, true)
 

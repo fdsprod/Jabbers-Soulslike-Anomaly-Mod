@@ -23,6 +23,8 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
 - Upon death
  - Respawn locations can be set at any bed
  - Stash with some or all of the players items drops on the ground.
+ - Rank/rep loss % (configurable)
+ - Possibility of having to find your items in a hidden stash with a RF detector (configurable)
  - Item condition/loss scales based on rank in order to not hinder the players early game progress.
  - Item condition degrade each death (configurable).
  - Item loss % applied each death (configurable).
@@ -79,8 +81,6 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **TODOs**
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
-- Lose % of rank on death
-- Lose % of rep on death
-- Address magazin loadout support
+
 
 
