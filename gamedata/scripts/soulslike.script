@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.14-beta"
+local version = "0.15-beta"
 
 local m_data = {
     last_spawn_set_time = nil,
@@ -1228,7 +1228,7 @@ local function physic_object_on_use_callback(box, who)
 
 	item_radio.clear_stash(data.radio_id) 
 	item_radio.clear_stash(data.stash_id) 
-    
+
     debug("Transfering items from hidden stash to static stash.")    
     stash:iterate_inventory_box(transfer_item)      
     alife_release(stash)
