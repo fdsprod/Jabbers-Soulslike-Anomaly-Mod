@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.12-beta"
+local version = "0.13-beta"
 
 local m_data = {
     last_spawn_set_time = nil,
@@ -1256,7 +1256,7 @@ function on_option_change()
 end
 
 local function physic_object_on_use_callback(box, who)
-    if not IsInvbox(box) or not m_data.hidden_stashes[box:id()] then
+    if not IsInvbox(box) or not m_data.hidden_stashes or m_data.hidden_stashes[box:id()] then
         return
     end
 

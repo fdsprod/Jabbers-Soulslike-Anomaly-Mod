@@ -1,3 +1,9 @@
+--[[
+	Jabbers
+	05APR2023
+	Jabbers' Soulslike Anomaly Mod
+--]]
+
 function on_mcm_load()
     local op = {
         id = "soulslike",
