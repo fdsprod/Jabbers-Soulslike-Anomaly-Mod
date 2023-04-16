@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.13-beta"
+local version = "0.14-beta"
 
 local m_data = {
     last_spawn_set_time = nil,
@@ -64,16 +64,70 @@ local relations = {
     NEUTRALS = 0,
     ENEMIES = -1000
 }
+
+----------------------------------------
+-- DEBUG
+----------------------------------------
+
+local function print_table (tbl, indent)
+    if not indent then
+        indent = 0
+    end
+
+    utils_data.debug_write(string.rep(" ", indent) .. "{")
+
+    indent = indent + 2
+
+    if (type(tbl) == "userdata") then        
+        utils_data.debug_write("<userdata>,\n")
+    else
+        for k, v in pairs(tbl) do
+            local toprint = string.rep(" ", indent)
+
+            if (type(k) == "number") then
+                toprint = toprint .. "[" .. k .. "] = "
+            elseif (type(k) == "string") then
+                toprint = toprint  .. k ..  " = "
+            end
+
+            if (type(v) == "number") then
+                utils_data.debug_write(toprint .. v .. ",")
+            elseif (type(v) == "string") then
+                utils_data.debug_write(toprint .. "\"" .. v .. "\",")
+            elseif (type(v) == "table") then
+                utils_data.debug_write(toprint)
+                print_table(v, indent + 2)
+            else
+                utils_data.debug_write(toprint .. "\"" .. tostring(v) .. "\",")
+            end
+        end
+    end
+
+    utils_data.debug_write(string.rep(" ", indent-2) .. "}")
+end
+
+local function debug(output)
+    if not output then
+        utils_data.debug_write("[Soulslike] ".."(nil)")
+    end
+    if (type(output) == "table") then
+        utils_data.debug_write("[Soulslike] ")
+        print_table(output)
+    else
+        utils_data.debug_write("[Soulslike] "..output)
+    end
+end
+
 ----------------------------------------
 -- MCM Config Values
 ----------------------------------------
 
-local function is_hardcore_save_enabled() 
-    return soulslike_mcm.get_config("is_hardcore_save_enabled", false)
+function IsSoulslikeMode()
+	return not IsHardcoreMode() and axr_main.config and axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true or alife_storage_manager.get_state().enable_soulslike_mode == true
 end
 
-local function is_enabled() 
-    return soulslike_mcm.get_config("is_enabled", true)
+local function is_hardcore_save_enabled() 
+    return soulslike_mcm.get_config("is_hardcore_save_enabled", false)
 end
 
 local function is_debug_enabled() 
@@ -144,60 +198,7 @@ local function debug_item_loss()
     return is_debug_enabled() and soulslike_mcm.get_config("debug_item_loss", false)
 end 
 
-----------------------------------------
--- DEBUG
-----------------------------------------
-
-local function print_table (tbl, indent)
-    if not indent then
-        indent = 0
-    end
-
-    utils_data.debug_write(string.rep(" ", indent) .. "{")
-
-    indent = indent + 2
-
-    if (type(tbl) == "userdata") then        
-        utils_data.debug_write("<userdata>,\n")
-    else
-        for k, v in pairs(tbl) do
-            local toprint = string.rep(" ", indent)
-
-            if (type(k) == "number") then
-                toprint = toprint .. "[" .. k .. "] = "
-            elseif (type(k) == "string") then
-                toprint = toprint  .. k ..  " = "
-            end
-
-            if (type(v) == "number") then
-                utils_data.debug_write(toprint .. v .. ",")
-            elseif (type(v) == "string") then
-                utils_data.debug_write(toprint .. "\"" .. v .. "\",")
-            elseif (type(v) == "table") then
-                utils_data.debug_write(toprint)
-                print_table(v, indent + 2)
-            else
-                utils_data.debug_write(toprint .. "\"" .. tostring(v) .. "\",")
-            end
-        end
-    end
-
-    utils_data.debug_write(string.rep(" ", indent-2) .. "}")
-end
-
-local function debug(output)
-    if not output then
-        utils_data.debug_write("[Soulslike] ".."(nil)")
-    end
-    if (type(output) == "table") then
-        utils_data.debug_write("[Soulslike] ")
-        print_table(output)
-    else
-        utils_data.debug_write("[Soulslike] "..output)
-    end
-end
-
-local function save_spawn_location(show_message)
+function set_spawn(show_message)
 	local se_actor = alife():actor()
 
 	m_data.spawn_location.level = level.name()
@@ -708,15 +709,11 @@ local function lose_rep()
 	game_statistics.check_for_reputation_change()
 end
 
-local function actor_on_before_death(who, flags)
-    if IsHardcoreMode() then
+local function actor_on_before_death(who, flags)    
+    if not IsSoulslikeMode() then
         return
     end
 
-    if not is_enabled() then
-        return
-    end
-    
     -- Pretty sure this fixes arena fights, still need to test
 	if has_alife_info("bar_arena_fight") then
         debug('Actor was in an arena fight, ignoring death.')
@@ -738,11 +735,7 @@ local function actor_on_before_death(who, flags)
 end
 
 local function on_before_save_input(flags, type, text)
-    if IsHardcoreMode() then
-        return
-    end
-
-    if not is_enabled() then
+    if not IsSoulslikeMode() then
         return
     end    
 
@@ -771,24 +764,16 @@ local function on_before_save_input(flags, type, text)
 end
 
 local function save_state(data)
-    if IsHardcoreMode() then
+    if not IsSoulslikeMode() then
         return
     end
     
     debug('save_state')
 
-    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
-        save_spawn_location(false)
-    end
-
     data.soulslike = m_data
 end
 
 local function load_state(data)
-    if IsHardcoreMode() then
-        return
-    end
-
     debug('load_state')
 
     if not data.soulslike  then
@@ -798,38 +783,15 @@ local function load_state(data)
     m_data = data.soulslike 
 end
 
-local function actor_on_sleep(hours)
-    if IsHardcoreMode() then
+local function actor_on_sleep(hours)    
+    if not IsSoulslikeMode() then
         return
     end
-    
-    if not is_enabled() then
-        return
-    end
-    
+
     debug('actor_on_sleep')
     
     if not m_data.is_advancing_time then 
         force_save("sleep")
-    end
-end
-
-local function on_level_changing()
-    if IsHardcoreMode() then
-        return
-    end
-
-    if not is_enabled() then
-        return
-    end
-    
-    if IsTestMode() then
-        debug('actor_on_first_update called in test mode')
-        return
-    end
-
-    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
-        save_spawn_location(false)
     end
 end
 
@@ -1118,16 +1080,12 @@ local function advance_time()
     db.actor:give_info_portion("actor_is_sleeping")
 end
 
-local function on_game_load()    
-    if not is_enabled() then
+local function on_game_load()        
+    if not IsSoulslikeMode() then
         return
     end
 
     debug('Version: '..version)
-    
-    if ui_mcm then
-	    on_option_change()
-    end
 
     if not m_data.uuid then        
         m_data.uuid = GAME_VERSION .. "_" .. tostring(math.random(100)) .. tostring(math.random()) .. tostring(math.random(1000))
@@ -1196,12 +1154,12 @@ local function try_send_inventory_examined_message(stash_id)
 end
 
 local function actor_on_item_take_from_box(box,obj)
-    local id = box:id()
-    debug('Player opened stash id '..tostring(id))
-
-    if not is_enabled() then
+    if not IsSoulslikeMode() then
         return
     end
+
+    local id = box:id()
+    debug('Player opened stash id '..tostring(id))
     
 	if (box:section() == "inv_backpack") then
         if (box:is_inv_box_empty()) then
@@ -1219,7 +1177,7 @@ local function actor_on_item_take_from_box(box,obj)
 end
 
 local function actor_on_stash_remove(data)
-    if not is_enabled() then
+    if not IsSoulslikeMode() then
         return
     end
 
@@ -1230,7 +1188,7 @@ local function actor_on_stash_remove(data)
 end
 
 local function on_console_execute(name, ...)
-    if not is_enabled() then
+    if not IsSoulslikeMode() then
         return
     end
 
@@ -1247,12 +1205,6 @@ local function on_console_execute(name, ...)
             end
         end
     end
-end
-
-function on_option_change()
-    debug("is_enabled = "..tostring(is_enabled()))
-    debug("is_hardcore_save_enabled = "..tostring(is_hardcore_save_enabled()))
-    debug("debug = "..tostring(is_debug_enabled()))
 end
 
 local function physic_object_on_use_callback(box, who)
@@ -1274,10 +1226,13 @@ local function physic_object_on_use_callback(box, who)
         stash:transfer_item(item, box)
     end
 
+	item_radio.clear_stash(data.radio_id) 
+	item_radio.clear_stash(data.stash_id) 
+    
     debug("Transfering items from hidden stash to static stash.")    
     stash:iterate_inventory_box(transfer_item)      
     alife_release(stash)
-	item_radio.clear_stash(data.radio_id) 
+    
 
     m_data.hidden_stashes[box:id()] = nil
     m_data.created_stashes[stash_id] = nil
@@ -1288,7 +1243,6 @@ function on_game_start()
     RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
     RegisterScriptCallback("actor_on_before_death", actor_on_before_death)
     RegisterScriptCallback("on_before_save_input",on_before_save_input)
-    RegisterScriptCallback("on_level_changing", on_level_changing)
     RegisterScriptCallback("save_state", save_state)
     RegisterScriptCallback("load_state", load_state)
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
@@ -1304,7 +1258,7 @@ end
 local detour_sleep = ui_sleep_dialog.sleep
 local detour_sleep_bag = ui_sleep_dialog.sleep_bag
 
-local function try_set_spawn_point()
+local function try_set_spawn()
     local now = game.get_game_time()
 
     if m_data.last_spawn_set_time then
@@ -1315,19 +1269,19 @@ local function try_set_spawn_point()
         
         if diff_seconds > 60 then
             m_data.last_spawn_set_time = now
-            save_spawn_location(true);
+            set_spawn(true);
             return true    
         end 
     else
         m_data.last_spawn_set_time = now
-        save_spawn_location(true);
+        set_spawn(true);
         return true
     end
     return false
 end
 
 ui_sleep_dialog.sleep = function(force)
-    if try_set_spawn_point() then
+    if try_set_spawn() then
 		disable_info("sleep_active")
         return
     end
@@ -1336,7 +1290,7 @@ ui_sleep_dialog.sleep = function(force)
 end
 
 ui_sleep_dialog.sleep_bag = function(ph_sleepbag_id, sec)
-    if try_set_spawn_point() then
+    if try_set_spawn() then
 		disable_info("sleep_active")
         return
     end
