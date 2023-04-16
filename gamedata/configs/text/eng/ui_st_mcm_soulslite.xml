@@ -19,6 +19,27 @@
     <string id="ui_mcm_soulslike_is_enabled">
         <text>Enabled</text>
     </string>
+
+    <string id="ui_mcm_soulslike_allow_weapon_loss">
+        <text>Allow Weapon Loss</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_allow_outfit_loss">
+        <text>Allow Outfit Loss</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_allow_headgear_loss">
+        <text>Allow Headgear Loss</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_allow_artifact_loss">
+        <text>Allow Artifact Loss</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_allow_tool_loss">
+        <text>Allow Tools Loss</text>
+    </string>
+
     <string id="ui_mcm_soulslike_scalar_description">
         <text>Item and condition loss are based on your rank. When you die, the higher rank you are the more likely the chance to lose an item or have the condition reduced. This is to make it easier at the beginning of a new game but as you progress the conciquence of death becomes more and more severe.  See the tooltip on each setting for a more detailed explination.</text>
      </string>
@@ -42,6 +63,13 @@
     </string>
     <string id="ui_mcm_soulslike_lost_items_looted_by_npcs_desc">
         <text>Items you lose from death have a chance to appear on enemy stalkers in the area.  Keep in mind that if no enemy stalkers exist in the level you have died in, the item will instead be lost.</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_rf_detector_recovery_task_chance">
+        <text>Chance to have to recover your gear via RF Detector</text>
+    </string>
+    <string id="ui_mcm_soulslike_rf_detector_recovery_task_chance_desc">
+        <text>In some instances your gear will be put in a random hidden stash by your rescuer for safekeeping. In these cases they will leave you information with the frequency to use to find your gear.</text>
     </string>
 
     <string id="ui_mcm_soulslike_looter_npcs_marked">
@@ -78,7 +106,15 @@
     <string id="ui_mcm_soulslike_debug_description">
         <text>Debug Settings</text>
     </string>
+    
     <string id="ui_mcm_soulslike_debug">
         <text>Debug</text>
+    </string>
+    
+    <string id="ui_mcm_soulslike_debug_hidden_stashes">
+        <text>Debug Hidden Stashes</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_item_loss">
+        <text>Debug Item Loss</text>
     </string>
 </string_table>

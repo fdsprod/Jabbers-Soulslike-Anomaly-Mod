@@ -33,7 +33,8 @@ local m_data = {
     },    
     is_changing_levels = nil,    
     is_advancing_time = nil,
-    created_stashes = {}
+    created_stashes = {},
+    hidden_stashes = {}
 }
 
 local ignore_list = {
@@ -45,6 +46,16 @@ local ignore_list = {
     ["device_pda_2"] = true,
     ["device_pda_3"] = true,
     ["wpn_knife"] = true,
+}
+
+local tools_list = {
+    ["itm_basickit"] = true,
+    ["itm_advancedkit"] = true,
+    ["itm_expertkit"] = true,
+    ["itm_drugkit"] = true,
+    ["itm_ammokit"] = true,
+    ["itm_gunsmith_toolkit"] = true,
+    ["itm_artefactskit"] = true,
 }
 
 local relations = { 
@@ -91,7 +102,39 @@ end
 
 local function are_looter_npcs_marked()
     return soulslike_mcm.get_config("looter_npcs_marked", false)
-end
+end 
+
+local function rf_detector_recovery_task_chance()
+    return soulslike_mcm.get_config("rf_detector_recovery_task_chance", 0.1)
+end 
+
+local function allow_toolkit_loss()
+    return soulslike_mcm.get_config("allow_tool_loss", true)
+end 
+
+local function allow_artifact_loss()
+    return soulslike_mcm.get_config("allow_artifact_loss", true)
+end 
+
+local function allow_headgear_loss()
+    return soulslike_mcm.get_config("allow_headgear_loss", true)
+end 
+
+local function allow_outfit_loss()
+    return soulslike_mcm.get_config("allow_outfit_loss", true)
+end 
+
+local function allow_weapon_loss()
+    return soulslike_mcm.get_config("allow_weapon_loss", true)
+end 
+
+local function debug_hidden_stashes()
+    return is_debug_enabled() and soulslike_mcm.get_config("debug_hidden_stashes", false)
+end 
+
+local function debug_item_loss()
+    return is_debug_enabled() and soulslike_mcm.get_config("debug_item_loss", false)
+end 
 
 ----------------------------------------
 -- DEBUG
@@ -186,33 +229,72 @@ local function respawn_actor()
 	CreateTimeEvent(0, "respawn", 1, respawn)
 end
 
-local function drop_backpack()   
-    debug("Creating pack")    
+local function create_hidden_stash()
+    -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
+    local function box_in_same_map(id)
+        local obj1 = alife():actor()
+        local obj2 = alife_object(id)
+        return simulation_objects.is_on_the_same_level(obj1, obj2)
+    end
+    local old_box_in_same_map = treasure_manager.box_in_same_map
+    treasure_manager.box_in_same_map = box_in_same_map
+    local id = treasure_manager.get_random_stash("treasure", nil ,true, true)
+    treasure_manager.box_in_same_map = old_box_in_same_map
+
+    -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
+    if not id then return nil end
+
+    debug("Random stash found: "..tostring(id))    
+
+    local actor = db.actor
+    local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+    m_data.hidden_stashes[id] = {
+        stash_id = se_stash.id,
+        radio_id = id
+    } 
+
+    if debug_hidden_stashes() then
+        level.map_add_object_spot_ser(id, "secondary_task_location", "DEBUG: RF STASH.") 
+    end          
+        
+    m_data.last_death_state.stash_id = id
+    m_data.last_death_state.inventory_hidden = true
+
+    return se_stash
+end
+
+local function create_stash()   
+    debug("Creating stash")    
+
     local backpack = db.actor:item_in_slot(13)
+    local se_stash = nil
+    local actor = db.actor
  
-    if not backpack then 
+    if debug_hidden_stashes() or not backpack then 
         -- If the player doesn't have a backpack equiped, we will just respawn them with all the items 
         -- in their inventory.  
-        m_data.last_death_state.dropped_backpack_id = nil
-        debug("Player does not have a backpack equipped")    
-        return nil
+        debug("Player does not have a backpack equipped")  
+        se_stash = create_hidden_stash()
     else
-        local actor = db.actor
-        local se_pack = alife_create("inv_backpack", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+        local roll = math.random(1,100)
 
-        if (se_pack) then
-            debug("Pack created "..tostring(se_pack.id))
-
-            m_data.created_stashes[se_pack.id] = {
-                section = se_pack:section_name(),
-                lost_items = {},
-                examine = false
-            } 
+        if roll <= rf_detector_recovery_task_chance() then
+            debug("Random stash roll.")  
+            se_stash = create_hidden_stash()
+        else
+            se_stash = alife_create("inv_backpack", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())        
+            m_data.last_death_state.dropped_backpack_id = backpack:id()
         end
-
-        m_data.last_death_state.dropped_backpack_id = backpack:id()
-        return se_pack
     end
+
+    if (se_stash) then
+        m_data.created_stashes[se_stash.id] = {
+            lost_items = {},
+            examine = false
+        } 
+    end
+
+    return se_stash
 end
 
 function math.clamp(x, min, max)
@@ -266,7 +348,14 @@ local function find_actor_community_friendly()
     return friend
 end
 
-local function transfer_loot_to_backpack(se_pack)
+local function IsToolkit(o, s)
+    if not (s) then
+		s = o and o:section()
+	end
+    return tools_list[s]
+end
+
+local function transfer_loot(id)
     local slot_backpack_id = nil
     
     if m_data.last_death_state.dropped_backpack_id then 
@@ -278,7 +367,7 @@ local function transfer_loot_to_backpack(se_pack)
     local ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank)/math.log(1000) * 1.5, 0, 50) / 66;
     local item_condition_loss_percent = get_item_condition_loss_percent()
     local item_loss_scalar = get_item_loss_scalar()
-    local backpack = level.object_by_id(se_pack.id)
+    local backpack = level.object_by_id(id)
     local enemy_looter = find_enemy()
     local enemy_looted = false
     
@@ -300,12 +389,43 @@ local function transfer_loot_to_backpack(se_pack)
         
         loss_chance = math.clamp(loss_chance, 0, 100)
 
+        if debug_item_loss() then
+            loss_chance = 100
+        end
+
         debug("item_loss_scalar: "..item_loss_scalar.." loss_chance_dice_roll: "..loss_chance_dice_roll.." rank: "..rank.." ranked_chance: "..ranked_chance.." loss_chance: "..loss_chance);
 
         local is_grenade = IsGrenade(item)
+        local is_artefact = IsArtefact(item)
         local is_weapon = (IsWeapon(item) and not is_grenade)
         local is_outfit = IsOutfit(item) 
         local is_headgear = IsHeadgear(item)
+        local is_toolkit = IsToolkit(item)
+
+        if is_weapon and not allow_weapon_loss() then   
+            debug("Not allowed to lose weapon "..sec)
+            return
+        end
+
+        if is_artefact and not allow_artifact_loss() then   
+            debug("Not allowed to lose artefact "..sec)
+            return
+        end
+
+        if is_outfit and not allow_outfit_loss() then   
+            debug("Not allowed to lose outfit "..sec)
+            return
+        end
+
+        if is_headgear and not allow_headgear_loss() then   
+            debug("Not allowed to lose headgear "..sec)
+            return
+        end
+
+        if is_toolkit and not allow_toolkit_loss() then   
+            debug("Not allowed to lose toolkit "..sec)
+            return
+        end
 
         -- We never want to delete the players backpack
         -- since it makes up the created stash
@@ -337,13 +457,13 @@ local function transfer_loot_to_backpack(se_pack)
 
                 if(allow_npc_looting and (is_weapon or is_outfit or is_headgear) and enemy_looter) then   
                     debug("Transfering item to enemy: "..sec)   
-                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)                
+                    table.insert(m_data.created_stashes[id].lost_items, sec)                
                     db.actor:transfer_item(item, enemy_looter)
                     enemy_looted = true
                 else
                     debug("Item lost "..sec)            
                     alife_release(item)
-                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+                    table.insert(m_data.created_stashes[id].lost_items, sec)
                 end
             end
             
@@ -371,7 +491,7 @@ local function transfer_loot_to_backpack(se_pack)
                 if condition == 0 then
                     debug("Item ".. sec.. " was degraded into oblivion")
                     m_data.last_death_state.items_lost = true
-                    table.insert(m_data.created_stashes[se_pack.id].lost_items, sec)
+                    table.insert(m_data.created_stashes[id].lost_items, sec)
                     return;
                 end
             end
@@ -394,9 +514,9 @@ local function transfer_loot_to_backpack(se_pack)
     end
 end
 
-local function add_backpack_marker_to_pda(se_pack)
+local function add_marker_to_pda(id)
     debug("Adding backpack marker to PDA")
-    level.map_add_object_spot_ser(se_pack.id, "primary_object", db.actor:character_name() .. " items")
+    level.map_add_object_spot_ser(id, "primary_object", db.actor:character_name() .. " items")
 end
 
 local function stop_surge_and_storm()            
@@ -407,7 +527,7 @@ local function stop_surge_and_storm()
     end
 end
 
-local function ensure_inventory_pre_conditions()
+local function inventory_pre_conditions()
     local is_magazine					= magazine_binder and magazine_binder.is_magazine
     local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
     local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
@@ -426,34 +546,41 @@ local function ensure_inventory_pre_conditions()
     db.actor:iterate_inventory(check_item)
 end
 
-local function drop_backpack_and_respawn()
-    -- Drops the players current backpack if it exists
-    local se_pack = drop_backpack()
+local function create_stash_and_respawn()    
+    inventory_pre_conditions()    
+    local se_stash = create_stash()
              
-    if se_pack then
-
+    if se_stash then
+        debug("Stash created "..tostring(se_stash.id))
         local function transfer_and_respawn()
-            local pack = level.object_by_id(se_pack.id)
+            local pack = level.object_by_id(se_stash.id)
 
             if pack then
-                debug("Backpack exists in game")
+                debug("Stash exists in game")
 
-                ensure_inventory_pre_conditions()
-                transfer_loot_to_backpack(se_pack)    
-                add_backpack_marker_to_pda(se_pack)        
+                transfer_loot(se_stash.id)    
+                if m_data.last_death_state.dropped_backpack_id then
+                    add_marker_to_pda(se_stash.id)   
+                elseif m_data.last_death_state.stash_id then
+                    local lvl = level.name()
+                    debug("Adding radio target to level: "..lvl)
+                    m_data.last_death_state.radio_freq = math.random(30,  300)
+                    item_radio.add_stash(lvl, m_data.last_death_state.stash_id, m_data.last_death_state.radio_freq) 
+                end   
+
                 respawn_actor()
                 stop_surge_and_storm()
-
                 return true
             else
-                debug("Backpack does not yet exist in game")            
+                debug("Stash does not yet exist in game")            
                 return false
             end
         end
         
         --We have to create a timer to give the game time to spawn the backpack.
-        CreateTimeEvent(0, "transfer_loot_and_respawn", 0, transfer_and_respawn)
+        CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
     else    
+        debug("Stash was not created")
         respawn_actor()
         stop_surge_and_storm()
     end
@@ -568,7 +695,7 @@ local function actor_on_before_death(who, flags)
 	bind_stalker_ext.invulnerable_time = time_global() + 30000 
     level.add_pp_effector("black_infinite.ppe", 5606, true)
 
-    drop_backpack_and_respawn()
+    create_stash_and_respawn()
 end
 
 local function on_before_save_input(flags, type, text)
@@ -784,7 +911,7 @@ end
 
 local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
     local messages = {
-        "st_soulslike_rescuer_enemy_looter_1",
+        "st_soulslike_rescuer_radio_freq_1",
         "st_soulslike_rescuer_enemy_looter_2",
         "st_soulslike_rescuer_enemy_looter_3",
         "st_soulslike_rescuer_enemy_looter_4",
@@ -802,6 +929,27 @@ local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), enemy_comm, enemy_name)
+end
+local function rescuer_enemy_radio_freq_msg_factory(freq)
+    local messages = {
+        "st_soulslike_rescuer_radio_freq_1",
+        "st_soulslike_rescuer_radio_freq_2",
+        "st_soulslike_rescuer_radio_freq_3",
+        "st_soulslike_rescuer_radio_freq_4",
+        "st_soulslike_rescuer_radio_freq_5",
+        "st_soulslike_rescuer_radio_freq_6",
+        "st_soulslike_rescuer_radio_freq_7",
+        "st_soulslike_rescuer_radio_freq_8",
+        "st_soulslike_rescuer_radio_freq_9",
+        "st_soulslike_rescuer_radio_freq_10",
+        "st_soulslike_rescuer_radio_freq_11",
+        "st_soulslike_rescuer_radio_freq_12",
+        "st_soulslike_rescuer_radio_freq_13",
+        "st_soulslike_rescuer_radio_freq_14",
+        "st_soulslike_rescuer_radio_freq_15",
+    }
+    
+    return strformat(game.translate_string(messages[math.random(#messages)]), freq)
 end
 
 local function send_rescuer_message(gave_food_or_water)
@@ -821,6 +969,9 @@ local function send_rescuer_message(gave_food_or_water)
         if m_data.last_death_state.dropped_backpack_id then
             msg = msg.." "..rescuer_pda_marker_msg_factory()
         end
+        if m_data.last_death_state.stash_id then
+            msg = msg.." "..rescuer_enemy_radio_freq_msg_factory(m_data.last_death_state.radio_freq)
+        end
         if m_data.last_death_state.items_lost then
             msg = msg.." "..rescuer_used_items_msg_factory()            
         end
@@ -834,6 +985,9 @@ local function send_rescuer_message(gave_food_or_water)
         end
         if m_data.last_death_state.dropped_backpack_id then
             msg = msg.." " ..game.translate_string("st_soulslike_rescuer_pda_generic")
+        end
+        if m_data.last_death_state.stash_id then
+            msg = msg.." "..game.translate_string("st_soulslike_rescuer_radio_generic")
         end
 		local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
@@ -1062,6 +1216,34 @@ function on_option_change()
     debug("debug = "..tostring(is_debug_enabled()))
 end
 
+local function physic_object_on_use_callback(box, who)
+    if not IsInvbox(box) or not m_data.hidden_stashes[box:id()] then
+        return
+    end
+
+    local data = m_data.hidden_stashes[box:id()]
+
+    local stash_id = data.stash_id
+    local stash = level.object_by_id(stash_id)
+
+    if not stash then        
+        debug("Not expected, unable to find stash id linked to Invbox.. ")
+    end
+
+    local function transfer_item(temp,item)
+        debug("Transfering item "..item:section())    
+        stash:transfer_item(item, box)
+    end
+
+    debug("Transfering items from hidden stash to static stash.")    
+    stash:iterate_inventory_box(transfer_item)      
+    alife_release(stash)
+	item_radio.clear_stash(data.radio_id) 
+
+    m_data.hidden_stashes[box:id()] = nil
+    m_data.created_stashes[stash_id] = nil
+end
+
 function on_game_start()
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
     RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
@@ -1073,6 +1255,7 @@ function on_game_start()
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
     RegisterScriptCallback("on_game_load",on_game_load)
 	RegisterScriptCallback("on_console_execute",on_console_execute)
+	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
 end
 
 ---------------------------------------------
