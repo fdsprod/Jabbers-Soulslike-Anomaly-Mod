@@ -27,6 +27,9 @@ local m_data = {
     },
     last_death_state = {
         dropped_backpack_id = nil,
+        inventory_hidden = nil, 
+        radio_freq = nil,
+        stash_id = nil,
         items_lost = nil,
         enemy_looter_name = nil,
         enemy_looter_comm= nil,
@@ -1054,9 +1057,12 @@ function save_and_wake_callback()
     send_rescuer_message(gave_food_or_water)
 
     actor_status.activate_hud()
-        
+
     m_data.last_death_state.items_lost = nil
+    m_data.last_death_state.inventory_hidden = nil
     m_data.last_death_state.dropped_backpack_id = nil
+    m_data.last_death_state.radio_freq = nil
+    m_data.last_death_state.stash_id = nil
     m_data.last_death_state.enemy_looter_name = nil
     m_data.last_death_state.enemy_looter_comm = nil
     m_data.is_advancing_time = true
@@ -1098,6 +1104,12 @@ local function on_game_load()
         heal()    
         advance_time()
     end
+    
+    local rank = db.actor:character_rank()
+    local rep = db.actor:character_reputation()
+
+    debug('Character rank: '..rank)
+    debug('Character rep: '..rep)
 end
 
 local function tablelength(T)

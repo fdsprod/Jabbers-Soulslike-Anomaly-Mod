@@ -11,12 +11,17 @@ function ui_mm_faction_select.UINewGame.Main_Controls(self, rand)
         ctrl:SetWndPos(vector2():set( pos.x + deltaX ,pos.y + deltaY ))
     end
 
-    move(self.ck_story_cap, 0, -10)
-    move(self.ck_story, 0, -10)
-    move(self.ck_azazel_mode_cap, 0, -15)
-    move(self.ck_azazel_mode, 0, -15)
-    move(self.ck_survival_cap, 0, -20)
-    move(self.ck_survival, 0, -20)
+	if efp_utils_mcm then
+		move(self.ck_azazel_mode_cap, 0, -10)
+		move(self.ck_azazel_mode, 0, -10)
+	else
+		move(self.ck_story_cap, 0, -10)
+		move(self.ck_story, 0, -10)
+		move(self.ck_azazel_mode_cap, 0, -15)
+		move(self.ck_azazel_mode, 0, -15)
+		move(self.ck_survival_cap, 0, -20)
+		move(self.ck_survival, 0, -20)
+	end
     
 	local xml					= CScriptXmlInit()
 	xml:ParseFile				("soulslike_ui_mm_gamemode.xml")
@@ -25,6 +30,11 @@ function ui_mm_faction_select.UINewGame.Main_Controls(self, rand)
     self.ck_soulslike_mode = xml:InitCheck("main_dialog:options:check_soulslike_mode",	self.templ_options)
     self:Register(self.ck_soulslike_mode,"check_soulslike_mode")
 	
+	if efp_utils_mcm then
+		move(self.ck_soulslike_mode_cap, 0, 65)
+		move(self.ck_soulslike_mode, 0, 65)
+	end
+
 	self.ck_states["ck_soulslike_mode"] = false
 end
 
