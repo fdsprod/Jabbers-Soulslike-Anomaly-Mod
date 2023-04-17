@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <string_table>
 	<string id="st_cap_check_soulslike_mode">
-		<text>Soulslike Mode</text>
+		<text>Soulslike Режим</text>
 	</string>
 	<string id="st_mm_ck_soulslike_mode_desc">
 		<text>
-			%c[0,150,150,150]In Soulslike mode, death technically never happens.\n
-			\nUpon "death" your are rescued by a random Stalker in the zone.\n\n
-			They bring you back to the set last spawn location where you awake to find a message from them\n
-			about how you were found and the lengths they may have gone to to get you to a safe place.\n\n
-			The items that were on your character must be retrieved, some can be lost and condition degraded all depending on settings.\n 
-			\n %c[200,200,50,50] Not compatible with Azazel mode.\n
-			\n %c[200,200,50,50] Not compatible with Ironman.
+			%c[0,150,150,150]В режиме души, технически технически смерть никогда не происходит.\n
+			\nПосле «Смерти» вы спасены случайным сталкером в зоне.\n\n
+			Они возвращают вас в набор в прошлом месте, где вы проснетесь, чтобы найти от них сообщение\n
+			о том, как вы были найдены, и о том, как они, возможно, пошли, чтобы доставить вас в безопасное место.\n\n
+			Предметы, которые были на вашем персонаже, должны быть извлечены, некоторые могут быть потеряны, а состояние ухудшается все в зависимости от настройки.\n 
+			\n %c[200,200,50,50] Не совместим с Azazel режим.\n
+			\n %c[200,200,50,50] Не совместим сIronman.
 		</text>
 	</string>
 </string_table>

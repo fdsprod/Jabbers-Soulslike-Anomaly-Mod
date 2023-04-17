@@ -366,7 +366,7 @@
 
 
 <string id="st_soulslike_rescuer_radio_freq_1">
-    <text>I went back and hid your gear so no one would take it.  You should be able to track it down an RF Receiver by setting the frequency to FREQ.  Once you get close enough to its location, your device should start beeping.</text>
+    <text>I went back and hid your gear so no one would take it.  You should be able to track it down an RF Receiver by setting the frequency to %s.  Once you get close enough to its location, your device should start beeping.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_2">
@@ -374,19 +374,19 @@
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_3">
-    <text>To keep your gear safe, I hid it and set an RF receiver to the frequency FREQ. When you get close enough, your device will beep and you can find it.</text>
+    <text>To keep your gear safe, I hid it and set an RF receiver to the frequency %s. When you get close enough, your device will beep and you can find it.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_4">
-    <text>Your gear was at risk of being stolen, so I hid it and set an RF receiver to the frequency FREQ. Your device should beep when you're near its location.</text>
+    <text>Your gear was at risk of being stolen, so I hid it and set an RF receiver to the frequency %s. Your device should beep when you're near its location.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_5">
-    <text>I secured your gear by hiding it and setting an RF receiver to the frequency FREQ. Use your device to track it down and it will start beeping once you're close enough.</text>
+    <text>I secured your gear by hiding it and setting an RF receiver to the frequency %s. Use your device to track it down and it will start beeping once you're close enough.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_6">
-    <text>In order to protect your gear from theft, I hid it and set an RF receiver to the frequency FREQ. Your device will start beeping when you're in the vicinity of its location.</text>
+    <text>In order to protect your gear from theft, I hid it and set an RF receiver to the frequency %s. Your device will start beeping when you're in the vicinity of its location.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_7">
@@ -394,7 +394,7 @@
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_8">
-    <text>To safeguard your gear, I hid it and set an RF receiver to the frequency FREQ. Use your device to track it down and it should start beeping once you're close enough.</text>
+    <text>To safeguard your gear, I hid it and set an RF receiver to the frequency %s. Use your device to track it down and it should start beeping once you're close enough.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_9">
@@ -418,7 +418,7 @@
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_14">
-    <text>To protect your gear from theft, I hid it and set an RF receiver to the frequency FREQ. Use your device to track it down, and it should start beeping when you're close enough.</text>
+    <text>To protect your gear from theft, I hid it and set an RF receiver to the frequency %s. Use your device to track it down, and it should start beeping when you're close enough.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_15">
