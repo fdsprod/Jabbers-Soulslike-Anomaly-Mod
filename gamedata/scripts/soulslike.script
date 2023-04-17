@@ -1120,7 +1120,7 @@ end
 
 local function try_send_inventory_examined_message(stash_id)    
     local stash_data = m_data.created_stashes[stash_id]
-    if not stash_data.examine then        
+    if stash_data and not stash_data.examine then        
         debug('Stash not yet examined.')
         local lost_items = stash_data.lost_items
 
