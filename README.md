@@ -10,6 +10,10 @@
 
 **WARNING: THIS IS INTENTED TO BE USED ON NEW GAMES, I CANNOT PREDICT WHAT THE CONCIQUENCES WILL BE IF YOU USE THIS ON AN EXISTING GAME**
 
+**THANKS**
+Huge thanks to Dr.Pr1nkos for the RUS translations!
+Huge thanks to GGFasd, robot, Twisted for help testing new versions!
+
 **DESCRIPTION**
 
 This S.T.A.L.K.E.R Anomaly mod brings elements souls style games to Stalker. Upon death your are rescued by a random Stalker in the zone. They bring you back to the set last spawn location where you awake to find a message from them about how you were found and the lengths they may have gone to to get you to a safe place. The items that were on your character must be retrieved, some can be lost and condition degraded all depending on settings.     
