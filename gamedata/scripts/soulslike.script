@@ -65,6 +65,10 @@ local relations = {
     ENEMIES = -1000
 }
 
+function IsSoulslikeMode()
+	return not IsHardcoreMode() and axr_main.config and axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true or alife_storage_manager.get_state().enable_soulslike_mode == true
+end
+
 ----------------------------------------
 -- DEBUG
 ----------------------------------------
@@ -121,10 +125,6 @@ end
 ----------------------------------------
 -- MCM Config Values
 ----------------------------------------
-
-function IsSoulslikeMode()
-	return not IsHardcoreMode() and axr_main.config and axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true or alife_storage_manager.get_state().enable_soulslike_mode == true
-end
 
 local function is_hardcore_save_enabled() 
     return soulslike_mcm.get_config("is_hardcore_save_enabled", false)
