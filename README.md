@@ -85,3 +85,11 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **TODOs**
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
+- Add task for RF detector scenario so that the radio freq can be referenced in the future
+- Add a task to the players PDA for all scenarios (similar to above, but RF Detector scenario takes priority for now)
+- Random chance for the player gear is just in a stash marked on the PDA
+- Random chance for the player gear is scattered in mutliple locations within a zone and marked on the PDA
+- Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
+- If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
+- Random chance for players gear stash to be a ambush location (need to figure out how this works)
+- Random chance that if the player dies with a lot of mutant meat or food, there will be boars/cats/dogs within the area of the stash as if attracted by the smell
