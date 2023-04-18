@@ -1,222 +1,29 @@
----------------------------------------------
--- Detours
----------------------------------------------
+local _InitControls = ui_sleep_dialog.UISleep.InitControls
+local _InitCallbacks = ui_sleep_dialog.UISleep.InitCallbacks
 
-local detour_sleep = ui_sleep_dialog.sleep
-local detour_sleep_bag = ui_sleep_dialog.sleep_bag
-
-GUI = nil -- instance, don't touch
-
-class "UISpawnPoint" (CUIScriptWnd)
-
-function UISpawnPoint:__init() super()
-	self:InitControls()
-	self:InitCallbacks()
-end
-
-function UISpawnPoint:__finalize()
-	GUI = nil
-end
-
-function UISpawnPoint:InitControls()
-	self:SetWndRect(Frect():set(0,0,1024,768))
-	self.wide = (device().width/device().height) > (1024/768 + 0.01)
-	
-	self:SetAutoDelete(true)
+function ui_sleep_dialog.UISleep.InitControls(self)
+    _InitControls(self)
 
 	local xml = CScriptXmlInit()
 	xml:ParseFile("soulslike_ui_sleep_dialog.xml")
 
-	self.back = xml:InitStatic("background", self)
+    local function move(ctrl, deltaX, deltaY)
+        local pos = ctrl:GetWndPos()
+        ctrl:SetWndPos(vector2():set( pos.x + deltaX ,pos.y + deltaY ))
+    end
 
-	self.sleep_static = xml:InitStatic("sleep_static", self.back)
-	self.sleep_static2 = xml:InitStatic("sleep_static", self.back)
-	self.static_cover = xml:InitStatic("static_cover", self.back)
-	self.st_marker = xml:InitStatic("st_marker", self.static_cover)
-
-	self.sleep_st_tbl = {}
-	for i = 1, 24 do
-		self.sleep_st_tbl[i] = xml:InitStatic("sleep_st_"..i, self.back)
-	end
-    
-	self.time_track = xml:InitTrackBar("time_track", self.back)
-	self:Register(self.time_track, "time_track")
+    move(self.btn_sleep, 52, 0)
+    move(self.btn_cancel, 52, 0)
 
 	self.btn_set_spawn = xml:Init3tButton("btn_set_spawn", self.back)
 	self:Register(self.btn_set_spawn, "btn_set_spawn")
-
-	self.btn_sleep = xml:Init3tButton("btn_sleep", self.back)
-	self:Register(self.btn_sleep, "btn_sleep")
-    
-	self.btn_cancel = xml:Init3tButton("btn_cancel", self.back)
-	self:Register(self.btn_cancel, "btn_cancel")
 end
 
-function UISpawnPoint:InitCallbacks()
+function ui_sleep_dialog.UISleep.InitCallbacks(self)
+    _InitCallbacks(self)
 	self:AddCallback("btn_set_spawn", ui_events.BUTTON_CLICKED, self.OnButtonSetSpawn, self)
-	self:AddCallback("btn_sleep", ui_events.BUTTON_CLICKED, self.OnButtonSleep, self)
-	self:AddCallback("btn_cancel", ui_events.BUTTON_CLICKED, self.OnButtonCancel, self)
 end
 
-function UISpawnPoint:Initialize()
-	local cur_hours = level.get_time_hours()
-	for i = 1, 24 do
-		local hours = cur_hours + i
-		if (hours >= 24) then
-			hours = hours - 24
-		end
-		self.sleep_st_tbl[i]:TextControl():SetText(hours..game.translate_string("st_sleep_hours"))
-	end
-
-	local delta = math.floor(591/24*cur_hours)
-	local r = Frect():set(delta,413,591,531)
-	self.sleep_static:SetTextureRect(r)
-	local width = 591-delta
-	if (self.wide) then
-		width = width * 0.8
-	end
-	self.sleep_static:SetWndSize(vector2():set(width, 118))
-
-	r = Frect():set(0,413,delta,531)
-	self.sleep_static2:SetTextureRect(r)
-	local width = delta
-	if (self.wide) then
-		width = width * 0.8
-	end
-	self.sleep_static2:SetWndSize(vector2():set(width, 118))
-
-	local pos = self.sleep_static2:GetWndPos()
-	pos.x = self.sleep_static:GetWndPos().x+self.sleep_static:GetWidth()
-	self.sleep_static2:SetWndPos(pos)
-
-end
-
-function UISpawnPoint:TestAndShow(force)
-	if (force ~= true) then
-		local bleeding = db.actor.bleeding > 0
-		local radiation = db.actor.radiation > 0
-		
-		-- Prevent set spawn if bleeding and/or iradiated.
-		if (bleeding or radiation) then
-			if (bleeding and radiation) then
-				actor_menu.set_msg(1, game.translate_string("st_sleep_bleeding_irradiated"),5)
-			elseif (bleeding) then
-				actor_menu.set_msg(1, game.translate_string("st_sleep_bleeding"),4)
-			elseif (radiation) then
-				actor_menu.set_msg(1, game.translate_string("st_sleep_irradiated"),4)
-			end
-			disable_info("sleep_active")
-			return
-		end
-		
-		-- Check if actor is inside a safe zone
-		local actor_hide = GetEvent("current_safe_cover") and true or false
-	
-		-- Check if actor is inside a tent
-		if (not actor_hide) then
-			actor_hide = item_tent.get_nearby_tent(1.5)
-		end	
-		
-		-- If all is no, dont set spawn
-		if (not actor_hide) then
-			actor_menu.set_msg(1, game.translate_string("st_cant_sleep_find_shelter_mlr"),4)
-			disable_info("sleep_active")
-			return
-		end
-	end
-	
-	self:Initialize()
-	self:ShowDialog(true)
-    
-	Register_UI("UISpawnPoint","soulslike_sleep_dialog")
-end
-
-function UISpawnPoint:Show()	
-	self:Initialize()
-	self:ShowDialog(true)
-    
-	Register_UI("UISpawnPoint","soulslike_sleep_dialog")
-end
-
-function UISpawnPoint:Update()
-	CUIScriptWnd.Update(self)
-	if self:IsShown() then
-		local sleep_time = self.time_track:GetIValue()-1
-		local x = math.floor(591/24 * sleep_time)
-		if (x==0) then
-			x = 5
-		end
-		if (self.wide) then
-			x = x * 0.8
-		end
-		self.st_marker:SetWndPos(vector2():set(x, 0))
-	end
-end
-
-function UISpawnPoint:OnTrackButton()
-end
-
-function UISpawnPoint:OnButtonSleep()
-	if self:IsShown() then
-		self:HideDialog()
-		Unregister_UI("UISpawnPoint")
-	end
-
-	local hours = GUI.forced or GUI.time_track:GetIValue()
-    ui_sleep_dialog.sleep_forced(hours)
-end
-
-function UISpawnPoint:OnButtonCancel()
-	if self:IsShown() then
-		self:HideDialog()
-		Unregister_UI("UISpawnPoint")
-	end
-
-    disable_info("sleep_active")
-    self:Close()
-end
-
-function UISpawnPoint:OnButtonSetSpawn()
+function ui_sleep_dialog.UISleep:OnButtonSetSpawn()
     soulslike.set_spawn(true);
-end
-
-function UISpawnPoint:OnKeyboard(dik, keyboard_action)
-	local res = CUIScriptWnd.OnKeyboard(self,dik,keyboard_action)
-	if (res == false) then
-		local bind = dik_to_bind(dik)
-		if keyboard_action == ui_events.WINDOW_KEY_PRESSED then		
-			if dik == DIK_keys.DIK_ESCAPE then
-                disable_info("sleep_active")
-				self:Close()
-			end
-		end
-	end
-
-	return res
-end
-
-function UISpawnPoint:Close()
-	if (self:IsShown()) then
-		self:HideDialog()
-	end
-
-	Unregister_UI("UISpawnPoint")
-end
-
-ui_sleep_dialog.sleep = function(force)
-	if (GUI == nil) then
-		GUI = soulslike_sleep_dialog.UISpawnPoint()
-	end
-	GUI.forced = nil
-	GUI.time_track:SetCurrentValue()
-	GUI:TestAndShow(force)
-end
-
-ui_sleep_dialog.sleep_bag = function(ph_sleepbag_id, sec)
-	if (GUI == nil) then
-		GUI = soulslike_sleep_dialog.UISpawnPoint()
-	end
-	GUI.forced = nil
-	GUI.time_track:SetCurrentValue()
-	GUI:Show()
 end
