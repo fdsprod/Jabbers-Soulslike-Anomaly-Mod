@@ -17,6 +17,10 @@ function ui_sleep_dialog.UISleep.InitControls(self)
 
 	self.btn_set_spawn = xml:Init3tButton("btn_set_spawn", self.back)
 	self:Register(self.btn_set_spawn, "btn_set_spawn")
+
+    if not utils_xml.is_widescreen() then
+        move(self.btn_set_spawn, 40, 0)
+    end
 end
 
 function ui_sleep_dialog.UISleep.InitCallbacks(self)
