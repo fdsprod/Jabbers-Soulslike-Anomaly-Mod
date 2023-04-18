@@ -260,6 +260,11 @@ local function create_hidden_stash()
 
     local actor = db.actor
     local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+
+    if not m_data.hidden_stashes then
+        m_data.hidden_stashes = {}
+    end
+
     m_data.hidden_stashes[id] = {
         stash_id = se_stash.id,
         radio_id = id
@@ -1261,51 +1266,4 @@ function on_game_start()
     RegisterScriptCallback("on_game_load",on_game_load)
 	RegisterScriptCallback("on_console_execute",on_console_execute)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
-end
-
----------------------------------------------
--- Detours
----------------------------------------------
-
-local detour_sleep = ui_sleep_dialog.sleep
-local detour_sleep_bag = ui_sleep_dialog.sleep_bag
-
-local function try_set_spawn()
-    local now = game.get_game_time()
-
-    if m_data.last_spawn_set_time then
-        local tf = level.get_time_factor()
-	    local diff_seconds = tonumber(now:diffSec(m_data.last_spawn_set_time)/tf)
-
-        debug(tostring(diff_seconds))
-        
-        if diff_seconds > 60 then
-            m_data.last_spawn_set_time = now
-            set_spawn(true);
-            return true    
-        end 
-    else
-        m_data.last_spawn_set_time = now
-        set_spawn(true);
-        return true
-    end
-    return false
-end
-
-ui_sleep_dialog.sleep = function(force)
-    if try_set_spawn() then
-		disable_info("sleep_active")
-        return
-    end
-
-    detour_sleep()
-end
-
-ui_sleep_dialog.sleep_bag = function(ph_sleepbag_id, sec)
-    if try_set_spawn() then
-		disable_info("sleep_active")
-        return
-    end
-
-    detour_sleep_bag()
 end

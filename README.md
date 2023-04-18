@@ -85,6 +85,3 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **TODOs**
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
-
-
-
