@@ -1,5 +1,63 @@
 local _InitControls = ui_sleep_dialog.UISleep.InitControls
 local _InitCallbacks = ui_sleep_dialog.UISleep.InitCallbacks
+local _TestAndShow = ui_sleep_dialog.UISleep.TestAndShow
+local _OnButtonSleep = ui_sleep_dialog.UISleep.OnButtonSleep
+
+function ui_sleep_dialog.UISleep.OnButtonSleep(self)    
+    local bleeding = db.actor.bleeding > 0
+    local radiation = db.actor.radiation > 0
+    
+    -- Prevent sleep if bleeding and/or iradiated.
+    if (bleeding or radiation) then
+        if (bleeding and radiation) then
+            actor_menu.set_msg(1, game.translate_string("st_sleep_bleeding_irradiated"),5)
+        elseif (bleeding) then
+            actor_menu.set_msg(1, game.translate_string("st_sleep_bleeding"),4)
+        elseif (radiation) then
+            actor_menu.set_msg(1, game.translate_string("st_sleep_irradiated"),4)
+        end
+        disable_info("sleep_active")
+        if self:IsShown() then
+            self:HideDialog()
+            Unregister_UI("UISleep")
+        end
+        return
+    end
+    
+    -- Check if actor is inside a safe zone
+    local actor_hide = GetEvent("current_safe_cover") and true or false
+
+    -- Check if actor is inside a tent
+    if (not actor_hide) then
+        actor_hide = item_tent.get_nearby_tent(1.5)
+    end	
+    
+    -- If all is no, dont sleep
+    if (not actor_hide) then
+        actor_menu.set_msg(1, game.translate_string("st_cant_sleep_find_shelter_mlr"),4)
+        disable_info("sleep_active")
+        if self:IsShown() then
+            self:HideDialog()
+            Unregister_UI("UISleep")
+        end
+        return
+    end
+    
+    _OnButtonSleep()
+end
+
+function ui_sleep_dialog.UISleep.TestAndShow(self, force)
+    if force then
+        _TestAndShow(force)
+    else
+        -- Detour and show the UI so we can let the user 
+        -- set their spawn point.  Move the sleep check code
+        -- to the Sleep button click instead
+        self:Initialize()
+        self:ShowDialog(true)
+        Register_UI("UISleep","ui_sleep_dialog")
+    end
+end
 
 function ui_sleep_dialog.UISleep.InitControls(self)
     _InitControls(self)
