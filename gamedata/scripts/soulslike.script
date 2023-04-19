@@ -778,7 +778,7 @@ local function save_state(data)
     
     debug('save_state')
 
-    if not m_data.soulslike.spawn_location.level and level.name() ~= 'fake_start' then
+    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
         set_spawn(false)
     end
 
@@ -1260,11 +1260,10 @@ local function physic_object_on_use_callback(box, who)
 end
 
 local function on_level_changing() 
-    if not m_data.soulslike.spawn_location.level and level.name() ~= 'fake_start' then
+    if not m_data.spawn_location.level and level.name() ~= 'fake_start' then
         set_spawn(false)
     end
 end
-
 
 function on_game_start()
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
