@@ -34,7 +34,7 @@ SCENARIOS = {
     StalkerAmbush = 7,
 }
 
-local SCENARIO_COUNT = 7
+local SCENARIO_COUNT = 1
 
 ----------------------------------------
 -- Helpers
@@ -104,16 +104,35 @@ function IsSoulslikeMode()
 end
 
 function get_soulslike_state()
-    local game_state = alife_storage_manager.get_state().soulslike or {
-        created_stashes = {}
-    }
+    local game_state = alife_storage_manager.get_state()
+    
+    if not game_state.soulslike then 
+        game_state.soulslike = {
+            created_stashes = {},
+            spawn_location = {
+                    level = nil,
+                    position = {
+                        x = nil,
+                        y = nil,
+                        z = nil,
+                    },
+                    angle = {
+                        x = nil,
+                        y = nil,
+                        z = nil,
+                    },
+                    level_vertex_id = nil,
+                    game_vertex_id = nil,
+                },
+            hidden_stashes = {}
+        }
+    end
 
-    return game_state
+    return game_state.soulslike
 end
 
 function set_spawn(show_message)
 	local se_actor = alife():actor()
-
     local state = get_soulslike_state()
 
 	state.spawn_location.level = level.name()
@@ -127,7 +146,7 @@ function set_spawn(show_message)
 	state.spawn_location.game_vertex_id = se_actor.m_game_vertex_id
     
     debug("Saved spawn location data:")
-    debug(state.spawn_location)    
+    debug(state)    
             
     if show_message then
         local str = game.translate_string("st_soulslike_spawn_location_set")
@@ -287,36 +306,36 @@ local function actor_on_before_death(who, flags)
             max = 0,
             weight = 1.0 / SCENARIO_COUNT,
         },
-        [SCENARIOS.RFDetectorStash] = {
-            min = 0,
-            max = 0,
-            weight = rf_detector_scenario_weight()
-        },
-        [SCENARIOS.HiddenStash] = {
-            min = 0,
-            max = 0,
-            weight = hidden_stash_scenario_weight()
-        },
-        [SCENARIOS.ScatteredStashes] = {
-            min = 0,
-            max = 0,
-            weight = scattered_stash_scenario_weight()
-        },
-        [SCENARIOS.NearbyDeadStalker] = {
-            min = 0,
-            max = 0,
-            weight = nearby_dead_stalker_scenario_weight()
-        },
-        [SCENARIOS.MutantAmbush] = {
-            min = 0,
-            max = 0,
-            weight = mutant_ambush_scenario_weight()
-        },
-        [SCENARIOS.StalkerAmbush] = {
-            min = 0,
-            max = 0,
-            weight = stalker_ambush_scenario_weight() 
-        },
+        -- [SCENARIOS.RFDetectorStash] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = rf_detector_scenario_weight()
+        -- },
+        -- [SCENARIOS.HiddenStash] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = hidden_stash_scenario_weight()
+        -- },
+        -- [SCENARIOS.ScatteredStashes] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = scattered_stash_scenario_weight()
+        -- },
+        -- [SCENARIOS.NearbyDeadStalker] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = nearby_dead_stalker_scenario_weight()
+        -- },
+        -- [SCENARIOS.MutantAmbush] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = mutant_ambush_scenario_weight()
+        -- },
+        -- [SCENARIOS.StalkerAmbush] = {
+        --     min = 0,
+        --     max = 0,
+        --     weight = stalker_ambush_scenario_weight() 
+        -- },
     }
 
     local weight_sum = 0
@@ -348,7 +367,6 @@ local function actor_on_before_death(who, flags)
 
     local scenario_logic = soulslike_scenario_logic_factory.create(scenario_id)
 
-    scenario_logic:Initialize()
     scenario_logic:OnDeath()
 end
 
@@ -404,9 +422,10 @@ local function tablelength(T)
     return count
 end
 
-local function try_send_inventory_examined_message(stash_id)    
+local function try_send_inventory_examined_message(stash_id)        
     local data = get_soulslike_state()
     local stash_data = data.created_stashes[stash_id]
+
     if stash_data and not stash_data.examine then        
         debug('Stash not yet examined.')
         local lost_items = stash_data.lost_items
@@ -459,6 +478,7 @@ local function actor_on_item_take_from_box(box,obj)
 
     local data = get_soulslike_state()
     local id = box:id()
+
     debug('Player opened stash id '..tostring(id))
     
 	if (box:section() == "inv_backpack") then
@@ -496,7 +516,6 @@ local function on_console_execute(name, ...)
 
     if(name == "save") then
         debug(name)
-
         local extraArgs = {...}
 
         if extraArgs then
@@ -540,11 +559,29 @@ local function physic_object_on_use_callback(box, who)
     data.created_stashes[stash_id] = nil
 end
 
+local function save_state() 
+    local data = get_soulslike_state()
+
+    if not data.spawn_location.level and level.name() ~= 'fake_start' then
+        set_spawn(false)
+    end
+end
+
+local function on_level_changing() 
+    local data = get_soulslike_state()
+
+    if not data.spawn_location.level and level.name() ~= 'fake_start' then
+        set_spawn(false)
+    end
+end
+
 function on_game_start()
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
     RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
     RegisterScriptCallback("actor_on_before_death", actor_on_before_death)
     RegisterScriptCallback("on_before_save_input",on_before_save_input)
+    RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("on_level_changing", on_level_changing)
     RegisterScriptCallback("on_game_load",on_game_load)
 	RegisterScriptCallback("on_console_execute",on_console_execute)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
