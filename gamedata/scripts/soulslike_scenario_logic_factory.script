@@ -1,0 +1,526 @@
+local scenarios = {
+    [soulslike.SCENARIOS.Legacy] = function() return soulslike_scenario_logic_factory.DefaultSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.RFDetectorStash] = function() return soulslike_scenario_logic_factory.RFDetectorStashSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.HiddenStash] = function() return soulslike_scenario_logic_factory.HiddenStashSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.ScatteredStashes] = function() return soulslike_scenario_logic_factory.ScatteredStashesSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.NearbyDeadStalker] = function() return soulslike_scenario_logic_factory.NearbyDeadStalkerSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.MutantAmbush] = function() return soulslike_scenario_logic_factory.MutantAmbushSoulslikeScenarioLogic() end,
+    [soulslike.SCENARIOS.StalkerAmbush] = function() return soulslike_scenario_logic_factory.AmbushSoulslikeScenarioLogic() end
+}
+
+function create(scenario_id) 
+    return scenarios[scenario_id or soulslike.SCENARIOS.Legacy]()
+end
+
+local ignore_list = {
+    ["bolt"] = true,
+    -- Quick Release
+    ["itm_actor_backpack"] = true,
+    ["device_pda"] = true,
+    ["device_pda_1"] = true,
+    ["device_pda_2"] = true,
+    ["device_pda_3"] = true,
+    ["wpn_knife"] = true,
+}
+
+class "SoulslikeScenarioLogic"
+
+function SoulslikeScenarioLogic:__Initialize()
+	self.scenario_id = nil
+    self.game_state = soulslike.get_soulslike_state()
+
+    RegisterScriptCallback("on_game_load", self)
+end
+
+function SoulslikeScenarioLogic:HealActor()
+    local heath = 1 - soulslike_mcm.get_health_loss_percent()
+
+	db.actor:set_health_ex(heath)
+	db.actor.power = 1
+	db.actor.radiation = 0
+	db.actor.bleeding = 1
+	db.actor.psy_health = 1
+
+    save_var(db.actor,'grw_in_water',nil)
+	
+    arszi_psy.set_psy_health(1.0)
+end
+
+function SoulslikeScenarioLogic:ApplyRankLoss()
+    local rank = db.actor:character_rank()
+    local loss_percent = soulslike_mcm.rank_loss_percent()
+    local rank_loss = math.abs(rank * loss_percent)
+
+    debug("Player has lost "..tostring(rank_loss).." rank.")
+
+	db.actor:set_character_rank(db.actor:character_rank() + (-rank_loss or 0))
+	game_statistics.check_for_rank_change()
+end
+
+function SoulslikeScenarioLogic:ApplyRepLoss()
+    local rep = db.actor:character_reputation()
+    local loss_percent = soulslike_mcm.rep_loss_percent()
+    local rep_loss = math.abs(rep * loss_percent)
+
+    debug("Player has lost "..tostring(rep_loss).." repuation.")
+
+	db.actor:set_character_reputation(db.actor:character_reputation() + (-rep_loss or 0))
+	game_statistics.check_for_reputation_change()
+end
+
+function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_percent)
+    local cond = item:condition()
+    local sec = item:section()
+    local degrade_factor = cond * condition_loss_percent
+    local is_grenade = IsGrenade(item)
+    local is_weapon = (IsWeapon(item) and not is_grenade)
+    local is_outfit = IsOutfit(item) 
+    local is_headgear = IsHeadgear(item)
+    
+    local use_condition = utils_item.is_degradable(item, sec)
+    local has_cond = use_condition or is_weapon or is_outfit or is_headgear
+
+    if has_cond then
+        debug("Degrading ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+        -- utils_item.degrade releases the item if the condition is 0
+        local condition = utils_item.degrade(item, degrade_factor)
+        return condition
+    end
+
+    -- No condition to be returned.
+    return nil
+end
+
+function SoulslikeScenarioLogic:Initialize()
+    if self.scenario_id == nil then
+        soulslike.debug("ERROR: INVALID SCENARIO LOGIC ID (nil)")
+        -- TODO: Throw error
+    end
+end
+
+function SoulslikeScenarioLogic:ApplyItemPreconditions()
+    local is_magazine					= magazine_binder and magazine_binder.is_magazine
+    local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
+    local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
+
+    local function check_item(temp, item)
+        local sec = item:section()
+        if is_magazine and is_magazine(sec) and is_carried_mag(item:id()) then
+            soulslike.debug("Toggling carried mag: "..sec)
+            local result = toggle_carried_mag(item:id())
+            soulslike.debug("Mag toggled to: "..tostring(result))
+        end
+    end
+
+    soulslike.debug("Inventory precondition checks")
+    db.actor:iterate_inventory(check_item)
+end
+
+function SoulslikeScenarioLogic:HandleItemsAndRespawn()
+
+end
+
+function SoulslikeScenarioLogic:OnDeath()    
+    self:HealActor()
+    self:ApplyRankLoss()
+    self:ApplyRepLoss()
+    self:ApplyItemPreconditions()
+    self:HandleItemsAndRespawn()
+end
+
+function SoulslikeScenarioLogic:RespawnActor()
+    debug("Respawning actor at last sleep location")
+        
+    local position = vector():set(self.game_state.spawn_location.position.x, self.game_state.spawn_location.position.y, self.game_state.spawn_location.position.z)   
+    local level_vertex_id = self.game_state.spawn_location.level_vertex_id
+    local game_vertex_id = self.game_state.spawn_location.game_vertex_id  
+    
+    level.add_pp_effector("black_infinite.ppe", 5606, true)
+    actor_status.deactivate_hud()
+
+    local function respawn()
+        ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
+    end
+
+    CreateTimeEvent(0, "respawn", 1, respawn)
+end
+
+function SoulslikeScenarioLogic:OnWakeup()
+	xr_effects.enable_ui(db.actor, nil)
+
+	exec_console_cmd("snd_volume_music "..tostring(_G.mus_vol))
+	exec_console_cmd("snd_volume_eff "..tostring(_G.amb_vol))
+
+    soulslike.force_save("respawn")
+
+	_G.amb_vol = 0
+	_G.mus_vol = 0
+
+	disable_info("tutorial_sleep")
+	disable_info("actor_is_sleeping")
+	disable_info("sleep_active")
+    
+	-- Satiety
+	local conditions = db.actor:cast_Actor():conditions()
+	local satiety = conditions:GetSatiety()
+	local red_icon_satiety = conditions:SatietyCritical() * 0.5
+	
+    satiety = normalize(satiety, red_icon_satiety, 1)
+    satiety = math.clamp( satiety / 5.65 , 0, 0.185)
+
+    debug({satiety = satiety})
+    if satiety < 0.5 then
+        self.gave_food_or_water = true  
+        --debug("HACK updating satiety.")
+	    db.actor.satiety = 0.5
+    end
+
+	-- Thirst
+	local thirst = 1 - actor_status_thirst.get_water_deprivation()		-- 1 full
+	local red_icon_thirst = 5760
+	red_icon_thirst = 1 - normalize(red_icon_thirst, 0, 10000)		-- def 0.424 red
+	
+    thirst = normalize(thirst, red_icon_thirst, 1)
+    thirst = math.clamp(thirst / 5.65, 0, 0.185)
+
+    debug({thirst = thirst})
+
+    if thirst < 0.5 then
+        self.gave_food_or_water = true  
+        -- HACK... deal with it :shades:
+        soulslike.debug("HACK updating thirst.")
+        actor_status_thirst.load_state({drink = {last_drink = 3500, chk_drink = nil}})
+        actor_status_thirst.actor_on_update()
+    end
+
+    if self.gave_food_or_water then
+        soulslike.debug("Spawning bread and water on actor.")
+        alife_create_item('bread', db.actor)
+        alife_create_item('water_drink', db.actor)
+    end
+
+    self:SendWakeupMessage()
+
+    actor_status.activate_hud()
+
+    --TODO: Does any of this need to be cleared?
+    -- self.state.last_death_state.items_lost = nil
+    -- self.state.last_death_state.inventory_hidden = nil
+    -- self.state.last_death_state.dropped_backpack_id = nil
+    -- self.state.last_death_state.radio_freq = nil
+    -- self.state.last_death_state.stash_id = nil
+    -- self.state.last_death_state.enemy_looter_name = nil
+    -- self.state.last_death_state.enemy_looter_comm = nil
+    -- self.state.is_advancing_time = true
+end
+
+function SoulslikeScenarioLogic:SendWakeupMessage()
+    local rescuer = soulslike.find_actor_community_friendly()
+    local msg = soulslike_message_factory.create(rescuer, self)
+
+    if rescuer then
+        news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
+    else
+		local ui_sender = news_manager.tips_icons['default']
+        db.actor:give_game_news("", msg, ui_sender, 0, 20000)
+    end  
+end
+
+function SoulslikeScenarioLogic:OnDream()
+    level.add_cam_effector("camera_effects\\sleep.anm", 10, false, "SoulslikeScenarioLogic.OnWakeup")
+	
+	local hours = math.random(6,14)	
+	level.change_game_time(0,hours,0)
+	
+	db.actor.power = 1
+	
+	SendScriptCallback("actor_on_sleep", hours)
+end
+
+function SoulslikeScenarioLogic:AdvanceTime()
+    self.is_advancing_time = true
+
+    xr_effects.disable_ui(db.actor, nil)
+
+    level.add_cam_effector("camera_effects\\sleep.anm", 10, false, "SoulslikeScenarioLogic.OnDream")
+    level.add_pp_effector("sleep_fade.ppe", 11, false)
+
+    _G.mus_vol = get_console_cmd(2,"snd_volume_music")
+    _G.amb_vol = get_console_cmd(2,"snd_volume_eff")
+
+    exec_console_cmd("snd_volume_music 0")
+    exec_console_cmd("snd_volume_eff 0")
+
+    level.add_pp_effector("surge_fade.ppe", 11, false) 
+    db.actor:give_info_portion("actor_is_sleeping")
+end
+
+function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
+    -- skip surge due to bug with killing actor on switch
+    surge_manager.stop_surge()    
+    if (psi_storm_manager.get_psi_storm_manager().started) then
+        psi_storm_manager.get_psi_storm_manager().finish(true)
+    end
+end
+
+function SoulslikeScenarioLogic:TransferItems(to_id)
+    local rank = db.actor:character_rank()
+    local ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank)/math.log(1000) * 1.5, 0, 50) / 66;
+    local item_condition_loss_percent = soulslike_mcm.get_item_condition_loss_percent()
+    local item_loss_scalar = soulslike_mcm.get_item_loss_scalar()
+    local backpack = level.object_by_id(to_id)
+    local enemy_looter = find_enemy()
+    local enemy_looted = false
+    
+    local function release_actor_item(temp, item)
+        local sec = item:section()
+
+        if ignore_list[sec] then
+            soulslike.debug("Item is in ignore list: "..sec)
+            return
+        end
+
+        if ini_sys:r_bool_ex(sec,"quest_item",false) then
+            soulslike.debug("Item quest item: "..sec)
+            return
+        end
+        
+        local loss_chance_dice_roll = math.random(0, 100)
+        local loss_chance = math.floor(ranked_chance * item_loss_scalar * 100)
+        
+        loss_chance = math.clamp(loss_chance, 0, 100)
+
+        if soulslike_mcm.debug_item_loss() then
+            loss_chance = 100
+        end
+
+        soulslike.debug("item_loss_scalar: "..item_loss_scalar.." loss_chance_dice_roll: "..loss_chance_dice_roll.." rank: "..rank.." ranked_chance: "..ranked_chance.." loss_chance: "..loss_chance);
+
+        local is_grenade = IsGrenade(item)
+        local is_artefact = IsArtefact(item)
+        local is_weapon = (IsWeapon(item) and not is_grenade)
+        local is_outfit = IsOutfit(item) 
+        local is_headgear = IsHeadgear(item)
+        local is_toolkit = soulslike.IsToolkit(item)
+
+        if is_weapon and not soulslike_mcm.allow_weapon_loss() then   
+            soulslike.debug("Not allowed to lose weapon "..sec)
+            return
+        end
+
+        if is_artefact and not soulslike_mcm.allow_artifact_loss() then   
+            soulslike.debug("Not allowed to lose artefact "..sec)
+            return
+        end
+
+        if is_outfit and not soulslike_mcm.allow_outfit_loss() then   
+            soulslike.debug("Not allowed to lose outfit "..sec)
+            return
+        end
+
+        if is_headgear and not soulslike_mcm.allow_headgear_loss() then   
+            soulslike.debug("Not allowed to lose headgear "..sec)
+            return
+        end
+
+        if is_toolkit and not soulslike_mcm.allow_toolkit_loss() then   
+            soulslike.debug("Not allowed to lose toolkit "..sec)
+            return
+        end
+        
+        local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
+
+        -- We never want to delete the players backpack
+        -- since it makes up the created stash
+        if not is_backpack and loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then
+            self.items_lost = true                
+            loss_chance_dice_roll = math.random(0, 100)
+
+            -- I call this The Tarkov Looter... 
+            -- This shit is going to be funny as fuck for me to know that there is a 1% chance for this to happen 
+            if loss_chance_dice_roll <= 1 and is_weapon and item_parts then
+                local parts = item_parts.get_parts_con(item)
+                if parts then
+                    local keys = {}
+                    local numitems = 0 
+                    for k,v in pairs(parts) do
+                        numitems = numitems + 1
+                        table.insert(keys, k)
+                    end
+                    local index = math.random(1, numitems)
+                    parts[keys[index]] = -1 -- KEKW
+                    enemy_looted = true     
+                    self.got_tarkoved = true
+                end    
+                
+                soulslike.debug("Transfering item "..sec)
+                db.actor:transfer_item(item, backpack)
+                return       
+            else
+                local allow_npc_looting = soulslike.mcm.lost_items_looted_by_npcs()
+
+                if(allow_npc_looting and (is_weapon or is_outfit or is_headgear) and enemy_looter) then   
+                    soulslike.debug("Transfering item to enemy: "..sec)   
+                    table.insert(self.game_state.created_stashes[to_id].lost_items, sec)                
+                    db.actor:transfer_item(item, enemy_looter)
+                    enemy_looted = true
+                else
+                    soulslike.debug("Item lost "..sec)            
+                    alife_release(item)
+                    table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+                end
+            end
+            
+            return   
+        end
+
+        if item_condition_loss_percent > 0 then
+            local condition_loss_percent = math.clamp(ranked_chance * item_condition_loss_percent, 0, 1)
+            local condition = self:ApplyItemConditionLoss(item, condition_loss_percent)
+                
+            if condition == 0 then
+                soulslike.debug("Item ".. sec.. " was degraded into oblivion")
+                self.items_lost = true
+                table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+                return;
+            end
+        end
+            
+        debug("Transfering item "..sec)
+        db.actor:transfer_item(item, backpack)
+    end     
+    
+    debug("Transfering items")
+    db.actor:iterate_inventory(release_actor_item)
+
+    if enemy_looter and enemy_looted then        
+        self.enemy_looter_name = enemy_looter:character_name()
+        self.enemy_looter_comm = enemy_looter:character_community()
+
+        if soulslike_mcm.are_looter_npcs_marked() then
+            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", self.enemy_looter_name)            
+        end
+    end
+end
+
+function SoulslikeScenarioLogic:on_game_load()
+    bind_stalker_ext.invulnerable_time = time_global() + 1
+
+    self:HealActor()
+    self:AdvanceTime()
+    
+    local rank = db.actor:character_rank()
+    local rep = db.actor:character_reputation()
+
+    soulslike.debug('Character rank: '..rank)
+    soulslike.debug('Character rep: '..rep)
+end 
+
+function SoulslikeScenarioLogic:actor_on_sleep(hours)    
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    soulslike.debug('actor_on_sleep')
+    soulslike.force_save("sleep")
+end
+
+
+class "DefaultSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function DefaultSoulslikeScenarioLogic:__Initialize() super ()
+	self.scenario_id = soulslike.SCENARIOS.Legacy
+end
+
+function DefaultSoulslikeScenarioLogic:CreateStash()
+    debug("Creating stash")    
+
+    local actor = db.actor
+    local se_stash = alife_create("inv_backpack", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())  
+    
+    if (se_stash) then
+        self.game_state.created_stashes[se_stash.id] = {
+            lost_items = {},
+            examine = false
+        } 
+    end
+
+    return se_stash
+end
+
+function DefaultSoulslikeScenarioLogic:HandleItemsAndRespawn() super()   
+    local se_stash = self:CreateStash()
+             
+    if se_stash then
+        soulslike.debug("Stash created "..tostring(se_stash.id))
+
+        local function transfer_and_respawn()
+            local pack = level.object_by_id(se_stash.id)
+
+            if pack then
+                soulslike.debug("Stash exists in game")
+
+                self:TransferItems(se_stash.id)   
+
+                if self.dropped_backpack_id then
+                    level.map_add_object_spot_ser(se_stash.id, "primary_object", db.actor:character_name() .. " items")
+                elseif self.stash_id then
+                    local lvl = level.name()
+                    soulslike.debug("Adding radio target to level: "..lvl)
+                    self.radio_freq = math.random(30,  300)
+                    item_radio.add_stash(lvl, self.stash_id, self.radio_freq) 
+                end   
+
+                self:RespawnActor()
+                self:StopSurgeAndStorm()
+                return true
+            else
+                debug("Stash does not yet exist in game")            
+                return false
+            end
+        end
+        
+        --We have to create a timer to give the game time to spawn the backpack.
+        CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
+    else    
+        debug("Stash was not created")
+        self:RespawnActor()
+        self:StopSurgeAndStorm()
+    end
+end
+
+class "RFDetectorSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function RFDetectorSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.RFDetectorStash
+end
+
+class "HiddenStashSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function HiddenStashSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.HiddenStash
+end
+
+class "ScatteredStashesSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function ScatteredStashesSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.ScatteredStashes
+end
+
+class "NearbyDeadStalkerSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function NearbyDeadStalkerSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.NearbyDeadStalker
+end
+
+class "MutantAmbushSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function MutantAmbushSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.MutantAmbush
+end
+
+class "StalkerAmbushSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
+
+function StalkerAmbushSoulslikeScenarioLogic:__init() super ()
+	self.scenario_id = soulslike.SCENARIOS.StalkerAmbush
+end

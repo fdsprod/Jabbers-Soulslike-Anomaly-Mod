@@ -83,6 +83,7 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODOs**
+- Change "Allow Loss" logic to still put items in the stash but not delete them.
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
 - Add task for RF detector scenario so that the radio freq can be referenced in the future
@@ -93,3 +94,4 @@ Based on having played about 10 hours in total into a new game with this mod I c
 - If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
 - Random chance for players gear stash to be a ambush location (need to figure out how this works)
 - Random chance that if the player dies with a lot of mutant meat or food, there will be boars/cats/dogs within the area of the stash as if attracted by the smell
+- Add Soulslike death counter to statistics

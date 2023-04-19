@@ -4,6 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
+
 function on_mcm_load()
     local op = {
         id = "soulslike",
@@ -156,6 +157,75 @@ function on_mcm_load()
         def = 0.75
     })
     
+    -- Scenarios
+    table.insert(op.gr, {
+        id = "desc_mcm",
+        type = "slide",
+        text = "ui_mcm_soulslike_scenarios_description",
+        clr = {255, 255 ,255 ,255},
+    })
+
+    table.insert(op.gr, {
+        id = "rf_detector_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.10
+    })
+
+    table.insert(op.gr, {
+        id = "hidden_stash_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.10
+    })
+
+    table.insert(op.gr, {
+        id = "scattered_stash_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.02
+    })
+
+    table.insert(op.gr, {
+        id = "nearby_dead_stalker_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.10
+    })
+
+    table.insert(op.gr, {
+        id = "mutant_ambush_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.05
+    })
+
+    table.insert(op.gr, {
+        id = "stalker_ambush_scenario_weight",
+        type = "track",
+        val = 2,
+        min = 0.0,
+        max = 1.0,
+        step = 0.01,
+        def = 0.05
+    })
+    
+    -- Harcore Save
     table.insert(op.gr, 
     {
         id = "desc_mcm",
@@ -214,10 +284,106 @@ function on_mcm_load()
     return op
 end
 
-function get_config(key, default_when_nil)
+local function get_config(key, default_when_nil)
     local opt = ui_mcm and ui_mcm.get("soulslike/"..key)
     if opt == nil then
         opt = default_when_nil
     end
     return opt
 end
+
+function is_hardcore_save_enabled() 
+    return get_config("is_hardcore_save_enabled", false)
+end
+
+function is_debug_enabled() 
+    return get_config("debug", true)
+end
+
+function get_item_loss_scalar()
+    return get_config("item_loss_scalar", 0.2)
+end
+
+function get_item_condition_loss_percent()
+    return get_config("item_condition_loss_scalar", 0.05)
+end
+
+function get_health_loss_percent()
+    return get_config("health_loss_on_respawn", 0.75)
+end
+
+function override_campfire_hardcore_saves() 
+    return get_config("override_campfire_hardcore_saves", false)
+end
+
+function get_lost_items_looted_by_npcs() 
+    return get_config("lost_items_looted_by_npcs", true)
+end
+
+function are_looter_npcs_marked()
+    return get_config("looter_npcs_marked", false)
+end 
+
+function rf_detector_recovery_task_chance()
+    return get_config("rf_detector_recovery_task_chance", 0.1)
+end 
+
+function rf_detector_scenario_weight()
+    return get_config("rf_detector_scenario_weight", true)
+end 
+
+function hidden_stash_scenario_weight()
+    return get_config("hidden_stash_scenario_weight", true)
+end 
+
+function scattered_stash_scenario_weight()
+    return get_config("scattered_stash_scenario_weight", true)
+end 
+
+function nearby_dead_stalker_scenario_weight()
+    return get_config("nearby_dead_stalker_scenario_weight", true)
+end 
+
+function mutant_ambush_scenario_weight()
+    return get_config("mutant_ambush_scenario_weight", true)
+end 
+
+function stalker_ambush_scenario_weight()
+    return get_config("stalker_ambush_scenario_weight", true)
+end 
+
+function allow_toolkit_loss()
+    return get_config("allow_tool_loss", true)
+end 
+
+function allow_artifact_loss()
+    return get_config("allow_artifact_loss", true)
+end 
+
+function allow_headgear_loss()
+    return get_config("allow_headgear_loss", true)
+end 
+
+function allow_outfit_loss()
+    return get_config("allow_outfit_loss", true)
+end 
+
+function allow_weapon_loss()
+    return get_config("allow_weapon_loss", true)
+end 
+
+function rank_loss_percent()
+    return get_config("rank_loss_percent", 0.05)
+end 
+
+function rep_loss_percent()
+    return get_config("rep_loss_percent", 0.02)
+end 
+
+function debug_hidden_stashes()
+    return is_debug_enabled() and get_config("debug_hidden_stashes", false)
+end 
+
+function debug_item_loss()
+    return is_debug_enabled() and get_config("debug_item_loss", false)
+end 

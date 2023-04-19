@@ -1,0 +1,185 @@
+local function rescuer_initial_msg_factory() 
+    local messages = {
+        "st_soulslike_rescuer_initial_1",
+        "st_soulslike_rescuer_initial_2",
+        "st_soulslike_rescuer_initial_3",
+        "st_soulslike_rescuer_initial_4",
+        "st_soulslike_rescuer_initial_5",
+        "st_soulslike_rescuer_initial_6",
+        "st_soulslike_rescuer_initial_7",
+        "st_soulslike_rescuer_initial_8",
+        "st_soulslike_rescuer_initial_9",
+        "st_soulslike_rescuer_initial_10",
+        "st_soulslike_rescuer_initial_11",
+        "st_soulslike_rescuer_initial_12",
+        "st_soulslike_rescuer_initial_13",
+        "st_soulslike_rescuer_initial_14",
+        "st_soulslike_rescuer_initial_15",
+        "st_soulslike_rescuer_initial_16",
+    }
+
+    return game.translate_string(messages[math.random(#messages)])
+end
+
+local function rescuer_eat_drink_msg_factory() 
+    local messages = {
+        "st_soulslike_rescuer_food_1",
+        "st_soulslike_rescuer_food_2",
+        "st_soulslike_rescuer_food_3",
+        "st_soulslike_rescuer_food_4",
+        "st_soulslike_rescuer_food_5",
+    }
+
+    return game.translate_string(messages[math.random(#messages)])
+end
+
+local function rescuer_pda_marker_msg_factory()
+    local messages = {
+        "st_soulslike_rescuer_pda_1",
+        "st_soulslike_rescuer_pda_2",
+        "st_soulslike_rescuer_pda_3",
+        "st_soulslike_rescuer_pda_4",
+        "st_soulslike_rescuer_pda_5",
+        "st_soulslike_rescuer_pda_6",
+        "st_soulslike_rescuer_pda_7",
+        "st_soulslike_rescuer_pda_8",
+        "st_soulslike_rescuer_pda_9",
+        "st_soulslike_rescuer_pda_10",
+        "st_soulslike_rescuer_pda_11",
+        "st_soulslike_rescuer_pda_12",
+        "st_soulslike_rescuer_pda_13",
+        "st_soulslike_rescuer_pda_14",
+        "st_soulslike_rescuer_pda_15",
+        "st_soulslike_rescuer_pda_16",
+    }
+
+    return game.translate_string(messages[math.random(#messages)])
+end
+
+local function rescuer_used_items_msg_factory()
+    local messages = {
+        "st_soulslike_rescuer_used_items_1",
+        "st_soulslike_rescuer_used_items_2",
+        "st_soulslike_rescuer_used_items_3",
+        "st_soulslike_rescuer_used_items_4",
+        "st_soulslike_rescuer_used_items_5",
+        "st_soulslike_rescuer_used_items_6",
+        "st_soulslike_rescuer_used_items_7",
+        "st_soulslike_rescuer_used_items_8",
+        "st_soulslike_rescuer_used_items_9",
+        "st_soulslike_rescuer_used_items_10",
+        "st_soulslike_rescuer_used_items_11",
+        "st_soulslike_rescuer_used_items_12",
+        "st_soulslike_rescuer_used_items_13",
+        "st_soulslike_rescuer_used_items_14",
+        "st_soulslike_rescuer_used_items_15",
+        "st_soulslike_rescuer_used_items_16",
+    }
+
+    return game.translate_string(messages[math.random(#messages)])
+end
+
+local function rescuer_stay_safe_msg_factory()
+    local messages = {
+        "st_soulslike_rescuer_stay_safe_1",
+        "st_soulslike_rescuer_stay_safe_2",
+        "st_soulslike_rescuer_stay_safe_3",
+        "st_soulslike_rescuer_stay_safe_4",
+        "st_soulslike_rescuer_stay_safe_5",
+        "st_soulslike_rescuer_stay_safe_6",
+        "st_soulslike_rescuer_stay_safe_7",
+        "st_soulslike_rescuer_stay_safe_8",
+        "st_soulslike_rescuer_stay_safe_9",
+        "st_soulslike_rescuer_stay_safe_10",
+        "st_soulslike_rescuer_stay_safe_11",
+        "st_soulslike_rescuer_stay_safe_12",
+        "st_soulslike_rescuer_stay_safe_13",
+        "st_soulslike_rescuer_stay_safe_14",
+        "st_soulslike_rescuer_stay_safe_15",
+    }
+
+    return game.translate_string(messages[math.random(#messages)])
+end
+
+local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
+    local messages = {
+        "st_soulslike_rescuer_radio_freq_1",
+        "st_soulslike_rescuer_enemy_looter_2",
+        "st_soulslike_rescuer_enemy_looter_3",
+        "st_soulslike_rescuer_enemy_looter_4",
+        "st_soulslike_rescuer_enemy_looter_5",
+        "st_soulslike_rescuer_enemy_looter_6",
+        "st_soulslike_rescuer_enemy_looter_7",
+        "st_soulslike_rescuer_enemy_looter_8",
+        "st_soulslike_rescuer_enemy_looter_9",
+        "st_soulslike_rescuer_enemy_looter_10",
+        "st_soulslike_rescuer_enemy_looter_11",
+        "st_soulslike_rescuer_enemy_looter_12",
+        "st_soulslike_rescuer_enemy_looter_13",
+        "st_soulslike_rescuer_enemy_looter_14",
+        "st_soulslike_rescuer_enemy_looter_15",
+    }
+    
+    return strformat(game.translate_string(messages[math.random(#messages)]), enemy_comm, enemy_name)
+end
+local function rescuer_enemy_radio_freq_msg_factory(freq)
+    local messages = {
+        "st_soulslike_rescuer_radio_freq_1",
+        "st_soulslike_rescuer_radio_freq_2",
+        "st_soulslike_rescuer_radio_freq_3",
+        "st_soulslike_rescuer_radio_freq_4",
+        "st_soulslike_rescuer_radio_freq_5",
+        "st_soulslike_rescuer_radio_freq_6",
+        "st_soulslike_rescuer_radio_freq_7",
+        "st_soulslike_rescuer_radio_freq_8",
+        "st_soulslike_rescuer_radio_freq_9",
+        "st_soulslike_rescuer_radio_freq_10",
+        "st_soulslike_rescuer_radio_freq_11",
+        "st_soulslike_rescuer_radio_freq_12",
+        "st_soulslike_rescuer_radio_freq_13",
+        "st_soulslike_rescuer_radio_freq_14",
+        "st_soulslike_rescuer_radio_freq_15",
+    }
+    
+    return strformat(game.translate_string(messages[math.random(#messages)]), freq)
+end
+
+function create(rescuer, params)
+    if rescuer then
+        local msg = rescuer_initial_msg_factory()
+        local enemy_name = params.enemy_looter_name
+        local enemy_comm = params.enemy_looter_comm
+        
+        if params.gave_food_or_water then
+            msg = msg.." "..rescuer_eat_drink_msg_factory()
+        end
+        if enemy_name and enemy_comm then
+            msg = msg.." "..rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
+        end
+        if params.dropped_backpack_id then
+            msg = msg.." "..rescuer_pda_marker_msg_factory()
+        end
+        if params.stash_id then
+            msg = msg.." "..rescuer_enemy_radio_freq_msg_factory(params.radio_freq)
+        end
+        if params.items_lost then
+            msg = msg.." "..rescuer_used_items_msg_factory()            
+        end
+        msg = msg.." "..rescuer_stay_safe_msg_factory()
+        news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
+    else
+        -- TODO: Reactor this into a factory class
+        local msg = game.translate_string("st_soulslike_rescuer_initial_generic")
+        if params.gave_food_or_water then
+            msg = msg.." "..game.translate_string("st_soulslike_rescuer_food_generic")
+        end
+        if params.dropped_backpack_id then
+            msg = msg.." " ..game.translate_string("st_soulslike_rescuer_pda_generic")
+        end
+        if params.stash_id then
+            msg = msg.." "..game.translate_string("st_soulslike_rescuer_radio_generic")
+        end
+		local ui_sender = news_manager.tips_icons['default']
+        db.actor:give_game_news("", msg, ui_sender, 0, 20000)
+    end  
+end
