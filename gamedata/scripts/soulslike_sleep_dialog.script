@@ -43,7 +43,7 @@ function ui_sleep_dialog.UISleep.OnButtonSleep(self)
         return
     end
     
-    _OnButtonSleep()
+    _OnButtonSleep(self)
 end
 
 function ui_sleep_dialog.UISleep.TestAndShow(self, force)
