@@ -4,6 +4,10 @@ local _TestAndShow = ui_sleep_dialog.UISleep.TestAndShow
 local _OnButtonSleep = ui_sleep_dialog.UISleep.OnButtonSleep
 
 function ui_sleep_dialog.UISleep.OnButtonSleep(self)    
+    if not soulslike.IsSoulslikeMode() then        
+        _OnButtonSleep(self)
+        return
+    end
     local bleeding = db.actor.bleeding > 0
     local radiation = db.actor.radiation > 0
     
@@ -47,8 +51,13 @@ function ui_sleep_dialog.UISleep.OnButtonSleep(self)
 end
 
 function ui_sleep_dialog.UISleep.TestAndShow(self, force)
+    if not soulslike.IsSoulslikeMode() then        
+        _TestAndShow(self, force)
+        return
+    end
+
     if force then
-        _TestAndShow(force)
+        _TestAndShow(self, force)
     else
         -- Detour and show the UI so we can let the user 
         -- set their spawn point.  Move the sleep check code
@@ -61,6 +70,10 @@ end
 
 function ui_sleep_dialog.UISleep.InitControls(self)
     _InitControls(self)
+
+    if not soulslike.IsSoulslikeMode() then     
+        return
+    end
 
 	local xml = CScriptXmlInit()
 	xml:ParseFile("soulslike_ui_sleep_dialog.xml")
@@ -83,6 +96,11 @@ end
 
 function ui_sleep_dialog.UISleep.InitCallbacks(self)
     _InitCallbacks(self)
+
+    if not soulslike.IsSoulslikeMode() then     
+        return
+    end
+    
 	self:AddCallback("btn_set_spawn", ui_events.BUTTON_CLICKED, self.OnButtonSetSpawn, self)
 end
 
