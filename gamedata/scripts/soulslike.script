@@ -34,7 +34,6 @@ SCENARIOS = {
     StalkerAmbush = 7,
 }
 
-local SCENARIO_COUNT = 1
 local scenario_logic = nil
 
 ----------------------------------------
@@ -125,6 +124,7 @@ function get_soulslike_state()
                     level_vertex_id = nil,
                     game_vertex_id = nil,
                 },
+            note_message_data = {},
             hidden_stashes = {}
         }
     end
@@ -137,7 +137,7 @@ function set_spawn(show_message)
     local state = get_soulslike_state()
 
 	state.spawn_location.level = level.name()
-	state.spawn_location.position.x= se_actor.position.x
+	state.spawn_location.position.x = se_actor.position.x
 	state.spawn_location.position.y = se_actor.position.y
 	state.spawn_location.position.z = se_actor.position.z
 	state.spawn_location.angle.x = se_actor.angle.x
@@ -291,8 +291,6 @@ function wakeup_callback()
 	exec_console_cmd("snd_volume_music "..tostring(_G.mus_vol))
 	exec_console_cmd("snd_volume_eff "..tostring(_G.amb_vol))
 
-    soulslike.force_save("respawn")
-
 	_G.amb_vol = 0
 	_G.mus_vol = 0
 
@@ -306,6 +304,8 @@ function wakeup_callback()
         debug("Completing scenario.")
         scenario_logic:OnComplete()
         scenario_logic = nil
+        local data = get_soulslike_state()    
+        data.logic_state = nil
     end
 end
 
@@ -337,44 +337,83 @@ local function actor_on_before_death(who, flags)
 	flags.ret_value = false
 
     --TODO: Implement logic that checks for a backpack, if the player doesnt have a backpack always use hidden stash scenario
-    
-    local scenario_weights = { 
-        [SCENARIOS.Default] = {
+    --TODO: What if there are no stashes?  What do we want to do if the player is underground? not (level_weathers.valid_levels[level.name()]) then -- underground levels
+
+    local scenario_count = 0
+    local scenario_weights = {}
+
+    -- We want to be able to debug each scenario using the 
+    -- scenario weight to max, and in this case we want to 
+    -- be able to remove the default scenario so its always
+    -- chosen.
+    if not soulslike_mcm.debug_remove_default_scenario() then
+        scenario_count = scenario_count + 1
+        scenario_weights[SCENARIOS.Default] = {
             min = 0,
             max = 0,
-            weight = 1.0 / SCENARIO_COUNT,
-        },
-        -- [SCENARIOS.RFDetectorStash] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = rf_detector_scenario_weight()
-        -- },
-        -- [SCENARIOS.HiddenStash] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = hidden_stash_scenario_weight()
-        -- },
-        -- [SCENARIOS.ScatteredStashes] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = scattered_stash_scenario_weight()
-        -- },
-        -- [SCENARIOS.NearbyDeadStalker] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = nearby_dead_stalker_scenario_weight()
-        -- },
-        -- [SCENARIOS.MutantAmbush] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = mutant_ambush_scenario_weight()
-        -- },
-        -- [SCENARIOS.StalkerAmbush] = {
-        --     min = 0,
-        --     max = 0,
-        --     weight = stalker_ambush_scenario_weight() 
-        -- },
-    }
+            weight = 1.0,
+        }
+    end
+
+    if soulslike_mcm.rf_detector_scenario_weight() > 0 then
+        scenario_count = scenario_count + 1
+        scenario_weights[SCENARIOS.RFDetectorStash] = {
+            min = 0,
+            max = 0,
+            weight = soulslike_mcm.rf_detector_scenario_weight()
+        }
+    end
+    
+    if soulslike_mcm.hidden_stash_scenario_weight() > 0 then
+        scenario_count = scenario_count + 1
+        scenario_weights[SCENARIOS.HiddenStash] = {
+            min = 0,
+            max = 0,
+            weight = soulslike_mcm.hidden_stash_scenario_weight()
+        }
+    end
+    
+    -- if soulslike_mcm.scattered_stash_scenario_weight() > 0 then
+    --     scenario_count = scenario_count + 1
+    --     scenario_weights[SCENARIOS.ScatteredStashes] = {
+    --         min = 0,
+    --         max = 0,
+    --         weight = soulslike_mcm.scattered_stash_scenario_weight()
+    --     }
+    -- end
+
+    -- if soulslike_mcm.nearby_dead_stalker_scenario_weight() > 0 then
+    --     scenario_count = scenario_count + 1
+    --     scenario_weights[SCENARIOS.NearbyDeadStalker] = {
+    --         min = 0,
+    --         max = 0,
+    --         weight = soulslike_mcm.nearby_dead_stalker_scenario_weight()
+    --     }
+    -- end
+
+    -- if soulslike_mcm.mutant_ambush_scenario_weight() > 0 then
+    --     scenario_count = scenario_count + 1
+    --     scenario_weights[SCENARIOS.MutantAmbush] = {
+    --         min = 0,
+    --         max = 0,
+    --         weight = soulslike_mcm.mutant_ambush_scenario_weight()
+    --     }
+    -- end
+    
+    -- if soulslike_mcm.stalker_ambush_scenario_weight() > 0 then
+    --     scenario_count = scenario_count + 1
+    --     scenario_weights[SCENARIOS.StalkerAmbush] = {
+    --         min = 0,
+    --         max = 0,
+    --         weight = soulslike_mcm.stalker_ambush_scenario_weight() 
+    --     }
+    -- end
+
+    if scenario_count == 0 then
+        debug("ERROR: No scenario chosen because all scenario weights are at 0 and remove default was enabled.")
+        flags.ret_value = true
+        return
+    end
 
     local weight_sum = 0
     for _, value in pairs(scenario_weights) do
@@ -398,7 +437,7 @@ local function actor_on_before_death(who, flags)
     end
 
     if scenario_id == nil then
-        debug("Unable to determine scenario from roll: "..tostring(roll))
+        debug("ERROR: Unable to determine scenario from roll: "..tostring(roll))
         debug(scenario_weights)  
         scenario_id = SCENARIOS.Default
     end
@@ -555,7 +594,8 @@ local function physic_object_on_use_callback(box, who)
         return
     end
 
-    local stash_data = data.hidden_stashes[box:id()]
+    local id = box:id()
+    local stash_data = data.hidden_stashes[id]
     local stash_id = stash_data.stash_id
     local stash = level.object_by_id(stash_id)
 
@@ -568,13 +608,18 @@ local function physic_object_on_use_callback(box, who)
         stash:transfer_item(item, box)
     end
 
-	item_radio.clear_stash(stash_data.radio_id) 
+    if stash_data.radio_id then
+	    item_radio.clear_stash(stash_data.radio_id) 
+    end 
+
 	item_radio.clear_stash(stash_data.stash_id) 
 
     debug("Transfering items from hidden stash to static stash.")    
     stash:iterate_inventory_box(transfer_item)      
-    alife_release(stash)
-    
+    alife_release(stash)    
+
+    level.map_remove_object_spot(id , "primary_object")
+
     data.hidden_stashes[box:id()] = nil
     data.created_stashes[stash_id] = nil
 end

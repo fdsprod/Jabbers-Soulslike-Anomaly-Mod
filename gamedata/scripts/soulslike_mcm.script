@@ -280,6 +280,12 @@ function on_mcm_load()
         val = 1,
         def = false
     });
+    table.insert(op.gr, {
+        id = "debug_remove_default_scenario",
+        type = "check",
+        val = 1,
+        def = false
+    });
 
     return op
 end
@@ -386,4 +392,8 @@ end
 
 function debug_item_loss()
     return is_debug_enabled() and get_config("debug_item_loss", false)
+end 
+
+function debug_remove_default_scenario()
+    return is_debug_enabled() and get_config("debug_remove_default_scenario", false)
 end 

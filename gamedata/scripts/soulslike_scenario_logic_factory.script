@@ -8,22 +8,29 @@ local ignore_list = {
     ["wpn_knife"] = true,
 }
 
+---------------------------------------------------------
+-- Base Scenario Class 
+---------------------------------------------------------
+
 class "SoulslikeScenarioLogic"
 
-function SoulslikeScenarioLogic:__init(state)
-	self.logic_state = state or {}
-    self.game_state = soulslike.get_soulslike_state()
+function SoulslikeScenarioLogic:__init(state)    
+    if state then 
+        self.logic_state = state
+        soulslike.debug("Scenario created with state:")
+        soulslike.debug(state)
+    else
+        self.logic_state = {}
+        soulslike.debug("Scenario created without state.")
+    end
     
-    self:Initialize()
+    self.game_state = soulslike.get_soulslike_state()
 end
 
 function SoulslikeScenarioLogic:destroy()
+    soulslike.debug("Destroying scenario")
 	self.logic_state = nil
     self.game_state = nil
-end
-
-function SoulslikeScenarioLogic:Initialize()
-
 end
 
 function SoulslikeScenarioLogic:HealActor()
@@ -91,7 +98,7 @@ function SoulslikeScenarioLogic:ApplyItemPreconditions()
     local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
     local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
 
-    local function check_item(temp, item)
+    local function check_item(_, item)
         local sec = item:section()
         if is_magazine and is_magazine(sec) and is_carried_mag(item:id()) then
             soulslike.debug("Toggling carried mag: "..sec)
@@ -177,8 +184,9 @@ function SoulslikeScenarioLogic:RespawnActor()
         ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
         return true
     end
-
     CreateTimeEvent(0, "respawn", 1, respawn)
+
+    self:StopSurgeAndStorm()
 end
 
 function SoulslikeScenarioLogic:SendWakeupMessage()
@@ -258,38 +266,43 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
         local is_weapon = (IsWeapon(item) and not is_grenade)
         local is_outfit = IsOutfit(item) 
         local is_headgear = IsHeadgear(item)
+        local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
         local is_toolkit = soulslike.IsToolkit(item)
+        local is_loss_allowed = true
 
         if is_weapon and not soulslike_mcm.allow_weapon_loss() then   
             soulslike.debug("Not allowed to lose weapon "..sec)
-            return
+            is_loss_allowed = true
         end
 
         if is_artefact and not soulslike_mcm.allow_artifact_loss() then   
             soulslike.debug("Not allowed to lose artefact "..sec)
-            return
+            is_loss_allowed = true
         end
 
         if is_outfit and not soulslike_mcm.allow_outfit_loss() then   
             soulslike.debug("Not allowed to lose outfit "..sec)
-            return
+            is_loss_allowed = true
         end
 
         if is_headgear and not soulslike_mcm.allow_headgear_loss() then   
             soulslike.debug("Not allowed to lose headgear "..sec)
-            return
+            is_loss_allowed = true
         end
 
         if is_toolkit and not soulslike_mcm.allow_toolkit_loss() then   
             soulslike.debug("Not allowed to lose toolkit "..sec)
-            return
+            is_loss_allowed = true
         end
         
-        local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
+        if is_backpack then            
+            soulslike.debug("Not allowed to lose bakcpack "..sec)
+            is_loss_allowed = true
+        end
 
         -- We never want to delete the players backpack
         -- since it makes up the created stash
-        if not is_backpack and loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then
+        if is_loss_allowed and loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then
             self.logic_state.items_lost = true                
             loss_chance_dice_roll = math.random(0, 100)
 
@@ -307,6 +320,7 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
                     local index = math.random(1, numitems)
                     parts[keys[index]] = -1 -- KEKW
                     enemy_looted = true     
+                    -- TODO: Add message text for this 
                     self.logic_state.got_tarkoved = true
                 end    
                 
@@ -373,9 +387,13 @@ function SoulslikeScenarioLogic:OnRespawn()
 
     soulslike.debug('Character rank: '..rank)
     soulslike.debug('Character rep: '..rep)
-
-    self:destroy()
 end 
+
+---------------------------------------------------------
+-- Default Scenario 
+-- Stash dropped where the player died
+-- Marked on PDA
+---------------------------------------------------------
 
 class "DefaultSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
@@ -412,18 +430,11 @@ function DefaultSoulslikeScenarioLogic:HandleItemsAndRespawn()
                 soulslike.debug("Stash exists in game")
 
                 self:TransferItems(se_stash.id)   
-
-                if self.logic_state.dropped_backpack_id then
-                    level.map_add_object_spot_ser(se_stash.id, "primary_object", db.actor:character_name() .. " items")
-                elseif self.logic_state.tash_id then
-                    local lvl = level.name()
-                    soulslike.debug("Adding radio target to level: "..lvl)
-                    self.logic_state.radio_freq = math.random(30,  300)
-                    item_radio.add_stash(lvl, self.logic_state.stash_id, self.logic_state.radio_freq) 
-                end   
+                
+                self.logic_state.has_pda_marker = true
+                level.map_add_object_spot_ser(se_stash.id, "primary_object", db.actor:character_name() .. " items")
 
                 self:RespawnActor()
-                self:StopSurgeAndStorm()
                 return true
             else
                 soulslike.debug("Stash does not yet exist in game")            
@@ -436,9 +447,15 @@ function DefaultSoulslikeScenarioLogic:HandleItemsAndRespawn()
     else    
         soulslike.debug("Stash was not created")
         self:RespawnActor()
-        self:StopSurgeAndStorm()
     end
 end
+
+---------------------------------------------------------
+-- RF Detector Scenario 
+-- Hidden stash used for item drop
+-- RF Detector must be used to find the stash
+-- TODO: Add task to the players PDA
+---------------------------------------------------------
 
 class "RFDetectorSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
@@ -446,10 +463,156 @@ function RFDetectorSoulslikeScenarioLogic:__init(state) super (state)
 	self.logic_state.scenario_id = soulslike.SCENARIOS.RFDetectorStash
 end
 
+function RFDetectorSoulslikeScenarioLogic:CreateStash()
+     -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
+    local old_box_in_same_map = treasure_manager.box_in_same_map
+    treasure_manager.box_in_same_map = function(id)
+        local obj1 = alife():actor()
+        local obj2 = alife_object(id)
+        return simulation_objects.is_on_the_same_level(obj1, obj2)
+    end
+    local id = treasure_manager.get_random_stash("treasure", nil ,true, true)
+    treasure_manager.box_in_same_map = old_box_in_same_map
+
+    -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
+    if not id then return nil end
+
+    soulslike.debug("Random stash found: "..tostring(id))    
+
+    local actor = db.actor
+    local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+
+    if not self.game_state.hidden_stashes then
+        self.game_state.hidden_stashes = {}
+    end
+
+    self.game_state.hidden_stashes[id] = {
+        stash_id = se_stash.id,
+        radio_id = id
+    } 
+
+    if soulslike_mcm.debug_hidden_stashes() then
+        level.map_add_object_spot_ser(id, "secondary_task_location", "DEBUG: RF DETECTOR STASH.") 
+    end          
+        
+    return se_stash
+end
+
+function RFDetectorSoulslikeScenarioLogic:HandleItemsAndRespawn() 
+    local se_stash = self:CreateStash()
+             
+    if se_stash then
+        soulslike.debug("Hidden stash found "..tostring(se_stash.id))
+
+        local function transfer_and_respawn()
+            local pack = level.object_by_id(se_stash.id)
+
+            if pack then
+                soulslike.debug("Hidden stash exists in game")
+
+                self:TransferItems(se_stash.id)   
+
+                local lvl = level.name()
+                soulslike.debug("Added radio target to level: "..lvl)
+                self.logic_state.radio_freq = math.random(30,  300)
+                item_radio.add_stash(lvl, se_stash.id, self.logic_state.radio_freq) 
+
+                local se_note = alife_create_item('soulslike_rescuers_radio_frequency_note', db.actor)
+
+                self.game_state.note_message_data[se_note.id] = { 
+                    freq = self.logic_state.radio_freq,
+                    level_name = lvl
+                }
+
+                self:RespawnActor()
+                return true
+            else
+                soulslike.debug("Hidden stash does not yet exist in game")            
+                return false
+            end
+        end
+        
+        --We have to create a timer to give the game time to spawn the backpack.
+        CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
+    else    
+        soulslike.debug("Hidden stash found was not created")
+
+        self:RespawnActor()
+    end
+end
+
+---------------------------------------------------------
+-- Hidden Stash Scenario 
+-- Hidden stash used for item drop
+-- TODO: Add task to the players PDA
+---------------------------------------------------------
+
 class "HiddenStashSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function HiddenStashSoulslikeScenarioLogic:__init(state) super (state)
 	self.logic_state.scenario_id = soulslike.SCENARIOS.HiddenStash
+end
+
+function HiddenStashSoulslikeScenarioLogic:CreateStash()
+     -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
+    local old_box_in_same_map = treasure_manager.box_in_same_map
+    treasure_manager.box_in_same_map = function(id)
+        local obj1 = alife():actor()
+        local obj2 = alife_object(id)
+        return simulation_objects.is_on_the_same_level(obj1, obj2)
+    end
+    local id = treasure_manager.get_random_stash("treasure", nil ,true, true)
+    treasure_manager.box_in_same_map = old_box_in_same_map
+
+    -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
+    if not id then return nil end
+
+    debug("Random stash found: "..tostring(id))    
+
+    local actor = db.actor
+    local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+
+    if not self.game_state.hidden_stashes then
+        self.game_state.hidden_stashes = {}
+    end
+
+    self.game_state.hidden_stashes[id] = {
+        stash_id = se_stash.id,
+    } 
+
+    return se_stash
+end
+
+function HiddenStashSoulslikeScenarioLogic:HandleItemsAndRespawn() 
+    local se_stash = self:CreateStash()
+             
+    if se_stash then
+        soulslike.debug("Hidden stash found "..tostring(se_stash.id))
+
+        local function transfer_and_respawn()
+            local pack = level.object_by_id(se_stash.id)
+
+            if pack then
+                soulslike.debug("Hidden stash exists in game")
+
+                self:TransferItems(se_stash.id)   
+                level.map_add_object_spot_ser(se_stash.id, "primary_object", db.actor:character_name() .. " items")
+                
+                self:RespawnActor()
+                return true
+            else
+                soulslike.debug("Hidden stash does not yet exist in game")            
+                return false
+            end
+        end
+        
+        --We have to create a timer to give the game time to spawn the backpack.
+        CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
+    else    
+        soulslike.debug("Hidden stash found was not created")
+
+        self:RespawnActor()
+    end
 end
 
 class "ScatteredStashesSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
@@ -476,40 +639,42 @@ function StalkerAmbushSoulslikeScenarioLogic:__init(state) super (state)
 	self.logic_state.scenario_id = soulslike.SCENARIOS.StalkerAmbush
 end
 
-function create(scenario_id) 
+function create(scenario_id, state) 
     local scenario = nil
 
+    soulslike.debug("Creating scenario "..tostring(scenario_id))
+
     if scenario_id == soulslike.SCENARIOS.Default then
-        scenario = soulslike_scenario_logic_factory.DefaultSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.DefaultSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.RFDetectorStash then 
-        scenario = soulslike_scenario_logic_factory.RFDetectorStashSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.RFDetectorSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.HiddenStash then 
-        scenario = soulslike_scenario_logic_factory.HiddenStashSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.HiddenStashSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.ScatteredStashes then 
-        scenario = soulslike_scenario_logic_factory.ScatteredStashesSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.ScatteredStashesSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.NearbyDeadStalker then 
-        scenario = soulslike_scenario_logic_factory.NearbyDeadStalkerSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.NearbyDeadStalkerSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.MutantAmbush then
-         scenario = soulslike_scenario_logic_factory.MutantAmbushSoulslikeScenarioLogic() 
+         scenario = soulslike_scenario_logic_factory.MutantAmbushSoulslikeScenarioLogic(state) 
     end
     
     if scenario_id ==soulslike.SCENARIOS.StalkerAmbush then 
-        scenario = soulslike_scenario_logic_factory.AmbushSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.StalkerAmbushSoulslikeScenarioLogic(state) 
     end
 
     if scenario == nil then
         soulslike.debug("Unrecognized Scenario Id: "..tostring(scenario_id)) 
-        scenario = soulslike_scenario_logic_factory.DefaultSoulslikeScenarioLogic() 
+        scenario = soulslike_scenario_logic_factory.DefaultSoulslikeScenarioLogic(state) 
     end
 
     return scenario
