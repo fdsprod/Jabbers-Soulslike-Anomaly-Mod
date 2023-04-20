@@ -35,6 +35,7 @@ SCENARIOS = {
 }
 
 local SCENARIO_COUNT = 1
+local scenario_logic = nil
 
 ----------------------------------------
 -- Helpers
@@ -283,6 +284,43 @@ function force_save(type)
 	end
 end
 
+function wakeup_callback()
+    debug("wakeup_callback")
+	xr_effects.enable_ui(db.actor, nil)
+
+	exec_console_cmd("snd_volume_music "..tostring(_G.mus_vol))
+	exec_console_cmd("snd_volume_eff "..tostring(_G.amb_vol))
+
+    soulslike.force_save("respawn")
+
+	_G.amb_vol = 0
+	_G.mus_vol = 0
+
+	disable_info("tutorial_sleep")
+	disable_info("actor_is_sleeping")
+	disable_info("sleep_active")
+    
+    debug("Looking for scenario logic.")
+
+    if scenario_logic then
+        debug("Completing scenario.")
+        scenario_logic:OnComplete()
+        scenario_logic = nil
+    end
+end
+
+function dream_callback()
+    debug("dream_callback")
+    level.add_cam_effector("camera_effects\\sleep.anm", 10, false, "soulslike.wakeup_callback")
+	
+	local hours = math.random(6,14)	
+	level.change_game_time(0,hours,0)
+	
+	db.actor.power = 1
+	
+	SendScriptCallback("actor_on_sleep", hours)
+end
+
 local function actor_on_before_death(who, flags)    
     if not IsSoulslikeMode() then
         return
@@ -365,8 +403,7 @@ local function actor_on_before_death(who, flags)
         scenario_id = SCENARIOS.Default
     end
 
-    local scenario_logic = soulslike_scenario_logic_factory.create(scenario_id)
-
+    scenario_logic = soulslike_scenario_logic_factory.create(scenario_id)
     scenario_logic:OnDeath()
 end
 
@@ -397,23 +434,6 @@ local function on_before_save_input(flags, type, text)
     actor_menu.set_msg(1, str, 4)
     exec_console_cmd("main_menu off")
     flags.ret = true
-end
-
-local function on_game_load()        
-    if not IsSoulslikeMode() then
-        return
-    end
-
-    debug('Version: '..version)
-
-    local data = get_soulslike_state()
-
-    -- Write out an identifier so we can use it later
-    -- to identify other saves with the same ID if the 
-    -- user is playing with Hardcore Saves enabled.
-    if not data.uuid then        
-        data.uuid = GAME_VERSION .. "_" .. tostring(math.random(100)) .. tostring(math.random()) .. tostring(math.random(1000))
-    end
 end
 
 local function tablelength(T)
@@ -559,15 +579,45 @@ local function physic_object_on_use_callback(box, who)
     data.created_stashes[stash_id] = nil
 end
 
-local function save_state() 
+local function load_state(data) 
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    local data = get_soulslike_state()
+
+    if data.logic_state then
+        -- Reinitialize the last scenario using the saved logic state.
+        scenario_logic = soulslike_scenario_logic_factory.create(data.logic_state.scenario_id, data.logic_state)
+    end
+end
+
+local function save_state(data) 
+    if not IsSoulslikeMode() then
+        return
+    end
+
     local data = get_soulslike_state()
 
     if not data.spawn_location.level and level.name() ~= 'fake_start' then
         set_spawn(false)
+    end
+
+    if scenario_logic then
+        -- Save the logic state for the current scenario so we can restore it on load
+        -- This is for the purposes of ChangeLevel which unloads the scripts and then 
+        -- reloads them, so we need to be able to reinitialize the scenario as it was
+        -- before changing levels
+        data.logic_state = scenario_logic.logic_state;
     end
 end
 
 local function on_level_changing() 
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    debug("On on_level_changing load.")
     local data = get_soulslike_state()
 
     if not data.spawn_location.level and level.name() ~= 'fake_start' then
@@ -575,14 +625,52 @@ local function on_level_changing()
     end
 end
 
+local function on_game_load()
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    debug("On game load.")
+
+    local data = get_soulslike_state()
+
+    -- Write out an identifier so we can use it later
+    -- to identify other saves with the same ID if the 
+    -- user is playing with Hardcore Saves enabled.
+    if not data.uuid then        
+        data.uuid = GAME_VERSION .. "_" .. tostring(math.random(100)) .. tostring(math.random()) .. tostring(math.random(1000))
+    end
+
+    debug("Looking for scenario logic.")
+
+    if scenario_logic then
+        debug("Calling scenario respawn.")
+        scenario_logic:OnRespawn()
+    end
+end 
+
+local function actor_on_sleep(hours)    
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    soulslike.debug('actor_on_sleep')
+    soulslike.force_save("sleep")
+end
+
+
 function on_game_start()
+    debug('Version: '..version)
+
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
-    RegisterScriptCallback("actor_on_item_take_from_box",actor_on_item_take_from_box)
+    RegisterScriptCallback("actor_on_item_take_from_box", actor_on_item_take_from_box)
     RegisterScriptCallback("actor_on_before_death", actor_on_before_death)
-    RegisterScriptCallback("on_before_save_input",on_before_save_input)
+    RegisterScriptCallback("on_before_save_input", on_before_save_input)
     RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("load_state", load_state)
     RegisterScriptCallback("on_level_changing", on_level_changing)
-    RegisterScriptCallback("on_game_load",on_game_load)
-	RegisterScriptCallback("on_console_execute",on_console_execute)
+    RegisterScriptCallback("on_game_load", on_game_load)
+    RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
+	RegisterScriptCallback("on_console_execute", on_console_execute)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
 end
