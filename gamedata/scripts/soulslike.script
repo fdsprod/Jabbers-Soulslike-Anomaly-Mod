@@ -333,11 +333,19 @@ local function actor_on_before_death(who, flags)
 	end
 
     debug('Actor died')
+    
+    soulslike.debug("Looking for player backpack")
+    local has_backpack = false
+    local function find_backpack(_, item)
+        local sec = item:section()
+        has_backpack = has_backpack or (item and SYS_GetParam(0, sec, "kind") == "i_backpack")
+    end
+    db.actor:iterate_inventory(find_backpack)
 
-	flags.ret_value = false
-
-    --TODO: Implement logic that checks for a backpack, if the player doesnt have a backpack always use hidden stash scenario
-    --TODO: What if there are no stashes?  What do we want to do if the player is underground? not (level_weathers.valid_levels[level.name()]) then -- underground levels
+    local player_is_indoor = not level_weathers.valid_levels[level.name()]
+    
+    soulslike.debug("has_backpack="..tostring(has_backpack))
+    soulslike.debug("player_is_indoor="..tostring(player_is_indoor))
 
     local scenario_count = 0
     local scenario_weights = {}
@@ -346,7 +354,9 @@ local function actor_on_before_death(who, flags)
     -- scenario weight to max, and in this case we want to 
     -- be able to remove the default scenario so its always
     -- chosen.
-    if not soulslike_mcm.debug_remove_default_scenario() then
+
+    if has_backpack and not soulslike_mcm.debug_remove_default_scenario() then
+        soulslike.debug("Adding default scenario")
         scenario_count = scenario_count + 1
         scenario_weights[SCENARIOS.Default] = {
             min = 0,
@@ -355,7 +365,8 @@ local function actor_on_before_death(who, flags)
         }
     end
 
-    if soulslike_mcm.rf_detector_scenario_weight() > 0 then
+    if not player_is_indoor and soulslike_mcm.rf_detector_scenario_weight() > 0 then
+        soulslike.debug("Adding RF detector scenario")
         scenario_count = scenario_count + 1
         scenario_weights[SCENARIOS.RFDetectorStash] = {
             min = 0,
@@ -364,7 +375,8 @@ local function actor_on_before_death(who, flags)
         }
     end
     
-    if soulslike_mcm.hidden_stash_scenario_weight() > 0 then
+    if not player_is_indoor and soulslike_mcm.hidden_stash_scenario_weight() > 0 then
+        soulslike.debug("Adding hidden stash scenario")
         scenario_count = scenario_count + 1
         scenario_weights[SCENARIOS.HiddenStash] = {
             min = 0,
@@ -373,16 +385,17 @@ local function actor_on_before_death(who, flags)
         }
     end
     
-    -- if soulslike_mcm.scattered_stash_scenario_weight() > 0 then
-    --     scenario_count = scenario_count + 1
-    --     scenario_weights[SCENARIOS.ScatteredStashes] = {
-    --         min = 0,
-    --         max = 0,
-    --         weight = soulslike_mcm.scattered_stash_scenario_weight()
-    --     }
-    -- end
+    if not player_is_indoor and soulslike_mcm.scattered_stash_scenario_weight() > 0 then
+        soulslike.debug("Adding scattered stash scenario")
+        scenario_count = scenario_count + 1
+        scenario_weights[SCENARIOS.ScatteredStashes] = {
+            min = 0,
+            max = 0,
+            weight = soulslike_mcm.scattered_stash_scenario_weight()
+        }
+    end
 
-    -- if soulslike_mcm.nearby_dead_stalker_scenario_weight() > 0 then
+    -- if not player_is_indoor and soulslike_mcm.nearby_dead_stalker_scenario_weight() > 0 then
     --     scenario_count = scenario_count + 1
     --     scenario_weights[SCENARIOS.NearbyDeadStalker] = {
     --         min = 0,
@@ -391,7 +404,7 @@ local function actor_on_before_death(who, flags)
     --     }
     -- end
 
-    -- if soulslike_mcm.mutant_ambush_scenario_weight() > 0 then
+    -- if not player_is_indoor and soulslike_mcm.mutant_ambush_scenario_weight() > 0 then
     --     scenario_count = scenario_count + 1
     --     scenario_weights[SCENARIOS.MutantAmbush] = {
     --         min = 0,
@@ -400,7 +413,7 @@ local function actor_on_before_death(who, flags)
     --     }
     -- end
     
-    -- if soulslike_mcm.stalker_ambush_scenario_weight() > 0 then
+    -- if not player_is_indoor and soulslike_mcm.stalker_ambush_scenario_weight() > 0 then
     --     scenario_count = scenario_count + 1
     --     scenario_weights[SCENARIOS.StalkerAmbush] = {
     --         min = 0,
@@ -409,9 +422,21 @@ local function actor_on_before_death(who, flags)
     --     }
     -- end
 
+    -- If for some reason the player doesn't have a backpack... 
+    -- and we have no other valid scenario in the list...
+    -- Let's make the exception to use the Default Scenario.
+    if not has_backpack and scenario_count == 0 then
+        soulslike.debug("No backpack or scenarios detected.  Adding default.")
+        scenario_count = scenario_count + 1
+        scenario_weights[SCENARIOS.Default] = {
+            min = 0,
+            max = 0,
+            weight = 1.0,
+        }
+    end
+
     if scenario_count == 0 then
         debug("ERROR: No scenario chosen because all scenario weights are at 0 and remove default was enabled.")
-        flags.ret_value = true
         return
     end
 
@@ -426,6 +451,8 @@ local function actor_on_before_death(who, flags)
         value.max = math.floor(min + (100 * (value.weight / weight_sum)))
         min = value.max
     end
+    
+    soulslike.debug(scenario_weights)
 
     local roll = math.random(1, 100)    
     local scenario_id = nil
@@ -444,6 +471,8 @@ local function actor_on_before_death(who, flags)
 
     scenario_logic = soulslike_scenario_logic_factory.create(scenario_id)
     scenario_logic:OnDeath()
+
+	flags.ret_value = false
 end
 
 local function on_before_save_input(flags, type, text)
@@ -475,10 +504,19 @@ local function on_before_save_input(flags, type, text)
     flags.ret = true
 end
 
-local function tablelength(T)
+function tablelength(T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
     return count
+end
+
+function tableHasValue(tab, val)
+    for _, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end    
+    return false
 end
 
 local function try_send_inventory_examined_message(stash_id)        
@@ -614,14 +652,14 @@ local function physic_object_on_use_callback(box, who)
 
 	item_radio.clear_stash(stash_data.stash_id) 
 
-    debug("Transfering items from hidden stash to static stash.")    
+    debug("Transfering items from hidden stash "..tostring(id).." to static stash "..tostring(stash_id))    
     stash:iterate_inventory_box(transfer_item)      
-    alife_release(stash)    
+    alife_release(stash)
 
-    level.map_remove_object_spot(id , "primary_object")
+    debug("Removing PDA marker "..tostring(id))   
+    level.map_remove_object_spot(id , "secondary_task_location")
 
-    data.hidden_stashes[box:id()] = nil
-    data.created_stashes[stash_id] = nil
+    data.hidden_stashes[id] = nil
 end
 
 local function load_state(data) 
@@ -700,7 +738,11 @@ local function actor_on_sleep(hours)
     end
 
     soulslike.debug('actor_on_sleep')
-    soulslike.force_save("sleep")
+
+    -- Only force save if we aren't running a scenario 
+    if not scenario_logic then
+        soulslike.force_save("sleep")
+    end
 end
 
 
