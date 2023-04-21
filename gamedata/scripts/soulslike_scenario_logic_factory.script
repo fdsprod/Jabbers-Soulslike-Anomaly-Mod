@@ -8,6 +8,14 @@ local ignore_list = {
     ["wpn_knife"] = true,
 }
 
+local function protect_call(func, ...)    
+    local success, err = pcall(func, ...)
+
+    if not success then
+        soulslike.debug("ERROR: "..err)
+    end
+end
+
 ---------------------------------------------------------
 -- Base Scenario Class 
 ---------------------------------------------------------
@@ -856,8 +864,8 @@ function ScatteredStashesSoulslikeScenarioLogic:HandleItemsAndRespawn()
 
             soulslike.debug("All stashes exists in game")
 
-            self:TransferItems()   
-            self:ApplyTransferItemsPostConditions()
+            self:TransferItems()  
+            self:ApplyTransferItemsPostConditions() 
             self:RespawnActor()
             return true
         end
