@@ -122,16 +122,6 @@ function on_mcm_load()
         step = 0.01,
         def = 0.05
     })
-
-    table.insert(op.gr, {
-        id = "rf_detector_recovery_task_chance",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 0.50,
-        step = 0.01,
-        def = 0.10
-    })
     
     table.insert(op.gr, {
         id = "lost_items_looted_by_npcs",
@@ -286,6 +276,12 @@ function on_mcm_load()
         val = 1,
         def = false
     });
+    table.insert(op.gr, {
+        id = "debug_the_tarkov_looter",
+        type = "check",
+        val = 1,
+        def = false
+    });
 
     return op
 end
@@ -330,32 +326,28 @@ function are_looter_npcs_marked()
     return get_config("looter_npcs_marked", false)
 end 
 
-function rf_detector_recovery_task_chance()
-    return get_config("rf_detector_recovery_task_chance", 0.1)
-end 
-
 function rf_detector_scenario_weight()
-    return get_config("rf_detector_scenario_weight", true)
+    return get_config("rf_detector_scenario_weight", 0.10)
 end 
 
 function hidden_stash_scenario_weight()
-    return get_config("hidden_stash_scenario_weight", true)
+    return get_config("hidden_stash_scenario_weight", 0.10)
 end 
 
 function scattered_stash_scenario_weight()
-    return get_config("scattered_stash_scenario_weight", true)
+    return get_config("scattered_stash_scenario_weight", 0.02)
 end 
 
 function nearby_dead_stalker_scenario_weight()
-    return get_config("nearby_dead_stalker_scenario_weight", true)
+    return get_config("nearby_dead_stalker_scenario_weight", 0.10)
 end 
 
 function mutant_ambush_scenario_weight()
-    return get_config("mutant_ambush_scenario_weight", true)
+    return get_config("mutant_ambush_scenario_weight", 0.5)
 end 
 
 function stalker_ambush_scenario_weight()
-    return get_config("stalker_ambush_scenario_weight", true)
+    return get_config("stalker_ambush_scenario_weight", 0.5)
 end 
 
 function allow_toolkit_loss()
@@ -396,4 +388,8 @@ end
 
 function debug_remove_default_scenario()
     return is_debug_enabled() and get_config("debug_remove_default_scenario", false)
+end 
+
+function debug_the_tarkov_looter()
+    return is_debug_enabled() and get_config("debug_the_tarkov_looter", false)
 end 

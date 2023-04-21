@@ -16,6 +16,7 @@ class "SoulslikeScenarioLogic"
 
 function SoulslikeScenarioLogic:__init(state)   
     soulslike.debug("SoulslikeScenarioLogic:__init") 
+
     if state then 
         self.logic_state = state
         soulslike.debug("Scenario created with state:")
@@ -41,8 +42,9 @@ function SoulslikeScenarioLogic:__init(state)
             are_looter_npcs_marked = soulslike_mcm.are_looter_npcs_marked(),
             story = {
                 gave_food_or_water = nil,
-                has_single_pda_marker = nil,
-                has_multi_pda_marker = nil,
+                has_pda_marker = nil,
+                has_stash_pda_marker = nil,
+                has_multi_stash_pda_marker = nil,
                 radio_freq = nil,
                 items_were_lost = nil,
                 enemy = nil, -- { name, community, tarkov_experience }
@@ -56,12 +58,14 @@ end
 
 function SoulslikeScenarioLogic:destroy()
     soulslike.debug("SoulslikeScenarioLogic:destroy")
+
 	self.logic_state = nil
     self.game_state = nil
 end
 
 function SoulslikeScenarioLogic:HealActor()
     soulslike.debug("SoulslikeScenarioLogic:HealActor")
+
     local heath = 1 - self.logic_state.health_loss_percent
 
 	db.actor:set_health_ex(heath)
@@ -77,6 +81,7 @@ end
 
 function SoulslikeScenarioLogic:ApplyRankLoss()
     soulslike.debug("SoulslikeScenarioLogic:ApplyRankLoss")
+
     local rank = db.actor:character_rank()
     local loss_percent = self.logic_state.rank_loss_percent
     local rank_loss = math.abs(rank * loss_percent)
@@ -89,6 +94,7 @@ end
 
 function SoulslikeScenarioLogic:ApplyRepLoss()
     soulslike.debug("SoulslikeScenarioLogic:ApplyRepLoss")
+
     local rep = db.actor:character_reputation()
     local loss_percent = self.logic_state.rep_loss_percent
     local rep_loss = math.abs(rep * loss_percent)
@@ -101,6 +107,7 @@ end
 
 function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_percent)
     soulslike.debug("SoulslikeScenarioLogic:ApplyItemConditionLoss")
+
     local cond = item:condition()
     local sec = item:section()
     local degrade_factor = cond * condition_loss_percent
@@ -125,6 +132,7 @@ end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
     soulslike.debug("SoulslikeScenarioLogic:ApplyTransferItemsPreConditions")
+
     local is_magazine					= magazine_binder and magazine_binder.is_magazine
     local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
     local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
@@ -148,6 +156,7 @@ end
 
 function SoulslikeScenarioLogic:HandleItemsAndRespawn() 
     soulslike.debug("SoulslikeScenarioLogic:HandleItemsAndRespawn")
+
     self:ApplyTransferItemsPreConditions()
 
     local se_stash = self:CreateStash()
@@ -182,6 +191,7 @@ end
 
 function SoulslikeScenarioLogic:OnDeath()  
     soulslike.debug("SoulslikeScenarioLogic:OnDeath")
+
     self:HealActor()
     self:ApplyRankLoss()
     self:ApplyRepLoss()
@@ -190,6 +200,7 @@ end
 
 function SoulslikeScenarioLogic:OnComplete()
     soulslike.debug("SoulslikeScenarioLogic:OnComplete")
+
 	-- Satiety
 	local conditions = db.actor:cast_Actor():conditions()
 	local satiety = conditions:GetSatiety()
@@ -239,6 +250,7 @@ end
 
 function SoulslikeScenarioLogic:RespawnActor()
     soulslike.debug("SoulslikeScenarioLogic:RespawnActor")
+
     soulslike.debug("Respawning actor at last sleep location")
     soulslike.debug(self.game_state)
         
@@ -260,6 +272,7 @@ end
 
 function SoulslikeScenarioLogic:SendWakeupMessage()
     soulslike.debug("SoulslikeScenarioLogic:SendWakeupMessage") 
+
     local rescuer = soulslike.find_actor_community_friendly()
     local msg = soulslike_message_factory.create(rescuer, self.logic_state.story)
 
@@ -273,6 +286,7 @@ end
 
 function SoulslikeScenarioLogic:AdvanceTime()
     soulslike.debug("SoulslikeScenarioLogic:AdvanceTime")
+
     self.logic_state.is_advancing_time = true
 
     xr_effects.disable_ui(db.actor, nil)
@@ -292,6 +306,7 @@ end
 
 function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
     soulslike.debug("SoulslikeScenarioLogic:StopSurgeAndStorm") 
+
     -- skip surge due to bug with killing actor on switch
     surge_manager.stop_surge()    
     if (psi_storm_manager.get_psi_storm_manager().started) then
@@ -301,6 +316,7 @@ end
 
 function SoulslikeScenarioLogic:IsItemLossAllowed(item)
     soulslike.debug("SoulslikeScenarioLogic:IsItemLossAllowed") 
+
     local sec = item:section()
     local is_grenade = IsGrenade(item)
     local is_artefact = IsArtefact(item)
@@ -336,6 +352,7 @@ end
 
 function SoulslikeScenarioLogic:TryEnemyLooter(item, container, looter)
     soulslike.debug("SoulslikeScenarioLogic:TryEnemyLooter") 
+
     local sec = item:section()
     local to_id = container:id()
     local is_grenade = IsGrenade(item)
@@ -346,7 +363,7 @@ function SoulslikeScenarioLogic:TryEnemyLooter(item, container, looter)
 
     if(self.logic_state.allow_npc_looting and (is_weapon or is_outfit or is_headgear or is_toolkit) and looter) then   
         soulslike.debug("Transfering item to enemy: "..sec)   
-        table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)                
+        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)                
         db.actor:transfer_item(item, looter)
         self.logic_state.looter = true
         return true
@@ -356,10 +373,15 @@ end
 
 function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
     soulslike.debug("SoulslikeScenarioLogic:TryTarkovLooter") 
+
     local loss_chance_dice_roll = math.random(0, 100)
     local sec = item:section()
     local is_grenade = IsGrenade(item)
     local is_weapon = (IsWeapon(item) and not is_grenade)
+
+    if soulslike_mcm.debug_the_tarkov_looter() then
+        loss_chance_dice_roll = 1
+    end
 
     if loss_chance_dice_roll <= 1 and is_weapon and item_parts then
         local parts = item_parts.get_parts_con(item)
@@ -370,11 +392,23 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
                 numitems = numitems + 1
                 table.insert(keys, k)
             end
+            
             local index = math.random(1, numitems)
-            local name = keys[index]
+            local sec = keys[index]
             local condition = parts[keys[index]]
 
-            parts[name] = -1 -- KEKW 
+            soulslike.debug("Creating item "..sec.." with condition "..tostring(condition)) 
+
+            local max_con_obj = 0.999
+            local min_con_obj = 0.001
+            local se_result = alife_create(sec, looter:position(), looter:level_vertex_id(), looter:game_vertex_id(), looter:id(), false)
+			local data_result = utils_stpk.get_item_data(se_result)
+			
+            data_result.condition = clamp((condition / 100) , min_con_obj , max_con_obj)
+			utils_stpk.set_item_data(data_result,se_result)
+			alife():register(se_result)
+
+            parts[sec] = -1 -- KEKW 
             -- TODO: Spawn part on looter
             self.logic_state.looter = true
             -- TODO: Add message text for this 
@@ -390,6 +424,7 @@ end
 
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     soulslike.debug("SoulslikeScenarioLogic:TransferItem") 
+
     local sec = item:section()
     local to_id = container:id()
 
@@ -430,7 +465,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         end
 
         soulslike.debug("Item lost "..sec)  
-        table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)          
+        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)          
         alife_release(item)      
 
         self.logic_state.story.items_were_lost = true  
@@ -443,7 +478,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         if condition == 0 then
             soulslike.debug("Item ".. sec.. " was degraded into oblivion")
             self.logic_state.story.items_were_lost = true
-            table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)
+            table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
             return false
         end
     end
@@ -455,9 +490,14 @@ end
 
 function SoulslikeScenarioLogic:TransferItems(to_id)
     soulslike.debug("SoulslikeScenarioLogic:TransferItems") 
+
     local container = level.object_by_id(to_id)
     local enemy_looter = soulslike.find_enemy()
-    
+
+    if enemy_looter then
+        soulslike.debug("Scenario Looter "..enemy_looter:character_community().." "..enemy_looter:character_name()) 
+    end
+
     local function release_actor_item(temp, item)
         self:TransferItem(item, container, enemy_looter)
     end     
@@ -508,6 +548,7 @@ end
 
 function DefaultSoulslikeScenarioLogic:CreateStash()
     soulslike.debug("DefaultSoulslikeScenarioLogic:CreateStash") 
+
     soulslike.debug("Creating stash")    
 
     local actor = db.actor
@@ -527,6 +568,7 @@ end
 
 function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
     soulslike.debug("DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
+
     self.logic_state.story.has_single_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.stash_id, "primary_object", db.actor:character_name() .. "'s items")
 end
@@ -547,6 +589,7 @@ end
 
 function RFDetectorSoulslikeScenarioLogic:CreateStash()
     soulslike.debug("RFDetectorSoulslikeScenarioLogic:CreateStash") 
+
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
@@ -581,6 +624,7 @@ end
 
 function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     soulslike.debug("RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
+
     local lvl = level.name()
     soulslike.debug("Added radio target to level: "..lvl)
     self.logic_state.story.radio_freq = math.random(30,  300)
@@ -613,6 +657,7 @@ end
 
 function HiddenStashSoulslikeScenarioLogic:CreateStash()
     soulslike.debug("HiddenStashSoulslikeScenarioLogic:CreateStash") 
+
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
@@ -648,10 +693,11 @@ end
 
 function HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
     soulslike.debug("HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
+
     soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))     
 
     local value = game.translate_string("st_soulslike_your_items")
-    self.logic_state.story.has_single_pda_marker = true
+    self.logic_state.story.has_stash_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.treasure_stash_id, "secondary_task_location", value)
 end
 
@@ -671,6 +717,7 @@ end
 
 function ScatteredStashesSoulslikeScenarioLogic:CreateStash()
     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:CreateStash") 
+
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
@@ -783,7 +830,7 @@ function ScatteredStashesSoulslikeScenarioLogic:ApplyTransferItemsPostConditions
         soulslike.debug("Adding PDA marker "..tostring(id))
 
         local value = game.translate_string("st_soulslike_your_items")
-        self.logic_state.story.has_multi_pda_marker = true
+        self.logic_state.story.has_multi_stash_pda_marker = true
         level.map_add_object_spot_ser(id, "secondary_task_location", value)
     end
 end

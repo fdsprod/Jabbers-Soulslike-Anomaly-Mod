@@ -119,6 +119,8 @@
     <text>I left you a little something to eat and drink.</text>
 </string>
 
+
+
 <string id="st_soulslike_rescuer_pda_1">
     <text>I added a marker where I found you to your PDA. Hopefully you can get back some of your things.</text>
 </string>
@@ -182,7 +184,6 @@
 <string id="st_soulslike_rescuer_pda_16">
     <text>I marked the location where I found you on your PDA. This might help you recover some of your lost items.</text>
 </string>
-
 
 
 
@@ -311,6 +312,28 @@
     <text>Stay safe and stay alive, Stalker.</text>
 </string>
 
+
+<string id="st_soulslike_rescuer_enemy_tarkov_looter_1">
+    <text>As soon as I stumbled upon you, I noticed a %s individual who goes by the name of %s, fiddling with your weapon. It seemed like he was taking something out of it. Fortunately, I scared him away, but please inspect your equipment when you retrieve it.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_tarkov_looter_2">
+    <text>The moment I came across you, my eyes caught sight of a %s member called %s, tampering with your weapon. I observed him removing something from it. Although I managed to scare him off, I suggest you thoroughly examine your gear upon retrieval.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_tarkov_looter_3">
+    <text>Upon my initial encounter with you, I noticed a %s individual, who introduced himself as %s, meddling with your weapon. It appeared as though he was extracting something from it. Luckily, I frightened him away, but please verify your equipment upon its return.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_tarkov_looter_4">
+    <text>When I first came across you, I spotted a %s member by the name of %s, fiddling with your weapon. I saw him removing something from it. However, I scared him off, but do check your gear thoroughly when you get it back.</text>
+</string>
+
+<string id="st_soulslike_rescuer_enemy_tarkov_looter_5">
+    <text>From the moment I discovered you, I witnessed a %s individual, who goes by the name of %s, tampering with your weapon. I observed him taking something out of it. Though I was able to frighten him away, please ensure to double-check your equipment when you retrieve it.</text>
+</string>
+
+
 <string id="st_soulslike_rescuer_enemy_looter_1">
     <text>When I first found you I saw a %s member named %s, he grabbed some of your things and ran, hopefully you can find him and get whatever he took back.</text>
 </string>
@@ -374,63 +397,134 @@
 
 
 <string id="st_soulslike_rescuer_radio_freq_1">
-    <text>I went back and hid your gear so no one would take it.  You should be able to track it down an RF Receiver by setting the frequency to %s.  Once you get close enough to its location, your device should start beeping.</text>
+    <text>Your gear was left unattended, so I went back and hid it to keep it safe. If you need to find it, use an RF Receiver and set the frequency to %s. When you get close enough, your device will start beeping. I also left a note in your pocket with the frequency just in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_2">
-    <text>I hid your gear to prevent it from being stolen. Use an RF receiver and set the frequency to %s to locate it. Once you're close enough, your device will start beeping.</text>
+    <text>I took the initiative to hide your gear so that nobody else would take it. You can retrieve it by using an RF Receiver and setting the frequency to %s. Once you're in the vicinity, your device will start beeping. I've also included a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_3">
-    <text>To keep your gear safe, I hid it and set an RF receiver to the frequency %s. When you get close enough, your device will beep and you can find it.</text>
+    <text>Your gear was vulnerable, so I went back and hid it to prevent theft. To locate it, use an RF Receiver and set the frequency to %s. When you get close enough, your device will beep. I've left a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_4">
-    <text>Your gear was at risk of being stolen, so I hid it and set an RF receiver to the frequency %s. Your device should beep when you're near its location.</text>
+    <text>To safeguard your gear, I hid it somewhere secure. You can locate it by using an RF Receiver and setting the frequency to %s. Your device will start beeping once you're in the proximity. I've also included a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_5">
-    <text>I secured your gear by hiding it and setting an RF receiver to the frequency %s. Use your device to track it down and it will start beeping once you're close enough.</text>
+    <text>I didn't want anyone to steal your gear, so I hid it for safekeeping. To find it, use an RF Receiver and set the frequency to %s. Your device will beep once you're close enough. If you forget the frequency, don't worry; there's a note in your pocket with the details.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_6">
-    <text>In order to protect your gear from theft, I hid it and set an RF receiver to the frequency %s. Your device will start beeping when you're in the vicinity of its location.</text>
+    <text>To prevent your gear from being stolen, I went back and hid it. You can locate it by using an RF Receiver and setting the frequency to %s. Once you're near, your device will start beeping. I've also included a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_7">
-    <text>I concealed your gear to prevent it from being taken and set an RF receiver to the frequency %s to aid in its recovery. Your device will beep when you're close to it.</text>
+    <text>I made sure to hide your gear so that it wouldn't be taken. To retrieve it, use an RF Receiver and set the frequency to %s. Your device will beep once you're close enough. Don't forget to check the note I left in your pocket for the frequency.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_8">
-    <text>To safeguard your gear, I hid it and set an RF receiver to the frequency %s. Use your device to track it down and it should start beeping once you're close enough.</text>
+    <text>I hid your gear to keep it safe from theft. To locate it, use an RF Receiver and set the frequency to %s. Your device will beep once you're near enough. Check your pocket for the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_9">
-    <text>Your gear was at risk of being lost or stolen, so I hid it and set an RF receiver to the frequency %s to help you find it. Once you're close enough, your device will start beeping.</text>
+    <text>To ensure the safety of your gear, I hid it somewhere secure. You can locate it by using an RF Receiver and setting the frequency to %s. Once you're in the area, your device will start beeping. I've also included a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_10">
-    <text>I went back and hid your gear to keep it safe from potential theft. An RF receiver set to the frequency %s should help you locate it, and your device will beep when you're near.</text>
+    <text>I went back and hid your gear to prevent it from being stolen. To find it, use an RF Receiver and set the frequency to %s. Your device will start beeping when you're close enough. Check your pocket for the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_11">
-    <text>I hid your gear to protect it and set an RF receiver to the frequency %s to assist in its retrieval. When you're close enough, your device will start beeping.</text>
+    <text>Your gear was vulnerable, so I took it upon myself to hide it. To retrieve it, use an RF Receiver and set the frequency to %s. Your device will beep once you're in the vicinity. There's a note in your pocket with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_12">
-    <text>Your gear was at risk, so I hid it and set an RF receiver to the frequency %s to help you find it. Your device should start beeping when you're close enough.</text>
+    <text>I hid your gear to keep it from being stolen. To locate it, use an RF Receiver and set the frequency to %s. Once you're close enough, your device will start beeping. Check your pocket for the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_13">
-    <text>I stashed your gear to keep it safe and set an RF receiver to the frequency %s to aid in its recovery. Your device will beep when you're nearby.</text>
+    <text>To protect your gear from theft, I hid it somewhere secure. To locate it, use an RF Receiver and set the frequency to %s. Your device will beep once you're close enough. Check your pocket for the note with the frequency in case you forget.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_14">
-    <text>To protect your gear from theft, I hid it and set an RF receiver to the frequency %s. Use your device to track it down, and it should start beeping when you're close enough.</text>
+    <text>I hid your gear to keep it safe from potential theft. To retrieve it, use an RF Receiver and set the frequency to %s. Your device will start beeping once you're in the area. Don't forget to check the note in your pocket with the frequency.</text>
 </string>
 
 <string id="st_soulslike_rescuer_radio_freq_15">
-    <text>Your gear was in danger of being taken, so I hid it and set an RF receiver to the frequency %s to assist in its retrieval. When you're near, your device will start beeping.</text>
+    <text>I made sure to hide your gear so nobody would take it. You can track it down using an RF Receiver and setting the frequency to %s. When you're near, your device will start beeping. There's a note in your pocket with the frequency in case you forget.</text>
+</string>
+
+<string id="st_soulslike_rescuer_radio_freq_16">
+    <text>To safeguard your gear, I hid it away from prying eyes. To find it, use an RF Receiver and set the frequency to %s. Your device will beep once you're in the vicinity. Check your pocket for the note with the frequency in case you forget.</text>
+</string>
+
+
+
+<string id="st_soulslike_hidden_stash_1">
+    <text>Your belongings are tucked away in a hidden spot that I marked on your PDA.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_2">
+    <text>I've stowed your items in a secure stash and labeled its location on your PDA.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_3">
+    <text>I've hidden your possessions in a secret location and noted it on your PDA.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_4">
+    <text>Your things are safely tucked away in a stash that I marked on your PDA.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_5">
+    <text>I concealed your items in a discreet stash and marked its location on your PDA for safekeeping.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_6">
+    <text>I've stored your belongings in a private stash and marked it on your PDA so you can find them easily.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_7">
+    <text>Your items are safely hidden in a stash that I marked on your PDA to keep them secure.</text>
+</string>
+
+<string id="st_soulslike_hidden_stash_8">
+    <text>I've hidden your things in a secure location and marked it on your PDA for easy retrieval.</text>
+</string>
+
+
+<string id="st_soulslike_multiple_hidden_stashes_1">
+    <text>Your belongings are tucked away in a hidden spot that I marked on your PDA.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_2">
+    <text>Your items are stored in multiple secure stashes that I marked on your PDA to keep them safe.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_3">
+    <text>I was concerned about the safety of your possessions, so I hid them in several different locations and marked each spot on your PDA.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_4">
+    <text>Your things are securely hidden in several stashes that I marked on your PDA to ensure their safety.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_5">
+    <text>To ensure the protection of your belongings, I hid them in multiple stashes and marked each location on your PDA.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_6">
+    <text>I concealed your items in various secure locations and marked them on your PDA to prevent them from being found.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_7">
+    <text>Your possessions are hidden in multiple stashes that I marked on your PDA to keep them safe from prying eyes.</text>
+</string>
+
+<string id="st_soulslike_multiple_hidden_stashes_9">
+    <text>I was worried about someone discovering your items, so I hid them in multiple secure stashes and marked each location on your PDA for added protection.</text>
 </string>
 
 </string_table>
