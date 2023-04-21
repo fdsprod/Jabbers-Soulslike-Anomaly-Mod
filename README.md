@@ -88,5 +88,5 @@ Based on having played about 10 hours in total into a new game with this mod I c
 - Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
 - If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
 - Random chance for players gear stash to be a ambush location (need to figure out how this works)
-- Random chance that if the player dies with a lot of mutant meat or food, there will be boars/cats/dogs within the area of the stash as if attracted by the smell
+- Random chance that if the player dies with a lot of mutant meat or food, there will be boars/cats/dogs within the area of the stash as if attracted by the smell (need to figure out how this works)
 - Add Soulslike death counter to statistics

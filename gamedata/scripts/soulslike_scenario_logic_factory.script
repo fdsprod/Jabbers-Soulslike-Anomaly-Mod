@@ -38,7 +38,15 @@ function SoulslikeScenarioLogic:__init(state)
             allow_headgear_loss = soulslike_mcm.allow_headgear_loss(),
             allow_toolkit_loss = soulslike_mcm.allow_toolkit_loss(),
             allow_npc_looting = soulslike_mcm.get_lost_items_looted_by_npcs(),
-            are_looter_npcs_marked = soulslike_mcm.are_looter_npcs_marked()
+            are_looter_npcs_marked = soulslike_mcm.are_looter_npcs_marked(),
+            story = {
+                gave_food_or_water = nil,
+                has_single_pda_marker = nil,
+                has_multi_pda_marker = nil,
+                radio_freq = nil,
+                items_were_lost = nil,
+                enemy = nil, -- { name, community, tarkov_experience }
+            }
         }
         soulslike.debug("Scenario created without state.")
     end
@@ -192,7 +200,7 @@ function SoulslikeScenarioLogic:OnComplete()
 
     soulslike.debug({satiety = satiety})
     if satiety < 0.5 then
-        self.logic_state.gave_food_or_water = true  
+        self.logic_state.story.gave_food_or_water = true  
         --soulslike.debug("HACK updating satiety.")
 	    db.actor.satiety = 0.5
     end
@@ -208,14 +216,14 @@ function SoulslikeScenarioLogic:OnComplete()
     soulslike.debug({thirst = thirst})
 
     if thirst < 0.5 then
-        self.logic_state.gave_food_or_water = true  
+        self.logic_state.story.gave_food_or_water = true  
         -- HACK... deal with it :shades:
         soulslike.debug("HACK updating thirst.")
         actor_status_thirst.load_state({drink = {last_drink = 3500, chk_drink = nil}})
         actor_status_thirst.actor_on_update()
     end
 
-    if self.logic_state.gave_food_or_water then
+    if self.logic_state.story.gave_food_or_water then
         soulslike.debug("Spawning bread and water on actor.")
         alife_create_item('bread', db.actor)
         alife_create_item('water_drink', db.actor)
@@ -224,7 +232,8 @@ function SoulslikeScenarioLogic:OnComplete()
     actor_status.activate_hud()
 
     self:SendWakeupMessage()
-    soulslike.force_save("respawn")
+    soulslike.force_save("respawn")	
+    actor_menu.set_msg(1, strformat(game.translate_string("st_death_count"), game_statistics.get_statistic_count("deaths")),8)
     self:destroy()
 end
 
@@ -252,7 +261,7 @@ end
 function SoulslikeScenarioLogic:SendWakeupMessage()
     soulslike.debug("SoulslikeScenarioLogic:SendWakeupMessage") 
     local rescuer = soulslike.find_actor_community_friendly()
-    local msg = soulslike_message_factory.create(rescuer, self.logic_state)
+    local msg = soulslike_message_factory.create(rescuer, self.logic_state.story)
 
     if rescuer then
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
@@ -339,7 +348,7 @@ function SoulslikeScenarioLogic:TryEnemyLooter(item, container, looter)
         soulslike.debug("Transfering item to enemy: "..sec)   
         table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)                
         db.actor:transfer_item(item, looter)
-        self.logic_state.enemy_looted = true
+        self.logic_state.looter = true
         return true
     end
     return false
@@ -367,7 +376,7 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
 
             parts[name] = -1 -- KEKW 
             -- TODO: Spawn part on looter
-            self.logic_state.enemy_looted = true
+            self.logic_state.looter = true
             -- TODO: Add message text for this 
             self.logic_state.got_tarkoved = true
         end
@@ -424,7 +433,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)          
         alife_release(item)      
 
-        self.logic_state.items_lost = true  
+        self.logic_state.story.items_were_lost = true  
         return false
     end
 
@@ -433,7 +442,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
             
         if condition == 0 then
             soulslike.debug("Item ".. sec.. " was degraded into oblivion")
-            self.logic_state.items_lost = true
+            self.logic_state.story.items_were_lost = true
             table.insert(self.logic_state.game_state.created_stashes[to_id].lost_items, sec)
             return false
         end
@@ -456,9 +465,12 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
     soulslike.debug("Transfering items")
     db.actor:iterate_inventory(release_actor_item)
 
-    if enemy_looter and self.logic_state.enemy_looted then        
-        self.logic_state.enemy_looter_name = enemy_looter:character_name()
-        self.logic_state.enemy_looter_comm = enemy_looter:character_community()
+    if enemy_looter and self.logic_state.looter then        
+        self.logic_state.story.enemy = {
+            name = enemy_looter:character_name(),
+            community = enemy_looter:character_community(),
+            tarkov_experience = self.logic_state.got_tarkoved 
+        }
 
         if self.logic_state.are_looter_npcs_marked then
             level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", self.logic_state.enemy_looter_name)            
@@ -478,7 +490,7 @@ function SoulslikeScenarioLogic:OnRespawn()
     local rep = db.actor:character_reputation()
 
     soulslike.debug('Character rank: '..rank)
-    soulslike.debug('Character rep: '..rep)
+    soulslike.debug('Character rep: '..rep)    
 end 
 
 ---------------------------------------------------------
@@ -515,7 +527,7 @@ end
 
 function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
     soulslike.debug("DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
-    self.logic_state.has_pda_marker = true
+    self.logic_state.story.has_single_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.stash_id, "primary_object", db.actor:character_name() .. "'s items")
 end
 
@@ -571,8 +583,8 @@ function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     soulslike.debug("RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
     local lvl = level.name()
     soulslike.debug("Added radio target to level: "..lvl)
-    self.logic_state.radio_freq = math.random(30,  300)
-    item_radio.add_stash(lvl, self.logic_state.hidden_stash_id, self.logic_state.radio_freq) 
+    self.logic_state.story.radio_freq = math.random(30,  300)
+    item_radio.add_stash(lvl, self.logic_state.hidden_stash_id, self.logic_state.story.radio_freq) 
 
     if soulslike_mcm.debug_hidden_stashes() then
         soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))
@@ -581,7 +593,7 @@ function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
 
     local se_note = alife_create_item('soulslike_rescuers_radio_frequency_note', db.actor)
     self.game_state.note_message_data[se_note.id] = { 
-        freq = self.logic_state.radio_freq,
+        freq = self.logic_state.story.radio_freq,
         level_name = lvl
     }
 end
@@ -639,6 +651,7 @@ function HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))     
 
     local value = game.translate_string("st_soulslike_your_items")
+    self.logic_state.story.has_single_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.treasure_stash_id, "secondary_task_location", value)
 end
 
@@ -748,10 +761,13 @@ function ScatteredStashesSoulslikeScenarioLogic:TransferItems(_)
         end
     end
 
-    if enemy_looter and self.logic_state.enemy_looted then  
-        soulslike.debug("Updating enemy looter values.") 
-        self.logic_state.enemy_looter_name = enemy_looter:character_name()
-        self.logic_state.enemy_looter_comm = enemy_looter:character_community()
+    if enemy_looter and self.logic_state.looter then  
+        soulslike.debug("Updating enemy looter values.")         
+        self.logic_state.story.enemy = {
+            name = enemy_looter:character_name(),
+            community = enemy_looter:character_community(),
+            tarkov_experience = self.logic_state.got_tarkoved 
+        }
 
         if self.logic_state.are_looter_npcs_marked then
             soulslike.debug("Marking enemy looter.")
@@ -767,6 +783,7 @@ function ScatteredStashesSoulslikeScenarioLogic:ApplyTransferItemsPostConditions
         soulslike.debug("Adding PDA marker "..tostring(id))
 
         local value = game.translate_string("st_soulslike_your_items")
+        self.logic_state.story.has_multi_pda_marker = true
         level.map_add_object_spot_ser(id, "secondary_task_location", value)
     end
 end

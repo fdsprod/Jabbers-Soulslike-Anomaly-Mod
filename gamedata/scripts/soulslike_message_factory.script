@@ -147,22 +147,30 @@ end
 function create(rescuer, params)
     if rescuer then
         local msg = rescuer_initial_msg_factory()
-        local enemy_name = params.enemy_looter_name
-        local enemy_comm = params.enemy_looter_comm
+        local looter = params.enemy
         
         if params.gave_food_or_water then
             msg = msg.." "..rescuer_eat_drink_msg_factory()
         end
-        if enemy_name and enemy_comm then
-            msg = msg.." "..rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
+        if looter then
+            if looter.tarkov_experience then
+                --TODO: Make message factory for this
+            else
+                msg = msg.." "..rescuer_enemy_looter_msg_factory(looter.name, looter.community) 
+            end
         end
-        if params.has_pda_marker then
+        if params.has_single_pda_marker then
             msg = msg.." "..rescuer_pda_marker_msg_factory()
         end
+        if params.has_multi_pda_marker then
+            --msg = msg.." "..rescuer_pda_marker_msg_factory()
+            --TODO: Make message factory for this
+        end
         if params.radio_freq then
+            -- TODO: Reword the messages to include information about the note 
             msg = msg.." "..rescuer_enemy_radio_freq_msg_factory(params.radio_freq)
         end
-        if params.items_lost then
+        if params.items_were_lost then
             msg = msg.." "..rescuer_used_items_msg_factory()            
         end
         msg = msg.." "..rescuer_stay_safe_msg_factory()
@@ -177,6 +185,7 @@ function create(rescuer, params)
             msg = msg.." " ..game.translate_string("st_soulslike_rescuer_pda_generic")
         end
         if params.radio_freq then
+            -- TODO: Reword the messages to include information about the note 
             msg = msg.." "..game.translate_string(strformat("st_soulslike_rescuer_radio_generic", params.radio_freq))
         end
 		local ui_sender = news_manager.tips_icons['default']

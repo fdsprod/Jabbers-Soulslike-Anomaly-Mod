@@ -333,7 +333,8 @@ local function actor_on_before_death(who, flags)
 	end
 
     debug('Actor died')
-    
+	game_statistics.increment_statistic("deaths")
+	    
     soulslike.debug("Looking for player backpack")
     local has_backpack = false
     local function find_backpack(_, item)
