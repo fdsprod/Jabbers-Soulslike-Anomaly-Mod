@@ -83,13 +83,8 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODOs**
-- Change "Allow Loss" logic to still put items in the stash but not delete them.
 - Offset the radius of the PDA death location 
 - Create an item that needs to be used to set a respawn point (optional with mcm)
-- Add task for RF detector scenario so that the radio freq can be referenced in the future
-- Add a task to the players PDA for all scenarios (similar to above, but RF Detector scenario takes priority for now)
-- Random chance for the player gear is just in a stash marked on the PDA
-- Random chance for the player gear is scattered in mutliple locations within a zone and marked on the PDA
 - Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
 - If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
 - Random chance for players gear stash to be a ambush location (need to figure out how this works)
