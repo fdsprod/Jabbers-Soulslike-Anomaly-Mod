@@ -5,6 +5,57 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
+
+local mutant_spawns = {
+    --Common Mutants
+    { section = "simulation_boar",              weight = 1.00 },
+    { section = "simulation_flesh",             weight = 0.90 },
+    { section = "simulation_dog",               weight = 0.80 },
+    { section = "zombied_sim_squad_novice",     weight = 0.70 },
+    { section = "simulation_cat",               weight = 0.60 },
+    { section = "simulation_boar_3_5",          weight = 0.50 },
+    { section = "simulation_mix_boar_flesh",    weight = 0.40 },
+    { section = "zombied_sim_squad_mix",        weight = 0.30 },
+    { section = "simulation_mix_dogs",          weight = 0.20 },
+    { section = "simulation_dog_5_7",           weight = 0.15 },
+    { section = "simulation_pseudodog",         weight = 0.12 },
+    { section = "simulation_cat_3_5",           weight = 0.10 },
+    { section = "simulation_snork",             weight = 0.08 },
+    --Rare Mutants
+    { section = "simulation_bloodsucker",       weight = 0.04 },
+    { section = "simulation_burer1",            weight = 0.03 },
+    { section = "simulation_chimera",           weight = 0.02 },
+    { section = "simulation_bloodsucker_2weak", weight = 0.02 },
+    { section = "simulation_chimera_2weak",     weight = 0.01 },
+    { section = "simulation_controller",        weight = 0.01 },
+}
+
+local stalker_spawns = {
+    --Bandit
+    { section = "bandit_sim_squad_novice",      community = "bandit",       weight = 1.00 },
+    { section = "bandit_sim_squad_advanced",    community = "bandit",       weight = 0.50 },
+    --Merc
+    { section = "merc_sim_squad_novice",        community = "merc",         weight = 0.75 },
+    { section = "merc_sim_squad_advanced",      community = "merc",         weight = 0.25 },
+    --Duty
+    { section = "duty_sim_squad_novice",        community = "duty",         weight = 1.00 },
+    { section = "duty_sim_squad_advanced",      community = "duty",         weight = 0.10 },
+    --Freedom
+    { section = "freedom_sim_squad_novice",     community = "freedom",      weight = 1.00 },
+    { section = "freedom_sim_squad_advanced",   community = "freedom",      weight = 0.10 },
+    --Military
+    { section = "army_sim_squad_novice",        community = "army",         weight = 1.00 },
+    { section = "army_sim_squad_advanced",      community = "army",         weight = 0.10 },
+    { section = "army_sim_squad_sniper",        community = "army",         weight = 0.05 },
+    --Clear Sky
+    { section = "csky_sim_squad_novice",        community = "csky",         weight = 1.00 },
+    { section = "csky_sim_squad_advanced",      community = "csky",         weight = 0.10 },
+    --Renegades
+    { section = "renegade_sim_squad_novice",    community = "renegade",     weight = 0.50 },
+    { section = "renegade_sim_squad_advanced",  community = "renegade",     weight = 0.20 },
+}
+
+
 local version = "0.20-beta"
 
 local tools_list = {
@@ -15,6 +66,68 @@ local tools_list = {
     ["itm_ammokit"] = true,
     ["itm_gunsmith_toolkit"] = true,
     ["itm_artefactskit"] = true,
+}
+
+local obj_to_spawn_classes = {
+    -- kind
+    ["AI_STL_S"]    = "NPC (Stalker)",
+    ["AI_TRD_S"]    = "NPC (Stalker)",
+
+    ["SM_KAR"]	    = "NPC (Mutant)",
+    ["SM_BLOOD"]    = "NPC (Mutant)",
+    ["SM_BOARW"]    = "NPC (Mutant)",
+    ["SM_BURER"]    = "NPC (Mutant)",
+    ["SM_CAT_S"]    = "NPC (Mutant)",
+    ["SM_CHIMS"]    = "NPC (Mutant)",
+    ["SM_CONTR"]    = "NPC (Mutant)",
+    ["SM_DOG_S"]    = "NPC (Mutant)",
+    ["SM_FLESH"]    = "NPC (Mutant)",
+    ["SM_IZLOM"]    = "NPC (Mutant)",
+    ["SM_GIANT"]    = "NPC (Mutant)",
+    ["SM_POLTR"]    = "NPC (Mutant)",
+    ["SM_P_DOG"]    = "NPC (Mutant)",
+    ["SM_DOG_P"]    = "NPC (Mutant)",
+    ["SM_DOG_F"]    = "NPC (Mutant)",
+    ["SM_SNORK"]    = "NPC (Mutant)",
+    ["SM_TUSHK"]    = "NPC (Mutant)",
+    ["SM_ZOMBI"]    = "NPC (Mutant)",
+    ["SM_RAT"]	    = "NPC (Mutant)",
+    ["SM_KARLIK"]	= "NPC (Mutant)",
+    ["SM_LURKER"]	= "NPC (Mutant)",
+    ["SM_PSYSUCKER"]	= "NPC (Mutant)",
+
+    ["C_HLCP_S"] 	= "Vehicles",
+    ["C_NIVA"] 		= "Vehicles",
+    ["SCRPTCAR"] 	= "Vehicles",
+
+    ["ON_OFF_S"]    = "Squads",
+    
+    ["O_PHYSIC"]    = "Physic (Misc.)",
+    ["O_DSTRBL"]    = "Physic (Misc.)",
+    ["P_DSTRBL"]    = "Physic (Misc.)",
+    ["O_PHYS_S"]    = "Physic (Misc.)",
+    ["O_DSTR_S"]    = "Physic (Misc.)",
+    ["S_INVBOX"]    = "Physic (Misc.)",
+    ["O_INVBOX"]    = "Physic (Misc.)",
+    ["S_EXPLO"]     = "Physic (Misc.)",
+    ["II_EXPLO"]    = "Physic (Misc.)",
+
+    ["ZS_MBALD"]    = "Anomaly",
+    ["ZS_GALAN"]    = "Anomaly",
+    ["ZS_MINCE"]    = "Anomaly",
+    ["ZS_RADIO"]    = "Anomaly",
+    ["ZS_TORRD"]    = "Anomaly",
+    ["ZS_NGRAV"]    = "Anomaly",
+    ["Z_MBALD"]     = "Anomaly",
+    ["Z_RADIO"]     = "Anomaly",
+    ["Z_CFIRE"]     = "Anomaly",
+    ["Z_NOGRAV"]    = "Anomaly",
+    ["Z_TORRID"]    = "Anomaly",
+    ["Z_RUSTYH"]    = "Anomaly",
+    ["ZS_BFUZZ"]    = "Anomaly",
+    ["ZS_AMEBA"]    = "Anomaly",
+    
+    ["AI_PHANT"]    = "Phantom",
 }
 
 local relations = { 
@@ -302,11 +415,70 @@ function wakeup_callback()
 
     if scenario_logic then
         debug("Completing scenario.")
-        scenario_logic:OnComplete()
-        scenario_logic = nil
-        local data = get_soulslike_state()    
-        data.logic_state = nil
+        scenario_logic:OnComplete()  
+            
+        local section = "simulation_controller_psy"
+        local class = ini_sys:r_string_ex(section,"class")
+        local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
+        if kind then class = kind end
+
+        if scenario_logic.logic_state.death_location.position.x then
+            local pos = vector():set(
+                scenario_logic.logic_state.death_location.position.x, 
+                scenario_logic.logic_state.death_location.position.y, 
+                scenario_logic.logic_state.death_location.position.z)   
+            local lvid = scenario_logic.logic_state.death_location.level_vertex_id
+            local gvid = scenario_logic.logic_state.death_location.game_vertex_id
+            local group = obj_to_spawn_classes[class]
+
+            local prop = {}
+            local is_squad = string.find(group,"Squad")
+            local cant_spawn_actor = string.find(group,"NPC") or string.find(group,"Physic")
+
+            if (is_squad) then
+                prop.no_id           = true
+                prop.squad           = true
+            elseif (cant_spawn_actor) then
+                prop.no_id           = true
+            end
+
+
+            local se_obj = section and alife_create(section, pos, lvid, gvid)
+            if se_obj then
+                if (prop.squad) then
+                    se_obj:create_npc(nil, pos, lvid, gvid)
+                    local sim = alife()
+                    for k in se_obj:squad_members() do
+                        local se_npc = k.object or k.id and sim:object(k.id)
+                        if (se_npc) then
+                            level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", 'Uh Oh!') 
+                            SIMBOARD:setup_squad_and_group(se_npc)
+                            SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
+                        end 
+                    end
+
+                    debug(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
+                            
+                else
+                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", 'Uh Oh!') 
+                    debug(strformat("Spawned object [%s] (%s)", section, se_obj.id))
+                end
+            else
+                debug(strformat("No server object made for [%s]", section))
+            end
+                    
+        else
+            debug("No nearby smarts, to dumb")
+        end
+    else
+        debug("No logic state")
+
     end
+    
+    local data = get_soulslike_state()  
+    scenario_logic:destroy()
+    scenario_logic = nil    
+    data.logic_state = nil
 end
 
 function dream_callback()

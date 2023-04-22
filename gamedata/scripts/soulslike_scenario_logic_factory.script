@@ -48,6 +48,15 @@ function SoulslikeScenarioLogic:__init(state)
             allow_toolkit_loss = soulslike_mcm.allow_toolkit_loss(),
             allow_npc_looting = soulslike_mcm.get_lost_items_looted_by_npcs(),
             are_looter_npcs_marked = soulslike_mcm.are_looter_npcs_marked(),
+            death_location = {
+                position = {
+                    x = nil,
+                    y = nil,
+                    z = nil
+                },
+                level_vertex_id = nil,
+                game_vertex_id = nil
+            },
             story = {
                 gave_food_or_water = nil,
                 has_pda_marker = nil,
@@ -167,6 +176,18 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
 
     self:ApplyTransferItemsPreConditions()
 
+    local actor = db.actor
+    local position = actor:position()
+    self.logic_state.death_location = {
+        position = {
+            x = position.x,
+            y = position.y,
+            z = position.z
+        },
+        level_vertex_id = actor:level_vertex_id(),
+        game_vertex_id = actor:game_vertex_id()
+    }
+
     local se_stash = self:CreateStash()
              
     if se_stash then
@@ -206,9 +227,7 @@ function SoulslikeScenarioLogic:OnDeath()
     self:HandleItemsAndRespawn()
 end
 
-function SoulslikeScenarioLogic:OnComplete()
-    soulslike.debug("SoulslikeScenarioLogic:OnComplete")
-
+function SoulslikeScenarioLogic:GiveFoodAndWater()
 	-- Satiety
 	local conditions = db.actor:cast_Actor():conditions()
 	local satiety = conditions:GetSatiety()
@@ -247,13 +266,34 @@ function SoulslikeScenarioLogic:OnComplete()
         alife_create_item('bread', db.actor)
         alife_create_item('water_drink', db.actor)
     end
+end
+
+function SoulslikeScenarioLogic:GiveMeds()
+end
+
+function SoulslikeScenarioLogic:GiveWeapon()
+end
+
+function SoulslikeScenarioLogic:GiveOutfit()
+end
+
+function SoulslikeScenarioLogic:GiveMask()
+end
+
+function SoulslikeScenarioLogic:OnComplete()
+    soulslike.debug("SoulslikeScenarioLogic:OnComplete")
+
+    self:GiveFoodAndWater()
+    self:GiveMeds()
+    self:GiveWeapon()
+    self:GiveOutfit()
+    self:GiveMask()
 
     actor_status.activate_hud()
 
     self:SendWakeupMessage()
     soulslike.force_save("respawn")	
     actor_menu.set_msg(1, strformat(game.translate_string("st_death_count"), game_statistics.get_statistic_count("deaths")),8)
-    self:destroy()
 end
 
 function SoulslikeScenarioLogic:RespawnActor()
@@ -578,7 +618,7 @@ function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     soulslike.debug("DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
 
     self.logic_state.story.has_single_pda_marker = true
-    level.map_add_object_spot_ser(self.logic_state.stash_id, "primary_object", db.actor:character_name() .. "'s items")
+    level.map_add_object_spot_ser(self.logic_state.stash_id, "secondary_task_location", db.actor:character_name() .. "'s items")
 end
 
 ---------------------------------------------------------
@@ -864,7 +904,7 @@ function ScatteredStashesSoulslikeScenarioLogic:HandleItemsAndRespawn()
 
             soulslike.debug("All stashes exists in game")
 
-            self:TransferItems()  
+            self:TransferItems()
             self:ApplyTransferItemsPostConditions() 
             self:RespawnActor()
             return true
