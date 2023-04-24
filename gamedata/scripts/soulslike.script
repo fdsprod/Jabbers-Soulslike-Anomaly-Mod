@@ -159,6 +159,21 @@ function math.clamp(x, min, max)
     return x
 end
 
+function table.get_length(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
+end
+
+function table.has_value(tab, val)
+    for _, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end    
+    return false
+end
+
 ----------------------------------------
 -- DEBUG
 ----------------------------------------
@@ -212,9 +227,24 @@ function debug(output)
     end
 end
 
-function IsSoulslikeMode()
+----------------------------------------
+-- Globals
+----------------------------------------
+
+function _G.IsSoulslikeMode()
 	return not IsHardcoreMode() and axr_main.config and axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true or alife_storage_manager.get_state().enable_soulslike_mode == true
 end
+
+function _G.IsToolkit(o, s)
+    if not (s) then
+		s = o and o:section()
+	end
+    return tools_list[s]
+end
+
+----------------------------------------
+-- Helper Functions
+----------------------------------------
 
 function get_soulslike_state()
     local game_state = alife_storage_manager.get_state()
@@ -268,106 +298,52 @@ function set_spawn(show_message)
     end
 end
 
-function find_enemy()
+function find_closest_enemy()
     local enemy = nil
+    local enemy_dist = 100000
+    
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
-		enemy = level.object_by_id(id)
-        if enemy then
-            local is_enemy = enemy:general_goodwill(db.actor) <= relations.ENEMIES
-            if enemy:alive() and   
-                (not get_object_story_id(id)) and
-                is_enemy then
-                local comm = enemy:character_community()
-                debug("Found enemy "..enemy:name().." from the "..comm.." community.")
-                return enemy
+		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+        
+        if npc then
+            local is_enemy = npc:general_goodwill(db.actor) <= relations.ENEMIES
+            local dist = npc:position():distance_to_sqr(npc:position())
+
+            if npc:alive() and  is_enemy and (not get_object_story_id(id)) and enemy_dist > dist then
+                local comm = npc:character_community()
+                debug("Found enemy "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                enemy = npc
             end
         end
     end
+
+    return enemy
 end
 
-function find_actor_community_friendly()  
+function find_closest_friendly()  
     local friend = nil
-    local actor_comm = db.actor:character_community():sub(7) -- removes "actor_"
-
-    debug("Actor community "..actor_comm)
+    local friend_dist = 100000
 
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
-		friend = db.storage[id] and db.storage[id].object or level.object_by_id(id)
-        if friend then
-			local comm = friend:character_community()
-            debug("Found friend "..friend:name().." from the "..comm.." community.")  
+		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
 
-            if friend:alive() and   
-               comm == actor_comm and
-               (not get_object_story_id(id)) then
-                debug("Found friend "..friend:name().." from the "..comm.." community.")
+        if npc then
+            local dist = npc:position():distance_to_sqr(npc:position())
+            local is_friend = npc:general_goodwill(db.actor) >= relations.NEUTRALS
+            
+            if npc:alive() and is_friend and friend_dist > dist (not get_object_story_id(id)) then
+                local comm = npc:character_community()
+                debug("Found friend "..friend:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                friend = npc
+                friend_dist = dist
                 break
             end
-        else 
-            friend = nil
         end
     end
 
     return friend
-end
-
-function IsToolkit(o, s)
-    if not (s) then
-		s = o and o:section()
-	end
-    return tools_list[s]
-end
-
-local function remove_prior_saves(last_save_file_name)    
-    last_save_file_name = string.lower(last_save_file_name)
-
-    debug("Don't delete: ".. last_save_file_name)
-
-	local uuid = get_soulslike_state().uuid	
-	local fs = getFS()
-	local flist = fs:file_list_open_ex("$game_saves$",bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*.scoc")
-	local f_cnt = flist:Size()
-
-	for	it=0, f_cnt-1 	do
-		local file = flist:GetAt(it)
-		local file_name = string.sub(file:NameFull(), 0, (string.len(file:NameFull()) - string.len(".scoc")))
-        
-		local scoc_path = fs:update_path('$game_saves$', '')..file_name..".scoc"
-		local scop_path = fs:update_path('$game_saves$', '')..file_name..".scop"
-		local dds_path = fs:update_path('$game_saves$', '')..file_name..".dds"
-
-		local f = io.open(scoc_path,"rb")
-
-		if (f) then
-			local data = f:read("*all")
-			f:close()
-
-			if (data) then
-				local decoded = alife_storage_manager.decode(data)
-				local d_soulslike = decoded and decoded.soulslike
-                
-				if (d_soulslike and (d_soulslike.uuid == uuid)) then
-					debug("/ Soulslike mode | file: "..file_name)
-                    file_name = string.lower(file_name)
-					if file_name ~= last_save_file_name then
-						debug("~ Soulslike mode | delete save file: "..file_name)
-
-                        local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
-                        local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
-                        local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
-
-                        fs:file_copy(scoc_path, scoc_path_bak)
-                        fs:file_copy(scop_path, scop_path_bak)
-                        fs:file_copy(dds_path, dds_path_bak)
-
-						ui_load_dialog.delete_save_game(file_name)			
-					end
-				end
-			end
-		end
-	end
 end
 
 function force_save(type)
@@ -396,6 +372,10 @@ function force_save(type)
 		device():pause(false)
 	end
 end
+
+----------------------------------------
+-- Dream Callbacks
+----------------------------------------
 
 function wakeup_callback()
     debug("wakeup_callback")
@@ -493,6 +473,10 @@ function dream_callback()
 	SendScriptCallback("actor_on_sleep", hours)
 end
 
+----------------------------------------
+-- Game Callbacks
+----------------------------------------
+
 local function actor_on_before_death(who, flags)    
     if not IsSoulslikeMode() then
         return
@@ -507,7 +491,7 @@ local function actor_on_before_death(who, flags)
     debug('Actor died')
 	game_statistics.increment_statistic("deaths")
 	    
-    soulslike.debug("Looking for player backpack")
+    debug("Looking for player backpack")
     local has_backpack = false
     local function find_backpack(_, item)
         local sec = item:section()
@@ -522,6 +506,8 @@ local function actor_on_before_death(who, flags)
 
     local scenario_count = 0
     local scenario_weights = {}
+
+    
 
     -- We want to be able to debug each scenario using the 
     -- scenario weight to max, and in this case we want to 
@@ -677,21 +663,6 @@ local function on_before_save_input(flags, type, text)
     flags.ret = true
 end
 
-function tablelength(T)
-    local count = 0
-    for _ in pairs(T) do count = count + 1 end
-    return count
-end
-
-function tableHasValue(tab, val)
-    for _, value in ipairs(tab) do
-        if value == val then
-            return true
-        end
-    end    
-    return false
-end
-
 local function try_send_inventory_examined_message(stash_id)        
     local data = get_soulslike_state()
     local stash_data = data.created_stashes[stash_id]
@@ -701,8 +672,6 @@ local function try_send_inventory_examined_message(stash_id)
         local lost_items = stash_data.lost_items
 
         debug(lost_items)
-        debug('Item lost count = '..tostring(#lost_items))
-        debug('Item lost count = '..tostring(tablelength(lost_items)))
 
         if #lost_items > 0 then
 
@@ -789,10 +758,56 @@ local function on_console_execute(name, ...)
         local extraArgs = {...}
 
         if extraArgs then
-            local file_name = table.concat(extraArgs," ")
-            debug(file_name)
+            local last_save_file_name = table.concat(extraArgs," ")
+            debug(last_save_file_name)
             if soulslike_mcm.is_hardcore_save_enabled() then
-                remove_prior_saves(file_name)
+                last_save_file_name = string.lower(last_save_file_name)
+            
+                debug("Don't delete: ".. last_save_file_name)
+            
+                local uuid = get_soulslike_state().uuid	
+                local fs = getFS()
+                local flist = fs:file_list_open_ex("$game_saves$",bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*.scoc")
+                local f_cnt = flist:Size()
+            
+                for	it=0, f_cnt-1 	do
+                    local file = flist:GetAt(it)
+                    local file_name = string.sub(file:NameFull(), 0, (string.len(file:NameFull()) - string.len(".scoc")))
+                    
+                    local scoc_path = fs:update_path('$game_saves$', '')..file_name..".scoc"
+                    local scop_path = fs:update_path('$game_saves$', '')..file_name..".scop"
+                    local dds_path = fs:update_path('$game_saves$', '')..file_name..".dds"
+            
+                    local f = io.open(scoc_path,"rb")
+            
+                    if f then
+                        local data = f:read("*all")
+                        f:close()
+            
+                        if (data) then
+                            local decoded = alife_storage_manager.decode(data)
+                            local d_soulslike = decoded and decoded.soulslike
+                            
+                            if (d_soulslike and (d_soulslike.uuid == uuid)) then
+                                debug("/ Soulslike mode | file: "..file_name)
+                                file_name = string.lower(file_name)
+                                if file_name ~= last_save_file_name then
+                                    debug("~ Soulslike mode | delete save file: "..file_name)
+            
+                                    local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
+                                    local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
+                                    local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
+            
+                                    fs:file_copy(scoc_path, scoc_path_bak)
+                                    fs:file_copy(scop_path, scop_path_bak)
+                                    fs:file_copy(dds_path, dds_path_bak)
+            
+                                    ui_load_dialog.delete_save_game(file_name)			
+                                end
+                            end
+                        end
+                    end
+                end
             end
         end
     end
@@ -918,6 +933,56 @@ local function actor_on_sleep(hours)
     end
 end
 
+local dtype = {
+	[hit.light_burn]    = "light_burn",
+	[hit.burn]          = "burn",
+	[hit.strike]        = "strike",
+	[hit.shock]         = "shock",
+	[hit.wound]         = "wound",
+	[hit.radiation]     = "radiation",
+	[hit.telepatic]     = "telepatic",
+	[hit.chemical_burn] = "chemical_burn",
+	[hit.explosion]     = "explosion",
+	[hit.fire_wound]    = "fire_wound",
+}
+
+local hit_pool = {
+
+}
+
+local function actor_on_before_hit(shit,bone_id,flags)
+    debug("Player hit:")
+    debug("shit.type: "..tostring(dtype[shit.type]))
+    debug("shit.power: "..tostring(shit.power))
+    debug("shit.impulse: "..tostring(shit.impulse))
+    debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
+
+    local is_stalker = false
+    local is_monster = false
+    local is_anomaly = false
+
+    if shit.draftsman then
+        is_stalker = IsStalker(shit.draftsman)
+        is_monster = IsMonster(shit.draftsman)
+        is_anomaly = IsAnomaly(shit.draftsman)
+        debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
+    end
+
+    local health = db.actor.health
+    local is_fatal = shit.power >= health
+
+    table.insert(hit_pool, { 
+        time = time_global(),
+        hit_type = shit.type,
+        hit_power = shit.power,
+        draftsman_id = shit.draftsman and shit.draftsman:id() or nil,
+        is_stalker = is_stalker,
+        is_monster = is_monster,
+        is_anomaly = is_anomaly,
+    }
+
+    debug("is_fatal: "..tostring(is_fatal))
+end
 
 function on_game_start()
     debug('Version: '..version)
@@ -932,5 +997,6 @@ function on_game_start()
     RegisterScriptCallback("on_game_load", on_game_load)
     RegisterScriptCallback("actor_on_sleep", actor_on_sleep)
 	RegisterScriptCallback("on_console_execute", on_console_execute)
+    RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
 end

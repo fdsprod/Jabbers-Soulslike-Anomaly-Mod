@@ -8,14 +8,6 @@ local ignore_list = {
     ["wpn_knife"] = true,
 }
 
-local function protect_call(func, ...)    
-    local success, err = pcall(func, ...)
-
-    if not success then
-        soulslike.debug("ERROR: "..err)
-    end
-end
-
 ---------------------------------------------------------
 -- Base Scenario Class 
 ---------------------------------------------------------
@@ -321,7 +313,7 @@ end
 function SoulslikeScenarioLogic:SendWakeupMessage()
     soulslike.debug("SoulslikeScenarioLogic:SendWakeupMessage") 
 
-    local rescuer = soulslike.find_actor_community_friendly()
+    local rescuer = soulslike.find_closest_friendly()
     local msg = soulslike_message_factory.create(rescuer, self.logic_state.story)
 
     if rescuer then
@@ -372,7 +364,7 @@ function SoulslikeScenarioLogic:IsItemLossAllowed(item)
     local is_outfit = IsOutfit(item) 
     local is_headgear = IsHeadgear(item)
     local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
-    local is_toolkit = soulslike.IsToolkit(item)
+    local is_toolkit = IsToolkit(item)
     local is_loss_allowed = true
     
     if is_weapon and not self.logic_state.allow_weapon_loss then   
@@ -407,7 +399,7 @@ function SoulslikeScenarioLogic:TryEnemyLooter(item, container, looter)
     local is_weapon = (IsWeapon(item) and not is_grenade)
     local is_outfit = IsOutfit(item) 
     local is_headgear = IsHeadgear(item)
-    local is_toolkit = soulslike.IsToolkit(item)
+    local is_toolkit = IsToolkit(item)
 
     if(self.logic_state.allow_npc_looting and (is_weapon or is_outfit or is_headgear or is_toolkit) and looter) then   
         soulslike.debug("Transfering item to enemy: "..sec)   
@@ -540,7 +532,7 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
     soulslike.debug("SoulslikeScenarioLogic:TransferItems") 
 
     local container = level.object_by_id(to_id)
-    local enemy_looter = soulslike.find_enemy()
+    local enemy_looter = soulslike.find_closest_enemy()
 
     if enemy_looter then
         soulslike.debug("Scenario Looter "..enemy_looter:character_community().." "..enemy_looter:character_name()) 
@@ -777,7 +769,7 @@ function ScatteredStashesSoulslikeScenarioLogic:CreateStash()
     local count = math.random(1, 4)
     for i=1,count do        
         local id = treasure_manager.get_random_stash("treasure", nil ,true, true)
-        if not soulslike.tableHasValue(scattered_stash_ids, id) then
+        if not table.has_value(scattered_stash_ids, id) then
             soulslike.debug("Random stash found: "..tostring(id))  
             table.insert(scattered_stash_ids, id)
         end
@@ -785,7 +777,7 @@ function ScatteredStashesSoulslikeScenarioLogic:CreateStash()
     treasure_manager.box_in_same_map = old_box_in_same_map
 
     -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
-    if soulslike.tablelength(scattered_stash_ids) == 0 then return nil end
+    if table.get_length(scattered_stash_ids) == 0 then return nil end
 
     local actor = db.actor
     local se_stashes = {}
@@ -844,7 +836,7 @@ function ScatteredStashesSoulslikeScenarioLogic:TransferItems(_)
     
     -- Remove treasure stash ids that were not used
     for _, id in ipairs(containers_used_ids) do
-        if not soulslike.tableHasValue(stash_ids, id) then
+        if not table.has_value(stash_ids, id) then
             soulslike.debug("Removing unused hidden stash id "..tostring(id))
             local se_id = self.logic_state.treasure_stash_ids[id]
             if not se_id then 
@@ -889,7 +881,7 @@ function ScatteredStashesSoulslikeScenarioLogic:HandleItemsAndRespawn()
 
     local se_stashes = self:CreateStash() -- This actually creates more than 1 stash
              
-    if se_stashes and soulslike.tablelength(se_stashes) > 0 then
+    if se_stashes and table.get_length(se_stashes) > 0 then
         soulslike.debug("Stashes created.")
         
         local function transfer_and_respawn()
