@@ -101,6 +101,15 @@ local function rescuer_stay_safe_msg_factory()
     return game.translate_string(messages[math.random(#messages)])
 end
 
+local function rescuer_moster_looter_msg_factory(enemy_name, enemy_comm)
+    local messages = {
+        "st_soulslike_rescuer_monster_looter_1",
+    }
+    
+    return messages[math.random(#messages)]
+end
+
+
 local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
     local messages = {
         "st_soulslike_rescuer_enemy_looter_1",
@@ -173,24 +182,20 @@ local function rescuer_hidden_stash_msg_factory(freq)
     return strformat(game.translate_string(messages[math.random(#messages)]), freq)
 end
 
-local function rescuer_multiple_hidden_stash_msg_factory(freq)
+local function recuer_indoor_msg_factory(level_name)
     local messages = {
-        "st_soulslike_multiple_hidden_stashes_1",
-        "st_soulslike_multiple_hidden_stashes_2",
-        "st_soulslike_multiple_hidden_stashes_3",
-        "st_soulslike_multiple_hidden_stashes_4",
-        "st_soulslike_multiple_hidden_stashes_5",
-        "st_soulslike_multiple_hidden_stashes_6",
-        "st_soulslike_multiple_hidden_stashes_7",
-        "st_soulslike_multiple_hidden_stashes_8",
+        "st_soulslike_rescuer_index_1",
     }
     
-    return strformat(game.translate_string(messages[math.random(#messages)]), freq)
+    return strformat(game.translate_string(messages[math.random(#messages)]), level_name)
 end
 
 function create(rescuer, params)
     if rescuer then
-        local msg = rescuer_initial_msg_factory()
+        local msg = params.player_died_indoor 
+            and recuer_indoor_msg_factory(params.level_name) 
+            or rescuer_initial_msg_factory()
+
         local looter = params.enemy
         
         if params.gave_food_or_water then
@@ -210,14 +215,15 @@ function create(rescuer, params)
         if params.has_stash_pda_marker then
             msg = msg.." "..rescuer_hidden_stash_msg_factory()
         end
-        if params.has_multi_stash_pda_marker then
-            msg = msg.." "..rescuer_multiple_hidden_stash_msg_factory()
-        end
         if params.radio_freq then
             msg = msg.." "..rescuer_enemy_radio_freq_msg_factory(params.radio_freq)
         end
         if params.items_were_lost then
-            msg = msg.." "..rescuer_used_items_msg_factory()            
+            if params.looter_type == soulslike.entity_type.Monster then
+                msg = msg.." "..rescuer_moster_looter_msg_factory() 
+            else
+                msg = msg.." "..rescuer_used_items_msg_factory()     
+            end       
         end
         msg = msg.." "..rescuer_stay_safe_msg_factory()
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)

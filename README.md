@@ -83,8 +83,6 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODOs**
-- Offset the radius of the PDA death location 
-- Create an item that needs to be used to set a respawn point (optional with mcm)
 - Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
 - If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
 - Random chance for players gear stash to be a ambush location (need to figure out how this works)
@@ -92,3 +90,4 @@ Based on having played about 10 hours in total into a new game with this mod I c
 - Chance to bring some/all weapon/outfit/headgear back based on reputation (maybe this is at the cost of reputation)
 - Chance to have rescuer give handgun/ammo/meds based on rep (maybe this is at the cost of reputation)
 - Insurance system?
+- Breaking a tent causes your spawn location to no longer exist, warn about this and revert to (where?)..

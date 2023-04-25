@@ -8,280 +8,401 @@
 function on_mcm_load()
     local op = {
         id = "soulslike",
+        gr = { }
+    }
+
+    local general = {
+        id = "general", 
+        text = "ui_mcm_soulslike_general",
+        sh = true,
+        gr = {           
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_general_title",
+                size = {512,50},
+                spacing = 20
+            }, 
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_general_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_general_disclaimer",
+                clr = {255, 255 ,255 ,0},
+            },
+        },
+    }
+
+    table.insert(op.gr, general)
+
+    local character = {
+        id = "character", 
+        text = "ui_mcm_soulslike_character",
+        sh = true,
+        gr = {          
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_character_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "health_loss_on_respawn",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 0.75,
+                step = 0.01,
+                def = 0.75
+            }, 
+            {
+                id = "rank_loss_percent",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 0.75,
+                step = 0.01,
+                def = 0.02
+            },
+            {
+                id = "rep_loss_percent",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 0.75,
+                step = 0.01,
+                def = 0.05
+            }
+        },
+    }
+
+    table.insert(op.gr, character)
+
+    local items = {
+        id = "items", 
+        text = "ui_mcm_soulslike_items",
+        sh = true,
+        gr = {  
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_items_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_items_scalar_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "item_loss_scalar",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 0.75,
+                step = 0.01,
+                def = 0.20
+            },
+            {
+                id = "item_condition_loss_scalar",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 0.25,
+                step = 0.01,
+                def = 0.05
+            },
+            {
+                id = "allow_weapon_loss",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_outfit_loss",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_headgear_loss",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_artifact_loss",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_tool_loss",
+                type = "check",
+                val = 1,
+                def = true
+            },        
+        },
+    }
+
+    table.insert(op.gr, items)
+
+    local scenarios = {
+        id = "scenarios", 
+        text = "ui_mcm_soulslike_scenarios",
         sh = true,
         gr = {
             {
                 id = "title",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
-                text = "ui_mcm_soulslike_title",
+                text = "ui_mcm_soulslike_scenarios_title",
                 size = {512,50},
                 spacing = 20
-            },    
-            {
-                id = "desc_mcm",
-                type = "desc",
-                text = "ui_mcm_soulslike_description",
-                clr = {255, 255 ,255 ,255},
             },
             {
                 id = "desc_mcm",
                 type = "desc",
-                text = "ui_mcm_soulslike_disclaimer",
+                text = "ui_mcm_soulslike_scenarios_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "rf_detector_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
+            {
+                id = "hidden_stash_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
+            {
+                id = "looter_npcs_marked",
+                type = "check",
+                val = 1,
+                def = false
+            }
+        },
+    }
+
+    table.insert(op.gr, scenarios)
+
+    local ambush = {
+        id = "ambush", 
+        text = "ui_mcm_soulslike_ambush",
+        sh = true,
+        gr = {
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_ambush_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_ambush_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "mutant_ambush_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25
+            },
+            {
+                id = "allow_boar_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_flesh_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_dogs_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+             {
+                id = "allow_cats_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_snorks_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_bloodsucker_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_burer_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_chimera_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_controller_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "stalker_ambush_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25
+            },
+            {
+                id = "allow_stalker_novice_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_stalker_advanced_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_stalker_veteran_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "allow_stalker_sniper_ambush",
+                type = "check",
+                val = 1,
+                def = true
+            }
+        },
+    }
+
+    table.insert(op.gr, ambush)
+
+    local hardcore = {
+        id = "hardcore", 
+        text = "ui_mcm_soulslike_hardcore",
+        sh = true,
+        gr = {
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_hardcore_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_hardcore_save_description",
                 clr = {255, 255 ,255 ,0},
             },
-            --Global Settings
             {
-                id = "desc_mcm",
-                type = "slide",
-                text = "ui_mcm_soulslike_global_description",
-                clr = {255, 255 ,255 ,255},
+                id = "is_hardcore_save_enabled",
+                type = "check",
+                val = 1,
+                def = false
             },
-        }
+            {
+                id = "override_campfire_hardcore_saves",
+                type = "check",
+                val = 1,
+                def = false
+            }
+        },
     }
-        
-    table.insert(op.gr, {
-        id = "allow_weapon_loss",
-        type = "check",
-        val = 1,
-        def = true
-    })
-        
-    table.insert(op.gr, {
-        id = "allow_outfit_loss",
-        type = "check",
-        val = 1,
-        def = true
-    })
-        
-    table.insert(op.gr, {
-        id = "allow_headgear_loss",
-        type = "check",
-        val = 1,
-        def = true
-    })
-        
-    table.insert(op.gr, {
-        id = "allow_artifact_loss",
-        type = "check",
-        val = 1,
-        def = true
-    })
-        
-    table.insert(op.gr, {
-        id = "allow_tool_loss",
-        type = "check",
-        val = 1,
-        def = true
-    })
 
-    table.insert(op.gr, {
-        id = "rank_loss_percent",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 0.75,
-        step = 0.01,
-        def = 0.02
-    })
+    table.insert(op.gr, hardcore)
 
-    table.insert(op.gr, {
-        id = "rep_loss_percent",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 0.75,
-        step = 0.01,
-        def = 0.05
-    })
+    local debug = {
+        id = "debug", 
+        text = "ui_mcm_soulslike_debug",
+        sh = true,
+        gr = {
+            {
+                id = "title",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_debug_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "debug",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_hidden_stashes",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_item_loss",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_the_tarkov_looter",
+                type = "check",
+                val = 1,
+                def = false
+            }
+        },
+    }
 
-    table.insert(op.gr, 
-    {
-        id = "desc_mcm",
-        type = "desc",
-        text = "ui_mcm_soulslike_scalar_description",
-        clr = {255, 255 ,255 ,255},
-    })
-
-    table.insert(op.gr, {
-        id = "item_loss_scalar",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 0.75,
-        step = 0.01,
-        def = 0.20
-    })
-
-    table.insert(op.gr, {
-        id = "item_condition_loss_scalar",
-        type = "track",
-        val = 2,
-        min = 0,
-        max = 0.25,
-        step = 0.01,
-        def = 0.05
-    })
-    
-    table.insert(op.gr, {
-        id = "lost_items_looted_by_npcs",
-        type = "check",
-        val = 1,
-        def = true
-    })
-
-    table.insert(op.gr, {
-        id = "looter_npcs_marked",
-        type = "check",
-        val = 1,
-        def = false
-    })
-
-    table.insert(op.gr, {
-        id = "health_loss_on_respawn",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 0.75,
-        step = 0.01,
-        def = 0.75
-    })
-    
-    -- Scenarios
-    table.insert(op.gr, {
-        id = "desc_mcm",
-        type = "slide",
-        text = "ui_mcm_soulslike_scenarios_description",
-        clr = {255, 255 ,255 ,255},
-    })
-
-    table.insert(op.gr, {
-        id = "rf_detector_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.10
-    })
-
-    table.insert(op.gr, {
-        id = "hidden_stash_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.10
-    })
-
-    table.insert(op.gr, {
-        id = "scattered_stash_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.02
-    })
-
-    table.insert(op.gr, {
-        id = "nearby_dead_stalker_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.10
-    })
-
-    table.insert(op.gr, {
-        id = "mutant_ambush_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.05
-    })
-
-    table.insert(op.gr, {
-        id = "stalker_ambush_scenario_weight",
-        type = "track",
-        val = 2,
-        min = 0.0,
-        max = 1.0,
-        step = 0.01,
-        def = 0.05
-    })
-    
-    -- Harcore Save
-    table.insert(op.gr, 
-    {
-        id = "desc_mcm",
-        type = "slide",
-        text = "ui_mcm_soulslike_hardcore_global_description",
-        clr = {255, 255 ,255 ,255},
-    })
-
-    table.insert(op.gr, 
-    {
-        id = "desc_mcm",
-        type = "desc",
-        text = "ui_mcm_soulslike_hardcore_save_description",
-        clr = {255, 255 ,255 ,0},
-    })
-    
-    table.insert(op.gr, {
-        id = "is_hardcore_save_enabled",
-        type = "check",
-        val = 1,
-        def = false
-    })
-
-    table.insert(op.gr, {
-        id = "override_campfire_hardcore_saves",
-        type = "check",
-        val = 1,
-        def = false
-    })
-
-    table.insert(op.gr, {
-        id = "desc_mcm",
-        type = "slide",
-        text = "ui_mcm_soulslike_debug_description",
-        clr = {255, 255 ,255 ,255},
-    })
-    table.insert(op.gr, {
-        id = "debug",
-        type = "check",
-        val = 1,
-        def = false
-    });
-    table.insert(op.gr, {
-        id = "debug_hidden_stashes",
-        type = "check",
-        val = 1,
-        def = false
-    });
-    table.insert(op.gr, {
-        id = "debug_item_loss",
-        type = "check",
-        val = 1,
-        def = false
-    });
-    table.insert(op.gr, {
-        id = "debug_remove_default_scenario",
-        type = "check",
-        val = 1,
-        def = false
-    });
-    table.insert(op.gr, {
-        id = "debug_the_tarkov_looter",
-        type = "check",
-        val = 1,
-        def = false
-    });
+    table.insert(op.gr, debug)
 
     return op
 end
@@ -318,9 +439,9 @@ function override_campfire_hardcore_saves()
     return get_config("override_campfire_hardcore_saves", false)
 end
 
-function get_lost_items_looted_by_npcs() 
-    return get_config("lost_items_looted_by_npcs", true)
-end
+-- function get_lost_items_looted_by_npcs() 
+--     return get_config("lost_items_looted_by_npcs", true)
+-- end
 
 function are_looter_npcs_marked()
     return get_config("looter_npcs_marked", false)
@@ -342,12 +463,12 @@ function nearby_dead_stalker_scenario_weight()
     return get_config("nearby_dead_stalker_scenario_weight", 0.10)
 end 
 
-function mutant_ambush_scenario_weight()
-    return get_config("mutant_ambush_scenario_weight", 0.5)
+function mutant_ambush_chance()
+    return get_config("mutant_ambush_chance", 0.5)
 end 
 
-function stalker_ambush_scenario_weight()
-    return get_config("stalker_ambush_scenario_weight", 0.5)
+function stalker_ambush_chance()
+    return get_config("stalker_ambush_chance", 0.5)
 end 
 
 function allow_toolkit_loss()
@@ -370,6 +491,47 @@ function allow_weapon_loss()
     return get_config("allow_weapon_loss", true)
 end 
 
+
+function allow_boar_ambush()
+    return get_config("allow_boar_ambush", true)
+end 
+function allow_flesh_ambush()
+    return get_config("allow_flesh_ambush", true)
+end 
+function allow_dogs_ambush()
+    return get_config("allow_dogs_ambush", true)
+end 
+function allow_cats_ambush()
+    return get_config("allow_cats_ambush", true)
+end 
+function allow_snorks_ambush()
+    return get_config("allow_snorks_ambush", true)
+end 
+function allow_bloodsucker_ambush()
+    return get_config("allow_bloodsucker_ambush", true)
+end 
+function allow_burer_ambush()
+    return get_config("allow_burer_ambush", true)
+end 
+function allow_chimera_ambush()
+    return get_config("allow_chimera_ambush", true)
+end 
+function allow_controller_ambush()
+    return get_config("allow_controller_ambush", true)
+end 
+function allow_stalker_novice_ambush()
+    return get_config("allow_stalker_novice_ambush", true)
+end 
+function allow_stalker_advanced_ambush()
+    return get_config("allow_stalker_advanced_ambush", true)
+end 
+function allow_stalker_veteran_ambush()
+    return get_config("allow_stalker_veteran_ambush", true)
+end 
+function allow_stalker_sniper_ambush()
+    return get_config("allow_stalker_sniper_ambush", true)
+end 
+
 function rank_loss_percent()
     return get_config("rank_loss_percent", 0.05)
 end 
@@ -377,6 +539,7 @@ end
 function rep_loss_percent()
     return get_config("rep_loss_percent", 0.02)
 end 
+
 
 function debug_hidden_stashes()
     return is_debug_enabled() and get_config("debug_hidden_stashes", false)

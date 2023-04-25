@@ -5,57 +5,6 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-
-local mutant_spawns = {
-    --Common Mutants
-    { section = "simulation_boar",              weight = 1.00 },
-    { section = "simulation_flesh",             weight = 0.90 },
-    { section = "simulation_dog",               weight = 0.80 },
-    { section = "zombied_sim_squad_novice",     weight = 0.70 },
-    { section = "simulation_cat",               weight = 0.60 },
-    { section = "simulation_boar_3_5",          weight = 0.50 },
-    { section = "simulation_mix_boar_flesh",    weight = 0.40 },
-    { section = "zombied_sim_squad_mix",        weight = 0.30 },
-    { section = "simulation_mix_dogs",          weight = 0.20 },
-    { section = "simulation_dog_5_7",           weight = 0.15 },
-    { section = "simulation_pseudodog",         weight = 0.12 },
-    { section = "simulation_cat_3_5",           weight = 0.10 },
-    { section = "simulation_snork",             weight = 0.08 },
-    --Rare Mutants
-    { section = "simulation_bloodsucker",       weight = 0.04 },
-    { section = "simulation_burer1",            weight = 0.03 },
-    { section = "simulation_chimera",           weight = 0.02 },
-    { section = "simulation_bloodsucker_2weak", weight = 0.02 },
-    { section = "simulation_chimera_2weak",     weight = 0.01 },
-    { section = "simulation_controller",        weight = 0.01 },
-}
-
-local stalker_spawns = {
-    --Bandit
-    { section = "bandit_sim_squad_novice",      community = "bandit",       weight = 1.00 },
-    { section = "bandit_sim_squad_advanced",    community = "bandit",       weight = 0.50 },
-    --Merc
-    { section = "merc_sim_squad_novice",        community = "merc",         weight = 0.75 },
-    { section = "merc_sim_squad_advanced",      community = "merc",         weight = 0.25 },
-    --Duty
-    { section = "duty_sim_squad_novice",        community = "duty",         weight = 1.00 },
-    { section = "duty_sim_squad_advanced",      community = "duty",         weight = 0.10 },
-    --Freedom
-    { section = "freedom_sim_squad_novice",     community = "freedom",      weight = 1.00 },
-    { section = "freedom_sim_squad_advanced",   community = "freedom",      weight = 0.10 },
-    --Military
-    { section = "army_sim_squad_novice",        community = "army",         weight = 1.00 },
-    { section = "army_sim_squad_advanced",      community = "army",         weight = 0.10 },
-    { section = "army_sim_squad_sniper",        community = "army",         weight = 0.05 },
-    --Clear Sky
-    { section = "csky_sim_squad_novice",        community = "csky",         weight = 1.00 },
-    { section = "csky_sim_squad_advanced",      community = "csky",         weight = 0.10 },
-    --Renegades
-    { section = "renegade_sim_squad_novice",    community = "renegade",     weight = 0.50 },
-    { section = "renegade_sim_squad_advanced",  community = "renegade",     weight = 0.20 },
-}
-
-
 local version = "0.20-beta"
 
 local tools_list = {
@@ -68,69 +17,9 @@ local tools_list = {
     ["itm_artefactskit"] = true,
 }
 
-local obj_to_spawn_classes = {
-    -- kind
-    ["AI_STL_S"]    = "NPC (Stalker)",
-    ["AI_TRD_S"]    = "NPC (Stalker)",
+local scenario_logic = nil
 
-    ["SM_KAR"]	    = "NPC (Mutant)",
-    ["SM_BLOOD"]    = "NPC (Mutant)",
-    ["SM_BOARW"]    = "NPC (Mutant)",
-    ["SM_BURER"]    = "NPC (Mutant)",
-    ["SM_CAT_S"]    = "NPC (Mutant)",
-    ["SM_CHIMS"]    = "NPC (Mutant)",
-    ["SM_CONTR"]    = "NPC (Mutant)",
-    ["SM_DOG_S"]    = "NPC (Mutant)",
-    ["SM_FLESH"]    = "NPC (Mutant)",
-    ["SM_IZLOM"]    = "NPC (Mutant)",
-    ["SM_GIANT"]    = "NPC (Mutant)",
-    ["SM_POLTR"]    = "NPC (Mutant)",
-    ["SM_P_DOG"]    = "NPC (Mutant)",
-    ["SM_DOG_P"]    = "NPC (Mutant)",
-    ["SM_DOG_F"]    = "NPC (Mutant)",
-    ["SM_SNORK"]    = "NPC (Mutant)",
-    ["SM_TUSHK"]    = "NPC (Mutant)",
-    ["SM_ZOMBI"]    = "NPC (Mutant)",
-    ["SM_RAT"]	    = "NPC (Mutant)",
-    ["SM_KARLIK"]	= "NPC (Mutant)",
-    ["SM_LURKER"]	= "NPC (Mutant)",
-    ["SM_PSYSUCKER"]	= "NPC (Mutant)",
-
-    ["C_HLCP_S"] 	= "Vehicles",
-    ["C_NIVA"] 		= "Vehicles",
-    ["SCRPTCAR"] 	= "Vehicles",
-
-    ["ON_OFF_S"]    = "Squads",
-    
-    ["O_PHYSIC"]    = "Physic (Misc.)",
-    ["O_DSTRBL"]    = "Physic (Misc.)",
-    ["P_DSTRBL"]    = "Physic (Misc.)",
-    ["O_PHYS_S"]    = "Physic (Misc.)",
-    ["O_DSTR_S"]    = "Physic (Misc.)",
-    ["S_INVBOX"]    = "Physic (Misc.)",
-    ["O_INVBOX"]    = "Physic (Misc.)",
-    ["S_EXPLO"]     = "Physic (Misc.)",
-    ["II_EXPLO"]    = "Physic (Misc.)",
-
-    ["ZS_MBALD"]    = "Anomaly",
-    ["ZS_GALAN"]    = "Anomaly",
-    ["ZS_MINCE"]    = "Anomaly",
-    ["ZS_RADIO"]    = "Anomaly",
-    ["ZS_TORRD"]    = "Anomaly",
-    ["ZS_NGRAV"]    = "Anomaly",
-    ["Z_MBALD"]     = "Anomaly",
-    ["Z_RADIO"]     = "Anomaly",
-    ["Z_CFIRE"]     = "Anomaly",
-    ["Z_NOGRAV"]    = "Anomaly",
-    ["Z_TORRID"]    = "Anomaly",
-    ["Z_RUSTYH"]    = "Anomaly",
-    ["ZS_BFUZZ"]    = "Anomaly",
-    ["ZS_AMEBA"]    = "Anomaly",
-    
-    ["AI_PHANT"]    = "Phantom",
-}
-
-local relations = { 
+relations = { 
     FRIENDS = 1000,    
     BUDDIES = 500,
     NEUTRALS = 0,
@@ -145,9 +34,36 @@ SCENARIOS = {
     NearbyDeadStalker = 5,
     MutantAmbush = 6,
     StalkerAmbush = 7,
+    NoLoss = 7,
+}
+hit_type_to_str = {
+	[hit.light_burn]    = "Light Burn",
+	[hit.burn]          = "Burn",
+	[hit.strike]        = "Strike",
+	[hit.shock]         = "Shock",
+	[hit.wound]         = "Wound",
+	[hit.radiation]     = "Radiation",
+	[hit.telepatic]     = "Telepatic",
+	[hit.chemical_burn] = "Chemical Burn",
+	[hit.explosion]     = "Explosion",
+	[hit.fire_wound]    = "Fire",
 }
 
-local scenario_logic = nil
+entity_type = { 
+    Stalker = 1,
+    Monster = 2,
+    Anomaly = 3,
+    Self = 4,
+    Other = 4
+}
+
+----------------------------------------
+-- Classes
+----------------------------------------
+
+local MAX_HIT_POOL_COUNT = 30
+local MAX_HIT_TIME = 30000
+local hit_queue = soulslike_classes.TimedQueue(MAX_HIT_POOL_COUNT, MAX_HIT_TIME)
 
 ----------------------------------------
 -- Helpers
@@ -215,16 +131,31 @@ local function print_table (tbl, indent)
     utils_data.debug_write(string.rep(" ", indent-2) .. "}")
 end
 
-function debug(output)
+local function log(log_type, output)
     if not output then
-        utils_data.debug_write("[Soulslike] ".."(nil)")
-    end
-    if (type(output) == "table") then
-        utils_data.debug_write("[Soulslike] ")
+        utils_data.debug_write("[Soulslike] "..log_type..": ".."(nil)")
+    elseif (type(output) == "table") then
+        utils_data.debug_write("[Soulslike] "..log_type..": ")
         print_table(output)
     else
-        utils_data.debug_write("[Soulslike] "..output)
+        utils_data.debug_write("[Soulslike] "..log_type..": "..output)
     end
+end
+
+function debug(output)
+    log("DEBUG", output)
+end
+
+function info(output)
+    log("INFO", output)
+end
+
+function warn(output)
+    log("WARN", output)
+end
+
+function error(output)
+    log("ERROR", output)
 end
 
 ----------------------------------------
@@ -300,28 +231,42 @@ end
 
 function find_closest_enemy()
     local enemy = nil
-    local enemy_dist = 100000
-    
-	for i=1, #db.OnlineStalkers do
-		local id = db.OnlineStalkers[i]
-		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
-        
-        if npc then
-            local is_enemy = npc:general_goodwill(db.actor) <= relations.ENEMIES
-            local dist = npc:position():distance_to_sqr(npc:position())
+    local enemy_dist = 150
+	local sim = alife()
+	local gg = game_graph()
+    local level_name = level.name()
 
-            if npc:alive() and  is_enemy and (not get_object_story_id(id)) and enemy_dist > dist then
-                local comm = npc:character_community()
-                debug("Found enemy "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
-                enemy = npc
+	for i=1,65534 do
+		local se_obj = sim:object(i)
+		if se_obj and (level_name == sim:level_name(gg:vertex(se_obj.m_game_vertex_id):level_id())) then
+            local cls = se_obj:clsid()
+			local sec = se_obj:section_name()
+            local is_valid = false
+
+			if IsStalker(nil,cls) and sfind(sec,"sim_default_") and se_obj:alive() then
+				local comm = se_obj:community()
+				if (comm ~= "trader") and (comm ~= "zombied") then
+					is_valid = true
+				end
+			elseif IsMonster(nil,cls) then
+                is_valid = true
+			end
+
+            if is_valid then
+                local dist = se_obj:position():distance_to_sqr(se_obj:position())
+                if enemy_dist > dist then
+                    local comm = se_obj:character_community()
+                    debug("Found enemy "..se_obj:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                    enemy = se_obj
+                end
             end
-        end
-    end
+		end
+	end
 
     return enemy
 end
 
-function find_closest_friendly()  
+function find_closest_friendly_stalker()  
     local friend = nil
     local friend_dist = 100000
 
@@ -330,15 +275,14 @@ function find_closest_friendly()
 		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
 
         if npc then
-            local dist = npc:position():distance_to_sqr(npc:position())
+            local dist = npc:position():distance_to_sqr(db.actor:position())
             local is_friend = npc:general_goodwill(db.actor) >= relations.NEUTRALS
             
-            if npc:alive() and is_friend and friend_dist > dist (not get_object_story_id(id)) then
+            if npc:alive() and is_friend and friend_dist > dist and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
-                debug("Found friend "..friend:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                debug("Found friend "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
                 friend = npc
                 friend_dist = dist
-                break
             end
         end
     end
@@ -395,64 +339,9 @@ function wakeup_callback()
 
     if scenario_logic then
         debug("Completing scenario.")
-        scenario_logic:OnComplete()  
-            
-        local section = "simulation_controller_psy"
-        local class = ini_sys:r_string_ex(section,"class")
-        local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
-        if kind then class = kind end
-
-        if scenario_logic.logic_state.death_location.position.x then
-            local pos = vector():set(
-                scenario_logic.logic_state.death_location.position.x, 
-                scenario_logic.logic_state.death_location.position.y, 
-                scenario_logic.logic_state.death_location.position.z)   
-            local lvid = scenario_logic.logic_state.death_location.level_vertex_id
-            local gvid = scenario_logic.logic_state.death_location.game_vertex_id
-            local group = obj_to_spawn_classes[class]
-
-            local prop = {}
-            local is_squad = string.find(group,"Squad")
-            local cant_spawn_actor = string.find(group,"NPC") or string.find(group,"Physic")
-
-            if (is_squad) then
-                prop.no_id           = true
-                prop.squad           = true
-            elseif (cant_spawn_actor) then
-                prop.no_id           = true
-            end
-
-
-            local se_obj = section and alife_create(section, pos, lvid, gvid)
-            if se_obj then
-                if (prop.squad) then
-                    se_obj:create_npc(nil, pos, lvid, gvid)
-                    local sim = alife()
-                    for k in se_obj:squad_members() do
-                        local se_npc = k.object or k.id and sim:object(k.id)
-                        if (se_npc) then
-                            level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", 'Uh Oh!') 
-                            SIMBOARD:setup_squad_and_group(se_npc)
-                            SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
-                        end 
-                    end
-
-                    debug(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
-                            
-                else
-                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", 'Uh Oh!') 
-                    debug(strformat("Spawned object [%s] (%s)", section, se_obj.id))
-                end
-            else
-                debug(strformat("No server object made for [%s]", section))
-            end
-                    
-        else
-            debug("No nearby smarts, to dumb")
-        end
+        scenario_logic:OnComplete()          
     else
-        debug("No logic state")
-
+        error("No logic state")
     end
     
     local data = get_soulslike_state()  
@@ -477,6 +366,7 @@ end
 -- Game Callbacks
 ----------------------------------------
 
+
 local function actor_on_before_death(who, flags)    
     if not IsSoulslikeMode() then
         return
@@ -491,147 +381,14 @@ local function actor_on_before_death(who, flags)
     debug('Actor died')
 	game_statistics.increment_statistic("deaths")
 	    
-    debug("Looking for player backpack")
-    local has_backpack = false
-    local function find_backpack(_, item)
-        local sec = item:section()
-        has_backpack = has_backpack or (item and SYS_GetParam(0, sec, "kind") == "i_backpack")
-    end
-    db.actor:iterate_inventory(find_backpack)
-
-    local player_is_indoor = not level_weathers.valid_levels[level.name()]
+    scenario_logic = soulslike_scenario_logic_factory.create_new(hit_queue:Values())
     
-    soulslike.debug("has_backpack="..tostring(has_backpack))
-    soulslike.debug("player_is_indoor="..tostring(player_is_indoor))
-
-    local scenario_count = 0
-    local scenario_weights = {}
-
-    
-
-    -- We want to be able to debug each scenario using the 
-    -- scenario weight to max, and in this case we want to 
-    -- be able to remove the default scenario so its always
-    -- chosen.
-
-    if has_backpack and not soulslike_mcm.debug_remove_default_scenario() then
-        soulslike.debug("Adding default scenario")
-        scenario_count = scenario_count + 1
-        scenario_weights[SCENARIOS.Default] = {
-            min = 0,
-            max = 0,
-            weight = 1.0,
-        }
+    if scenario_logic then 
+        scenario_logic:OnDeath()
+        flags.ret_value = false
     end
 
-    if not player_is_indoor and soulslike_mcm.rf_detector_scenario_weight() > 0 then
-        soulslike.debug("Adding RF detector scenario")
-        scenario_count = scenario_count + 1
-        scenario_weights[SCENARIOS.RFDetectorStash] = {
-            min = 0,
-            max = 0,
-            weight = soulslike_mcm.rf_detector_scenario_weight()
-        }
-    end
-    
-    if not player_is_indoor and soulslike_mcm.hidden_stash_scenario_weight() > 0 then
-        soulslike.debug("Adding hidden stash scenario")
-        scenario_count = scenario_count + 1
-        scenario_weights[SCENARIOS.HiddenStash] = {
-            min = 0,
-            max = 0,
-            weight = soulslike_mcm.hidden_stash_scenario_weight()
-        }
-    end
-    
-    if not player_is_indoor and soulslike_mcm.scattered_stash_scenario_weight() > 0 then
-        soulslike.debug("Adding scattered stash scenario")
-        scenario_count = scenario_count + 1
-        scenario_weights[SCENARIOS.ScatteredStashes] = {
-            min = 0,
-            max = 0,
-            weight = soulslike_mcm.scattered_stash_scenario_weight()
-        }
-    end
-
-    -- if not player_is_indoor and soulslike_mcm.nearby_dead_stalker_scenario_weight() > 0 then
-    --     scenario_count = scenario_count + 1
-    --     scenario_weights[SCENARIOS.NearbyDeadStalker] = {
-    --         min = 0,
-    --         max = 0,
-    --         weight = soulslike_mcm.nearby_dead_stalker_scenario_weight()
-    --     }
-    -- end
-
-    -- if not player_is_indoor and soulslike_mcm.mutant_ambush_scenario_weight() > 0 then
-    --     scenario_count = scenario_count + 1
-    --     scenario_weights[SCENARIOS.MutantAmbush] = {
-    --         min = 0,
-    --         max = 0,
-    --         weight = soulslike_mcm.mutant_ambush_scenario_weight()
-    --     }
-    -- end
-    
-    -- if not player_is_indoor and soulslike_mcm.stalker_ambush_scenario_weight() > 0 then
-    --     scenario_count = scenario_count + 1
-    --     scenario_weights[SCENARIOS.StalkerAmbush] = {
-    --         min = 0,
-    --         max = 0,
-    --         weight = soulslike_mcm.stalker_ambush_scenario_weight() 
-    --     }
-    -- end
-
-    -- If for some reason the player doesn't have a backpack... 
-    -- and we have no other valid scenario in the list...
-    -- Let's make the exception to use the Default Scenario.
-    if not has_backpack and scenario_count == 0 then
-        soulslike.debug("No backpack or scenarios detected.  Adding default.")
-        scenario_count = scenario_count + 1
-        scenario_weights[SCENARIOS.Default] = {
-            min = 0,
-            max = 0,
-            weight = 1.0,
-        }
-    end
-
-    if scenario_count == 0 then
-        debug("ERROR: No scenario chosen because all scenario weights are at 0 and remove default was enabled.")
-        return
-    end
-
-    local weight_sum = 0
-    for _, value in pairs(scenario_weights) do
-        weight_sum = weight_sum + value.weight
-    end
-
-    local min = 0
-    for _, value in pairs(scenario_weights) do
-        value.min = min + 1
-        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
-        min = value.max
-    end
-    
-    soulslike.debug(scenario_weights)
-
-    local roll = math.random(1, 100)    
-    local scenario_id = nil
-    for id, value in pairs(scenario_weights) do
-        if(roll >= value.min and roll <= value.max) then
-            scenario_id = id
-            break
-        end
-    end
-
-    if scenario_id == nil then
-        debug("ERROR: Unable to determine scenario from roll: "..tostring(roll))
-        debug(scenario_weights)  
-        scenario_id = SCENARIOS.Default
-    end
-
-    scenario_logic = soulslike_scenario_logic_factory.create(scenario_id)
-    scenario_logic:OnDeath()
-
-	flags.ret_value = false
+    hit_queue:Clear()
 end
 
 local function on_before_save_input(flags, type, text)
@@ -859,7 +616,7 @@ local function load_state(data)
 
     if data.logic_state then
         -- Reinitialize the last scenario using the saved logic state.
-        scenario_logic = soulslike_scenario_logic_factory.create(data.logic_state.scenario_id, data.logic_state)
+        scenario_logic = soulslike_scenario_logic_factory.create_by_id(data.logic_state.scenario_id, data.logic_state)
     end
 end
 
@@ -933,54 +690,27 @@ local function actor_on_sleep(hours)
     end
 end
 
-local dtype = {
-	[hit.light_burn]    = "light_burn",
-	[hit.burn]          = "burn",
-	[hit.strike]        = "strike",
-	[hit.shock]         = "shock",
-	[hit.wound]         = "wound",
-	[hit.radiation]     = "radiation",
-	[hit.telepatic]     = "telepatic",
-	[hit.chemical_burn] = "chemical_burn",
-	[hit.explosion]     = "explosion",
-	[hit.fire_wound]    = "fire_wound",
-}
-
-local hit_pool = {
-
-}
-
-local function actor_on_before_hit(shit,bone_id,flags)
+local function actor_on_before_hit(shit, ...)
     debug("Player hit:")
-    debug("shit.type: "..tostring(dtype[shit.type]))
+    debug("shit.type: "..tostring(hit_type_to_str[shit.type]))
     debug("shit.power: "..tostring(shit.power))
     debug("shit.impulse: "..tostring(shit.impulse))
     debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
 
-    local is_stalker = false
-    local is_monster = false
-    local is_anomaly = false
-
     if shit.draftsman then
-        is_stalker = IsStalker(shit.draftsman)
-        is_monster = IsMonster(shit.draftsman)
-        is_anomaly = IsAnomaly(shit.draftsman)
         debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
     end
 
     local health = db.actor.health
     local is_fatal = shit.power >= health
 
-    table.insert(hit_pool, { 
-        time = time_global(),
-        hit_type = shit.type,
-        hit_power = shit.power,
+    hit_queue:Enqueue({ 
+        type = shit.type,
+        power = shit.power,
+        is_fatal = is_fatal,
         draftsman_id = shit.draftsman and shit.draftsman:id() or nil,
-        is_stalker = is_stalker,
-        is_monster = is_monster,
-        is_anomaly = is_anomaly,
-    }
-
+    })
+    
     debug("is_fatal: "..tostring(is_fatal))
 end
 

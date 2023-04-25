@@ -34,6 +34,39 @@
 </string>
 
 
+
+
+<string id="st_soulslike_rescuer_index_1">
+	<text>Yo, you are one lucky mother fucker! I cannot believe you went into %s. You are incredibly luck we found you! I was able to rally some of the other Stalkers to go in there and help me with your gear, hopefully it's all accounted for.</text>
+</string>
+
+
+
+
+<string id="st_soulslike_rescuer_monster_looter_1">
+	<text>I was able to scare off the mutant near by but they seemed to be rummaging through your backpack.  I would take care when retrieving your things, whatever you had in there might attrack other wildllife in the area.</text>
+</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <string id="st_soulslike_rescuer_initial_1">
 	<text>Hi! I just wanted to see how you're feeling. You were almost dead when I found you.</text>
 </string>
@@ -494,37 +527,5 @@
     <text>I've hidden your things in a secure location and marked it on your PDA for easy retrieval.</text>
 </string>
 
-
-<string id="st_soulslike_multiple_hidden_stashes_1">
-    <text>Your belongings are tucked away in a hidden spot that I marked on your PDA.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_2">
-    <text>Your items are stored in multiple secure stashes that I marked on your PDA to keep them safe.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_3">
-    <text>I was concerned about the safety of your possessions, so I hid them in several different locations and marked each spot on your PDA.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_4">
-    <text>Your things are securely hidden in several stashes that I marked on your PDA to ensure their safety.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_5">
-    <text>To ensure the protection of your belongings, I hid them in multiple stashes and marked each location on your PDA.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_6">
-    <text>I concealed your items in various secure locations and marked them on your PDA to prevent them from being found.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_7">
-    <text>Your possessions are hidden in multiple stashes that I marked on your PDA to keep them safe from prying eyes.</text>
-</string>
-
-<string id="st_soulslike_multiple_hidden_stashes_9">
-    <text>I was worried about someone discovering your items, so I hid them in multiple secure stashes and marked each location on your PDA for added protection.</text>
-</string>
 
 </string_table>
