@@ -104,11 +104,20 @@ end
 local function rescuer_moster_looter_msg_factory(enemy_name, enemy_comm)
     local messages = {
         "st_soulslike_rescuer_monster_looter_1",
+        "st_soulslike_rescuer_monster_looter_2",
+        "st_soulslike_rescuer_monster_looter_3",
+        "st_soulslike_rescuer_monster_looter_4",
+        "st_soulslike_rescuer_monster_looter_5",
+        "st_soulslike_rescuer_monster_looter_6",
+        "st_soulslike_rescuer_monster_looter_7",
+        "st_soulslike_rescuer_monster_looter_8",
+        "st_soulslike_rescuer_monster_looter_9",
+        "st_soulslike_rescuer_monster_looter_10",
+        "st_soulslike_rescuer_monster_looter_11",
     }
     
     return game.translate_string(messages[math.random(#messages)])
 end
-
 
 local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
     local messages = {
@@ -184,7 +193,17 @@ end
 
 local function recuer_indoor_msg_factory(level_name)
     local messages = {
-        "st_soulslike_rescuer_index_1",
+        "st_soulslike_rescuer_indoor_1",
+        "st_soulslike_rescuer_indoor_2",
+        "st_soulslike_rescuer_indoor_3",
+        "st_soulslike_rescuer_indoor_4",
+        "st_soulslike_rescuer_indoor_5",
+        "st_soulslike_rescuer_indoor_6",
+        "st_soulslike_rescuer_indoor_7",
+        "st_soulslike_rescuer_indoor_8",
+        "st_soulslike_rescuer_indoor_9",
+        "st_soulslike_rescuer_indoor_10",
+        "st_soulslike_rescuer_indoor_11",
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), level_name)
