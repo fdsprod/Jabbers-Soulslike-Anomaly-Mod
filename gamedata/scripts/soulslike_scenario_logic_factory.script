@@ -162,7 +162,36 @@ function create_new(hits)
     local spawn_position = vector():set(game_state.spawn_location.position.x, game_state.spawn_location.position.y, game_state.spawn_location.position.z)   
     local distance_from_spawn = spawn_position:distance_to_sqr(db.actor:position())
     
-    if distance_from_spawn <= 50 then
+    if soulslike_mcm.debug_the_noloss_scenario() then
+        soulslike.debug("Debugging noloss scenario.")
+        rescuer = soulslike.find_closest_friendly_stalker()
+        scenario_loot_scalar = 0
+      
+        table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})      
+    elseif soulslike_mcm.debug_the_default_scenario() then
+        soulslike.debug("Debugging default scenario.")
+        rescuer = soulslike.find_closest_friendly_stalker()
+        looter = soulslike.find_closest_enemy()
+        scenario_loot_scalar = 1
+
+        table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
+    elseif soulslike_mcm.debug_the_rf_scenario() then
+        soulslike.debug("Debugging rf detector scenario.")
+
+        rescuer = soulslike.find_closest_friendly_stalker()
+        looter = soulslike.find_closest_enemy()
+        scenario_loot_scalar = 1
+
+        table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = 1.0})
+    elseif soulslike_mcm.debug_the_rf_scenario() then
+        soulslike.debug("Debugging hidden stash scenario.")
+
+        rescuer = soulslike.find_closest_friendly_stalker()
+        looter = soulslike.find_closest_enemy()
+        scenario_loot_scalar = 1
+
+        table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = 1.0})
+    elseif distance_from_spawn <= 50 then
         soulslike.debug("Player was killed "..tostring(distance_from_spawn).." meters their spawn point.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
@@ -190,7 +219,7 @@ function create_new(hits)
         rescuer = soulslike.find_closest_friendly_stalker()
         looter = soulslike.find_closest_enemy()
         scenario_loot_scalar = 0.75
-        
+
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 0.05})
 
         if has_backpack then

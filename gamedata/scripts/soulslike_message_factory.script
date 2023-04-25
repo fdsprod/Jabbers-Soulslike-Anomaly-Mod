@@ -106,7 +106,7 @@ local function rescuer_moster_looter_msg_factory(enemy_name, enemy_comm)
         "st_soulslike_rescuer_monster_looter_1",
     }
     
-    return messages[math.random(#messages)]
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 

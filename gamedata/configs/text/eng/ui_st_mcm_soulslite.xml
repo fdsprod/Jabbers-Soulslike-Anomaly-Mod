@@ -206,4 +206,16 @@
     <string id="ui_mcm_soulslike_debug_debug_the_tarkov_looter">
         <text>Debug Tarkov Looter</text>
     </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_noloss_scenario">
+        <text>Debug No Loss Scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_default_scenario">
+        <text>Debug Default Loss Scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_rf_scenario">
+        <text>Debug RF Detector Scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
+        <text>Debug Hidden Stash Scenario</text>
+    </string>
 </string_table>

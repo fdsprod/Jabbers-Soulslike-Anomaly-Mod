@@ -1047,6 +1047,13 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
     local actor = db.actor
     local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
 
+    if (se_stash) then
+        self.game_state.created_stashes[se_stash.id] = {
+            lost_items = {},
+            examine = false
+        } 
+    end
+
     if not self.game_state.hidden_stashes then
         self.game_state.hidden_stashes = {}
     end
@@ -1116,6 +1123,13 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
     local actor = db.actor
     local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
 
+    if (se_stash) then
+        self.game_state.created_stashes[se_stash.id] = {
+            lost_items = {},
+            examine = false
+        } 
+    end
+    
     if not self.game_state.hidden_stashes then
         self.game_state.hidden_stashes = {}
     end

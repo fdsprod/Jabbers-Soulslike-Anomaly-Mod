@@ -398,6 +398,30 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = false
+            },
+            {
+                id = "debug_the_noloss_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_the_default_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_the_rf_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_the_hidden_stash_scenario",
+                type = "check",
+                val = 1,
+                def = false
             }
         },
     }
@@ -555,4 +579,20 @@ end
 
 function debug_the_tarkov_looter()
     return is_debug_enabled() and get_config("debug_the_tarkov_looter", false)
+end 
+
+function debug_the_noloss_scenario()
+    return is_debug_enabled() and get_config("debug_the_noloss_scenario", false)
+end 
+
+function debug_the_default_scenario()
+    return is_debug_enabled() and get_config("debug_the_default_scenario", false)
+end 
+
+function debug_the_rf_scenario()
+    return is_debug_enabled() and get_config("debug_the_rf_scenario", false)
+end 
+
+function debug_the_hidden_stash_scenario()
+    return is_debug_enabled() and get_config("debug_the_hidden_stash_scenario", false)
 end 
