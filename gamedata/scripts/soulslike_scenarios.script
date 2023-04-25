@@ -224,7 +224,7 @@ function SoulslikeScenarioLogic:__init(state)
             allow_controller_ambush = soulslike_mcm.allow_controller_ambush(),
             allow_stalker_novice_ambush = soulslike_mcm.allow_stalker_novice_ambush(),
             allow_stalker_advanced_ambush = soulslike_mcm.allow_stalker_advanced_ambush(),
-            allow_stalker_ambush = soulslike_mcm.allow_stalker_veteran_ambush(),
+            allow_stalker_veteran_ambush = soulslike_mcm.allow_stalker_veteran_ambush(),
             allow_stalker_sniper_ambush = soulslike_mcm.allow_stalker_sniper_ambush(),
             allow_npc_looting = true,
             are_looter_npcs_marked = soulslike_mcm.are_looter_npcs_marked(),
