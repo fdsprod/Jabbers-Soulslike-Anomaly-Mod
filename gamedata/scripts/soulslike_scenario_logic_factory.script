@@ -91,22 +91,6 @@ function create_by_id(scenario_id, state)
         scenario = soulslike_scenarios.HiddenStashSoulslikeScenarioLogic(state) 
     end
     
-    if scenario_id ==soulslike.SCENARIOS.ScatteredStashes then 
-        scenario = soulslike_scenarios.ScatteredStashesSoulslikeScenarioLogic(state) 
-    end
-    
-    if scenario_id ==soulslike.SCENARIOS.NearbyDeadStalker then 
-        scenario = soulslike_scenarios.NearbyDeadStalkerSoulslikeScenarioLogic(state) 
-    end
-    
-    if scenario_id ==soulslike.SCENARIOS.MutantAmbush then
-         scenario = soulslike_scenarios.MutantAmbushSoulslikeScenarioLogic(state) 
-    end
-    
-    if scenario_id ==soulslike.SCENARIOS.StalkerAmbush then 
-        scenario = soulslike_scenarios.StalkerAmbushSoulslikeScenarioLogic(state) 
-    end
-
     if scenario == nil then
         soulslike.debug("Unrecognized Scenario Id: "..tostring(scenario_id)) 
         scenario = soulslike_scenarios.DefaultSoulslikeScenarioLogic(state) 
@@ -230,7 +214,7 @@ function create_new(hits)
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
     elseif fatal_hit and 
            fatal_hit.killer_type == soulslike.entity_type.Stalker and 
-           fatal_hit.draftsman:general_goodwill(db.actor) >= relations.NEUTRALS then
+           fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.relations.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
         rescuer = fatal_hit.draftsman
@@ -240,7 +224,7 @@ function create_new(hits)
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})
     elseif fatal_hit and 
            fatal_hit.killer_type == soulslike.entity_type.Stalker and 
-           fatal_hit.draftsman:general_goodwill(db.actor) <= relations.ENEMIES then
+           fatal_hit.draftsman:general_goodwill(db.actor) <= soulslike.relations.ENEMIES then
         soulslike.debug("Enemy Stalker killed the player.")
 
         rescuer = soulslike.find_closest_friendly_stalker()

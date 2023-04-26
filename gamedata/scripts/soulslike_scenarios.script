@@ -653,9 +653,7 @@ end
 
 function SoulslikeScenarioLogic:RespawnActor()
     soulslike.debug("SoulslikeScenarioLogic:RespawnActor")
-
     soulslike.debug("Respawning actor at last sleep location")
-    soulslike.debug(self.game_state)
         
     local position = vector():set(self.game_state.spawn_location.position.x, self.game_state.spawn_location.position.y, self.game_state.spawn_location.position.z)   
     local level_vertex_id = self.game_state.spawn_location.level_vertex_id
@@ -1129,7 +1127,7 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
             examine = false
         } 
     end
-    
+
     if not self.game_state.hidden_stashes then
         self.game_state.hidden_stashes = {}
     end
@@ -1153,175 +1151,6 @@ function HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     self.logic_state.story.has_stash_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.treasure_stash_id, "secondary_task_location", value)
 end
-
----------------------------------------------------------
--- Scattered Stashes Scenario 
--- Players items are distributed between a set of 
--- hidden stash 
--- Marked on PDA
----------------------------------------------------------
-
--- class "ScatteredStashesSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
-
--- function ScatteredStashesSoulslikeScenarioLogic:__init(state) super (state)
---     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:__init") 
--- 	self.logic_state.scenario_id = soulslike.SCENARIOS.ScatteredStashes
--- end
-
--- function ScatteredStashesSoulslikeScenarioLogic:CreateStash()
---     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:CreateStash") 
-
---      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
---     local old_box_in_same_map = treasure_manager.box_in_same_map
---     treasure_manager.box_in_same_map = function(id)
---         local obj1 = alife():actor()
---         local obj2 = alife_object(id)
---         return simulation_objects.is_on_the_same_level(obj1, obj2)
---     end
---     local scattered_stash_ids = {}
---     local count = math.random(1, 4)
---     for i=1,count do        
---         local id = treasure_manager.get_random_stash("treasure", nil ,true, true)
---         if not table.has_value(scattered_stash_ids, id) then
---             soulslike.debug("Random stash found: "..tostring(id))  
---             table.insert(scattered_stash_ids, id)
---         end
---      end
---     treasure_manager.box_in_same_map = old_box_in_same_map
-
---     -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
---     if table.get_length(scattered_stash_ids) == 0 then return nil end
-
---     local actor = db.actor
---     local se_stashes = {}
-        
---     if not self.game_state.hidden_stashes then
---         self.game_state.hidden_stashes = {}
---     end
-        
---     if not self.logic_state.hidden_stash_ids then
---         self.logic_state.hidden_stash_ids = {}
---     end
-        
---     if not self.logic_state.treasure_stash_ids then
---         self.logic_state.treasure_stash_ids = {}
---     end
-    
---     for _, id in ipairs(scattered_stash_ids) do
---         local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
-    
---         table.insert(self.logic_state.hidden_stash_ids, se_stash.id)
---         self.logic_state.treasure_stash_ids[se_stash.id] = id
-    
---         self.game_state.hidden_stashes[id] = {
---             stash_id = se_stash.id,
---         } 
-
---         table.insert(se_stashes, se_stash)
---     end    
-
---     return se_stashes
--- end
-
--- function ScatteredStashesSoulslikeScenarioLogic:TransferItems(_)
---     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:TransferItems") 
-
---     local stash_ids = self.logic_state.hidden_stash_ids
---     local count = 0
---     local container_pool = {}
---     for _, id in ipairs(stash_ids) do
---         local container = level.object_by_id(id)
---         table.insert(container_pool, container)
---         count = count + 1
---     end
-
---     local enemy_looter = soulslike.find_enemy()
---     local containers_used_ids = {}
-    
---     soulslike.debug("Transfering items")
---     local function release_actor_item(temp, item)
---         local container = container_pool[math.random(count)]
---         if self:TransferItem(item, container, enemy_looter) then
---             table.insert(containers_used_ids, container:id())
---         end
---     end    
---     db.actor:iterate_inventory(release_actor_item) 
-    
---     -- Remove treasure stash ids that were not used
---     for _, id in ipairs(containers_used_ids) do
---         if not table.has_value(stash_ids, id) then
---             soulslike.debug("Removing unused hidden stash id "..tostring(id))
---             local se_id = self.logic_state.treasure_stash_ids[id]
---             if not se_id then 
---                 soulslike.debug("ERROR: not hidden stash id for "..tostring(id))
---             else
---                 self.logic_state.treasure_stash_ids[id] = nil
---                 self.game_state.hidden_stashes[se_id] = nil
---             end
---         end
---     end
-
---     if enemy_looter and self.logic_state.looter then  
---         soulslike.debug("Updating enemy looter values.")         
---         self.logic_state.story.enemy = {
---             name = enemy_looter:character_name(),
---             community = enemy_looter:character_community(),
---             tarkov_experience = self.logic_state.got_tarkoved 
---         }
-
---         if self.logic_state.are_looter_npcs_marked then
---             soulslike.debug("Marking enemy looter.")
---             level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", self.logic_state.enemy_looter_name)            
---         end
---     end
--- end
-
--- function ScatteredStashesSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
---     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
-
---     for _, id in pairs(self.logic_state.treasure_stash_ids) do
---         soulslike.debug("Adding PDA marker "..tostring(id))
-
---         local value = game.translate_string("st_soulslike_your_items")
---         self.logic_state.story.has_multi_stash_pda_marker = true
---         level.map_add_object_spot_ser(id, "secondary_task_location", value)
---     end
--- end
-
--- function ScatteredStashesSoulslikeScenarioLogic:HandleItemsAndRespawn() 
---     soulslike.debug("ScatteredStashesSoulslikeScenarioLogic:HandleItemsAndRespawn") 
---     self:ApplyTransferItemsPreConditions()
-
---     local se_stashes = self:CreateStash() -- This actually creates more than 1 stash
-             
---     if se_stashes and table.get_length(se_stashes) > 0 then
---         soulslike.debug("Stashes created.")
-        
---         local function transfer_and_respawn()
---             -- We cannot continue unless all the stashes exist in the level
---             for _, se_stash in ipairs(se_stashes) do
---                 local pack = level.object_by_id(se_stash.id)
---                 if not pack then
---                     soulslike.debug("Still waiting on stashes to exist in game")            
---                     return false
---                 end
---             end
-
---             soulslike.debug("All stashes exists in game")
-
---             self:TransferItems()
---             self:ApplyTransferItemsPostConditions() 
---             self:RespawnActor()
---             return true
---         end
-        
---         --We have to create a timer to give the game time to spawn the backpack.
---         CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
---     else    
---         soulslike.debug("Stash was not created")
---         self:RespawnActor()
---     end
--- end
 
 ---------------------------------------------------------
 -- No Loss scenario

@@ -30,10 +30,6 @@ SCENARIOS = {
     Default = 1,
     RFDetectorStash = 2,
     HiddenStash = 3,
-    ScatteredStashes = 4,
-    NearbyDeadStalker = 5,
-    MutantAmbush = 6,
-    StalkerAmbush = 7,
     NoLoss = 7,
 }
 hit_type_to_str = {
@@ -200,6 +196,36 @@ function get_soulslike_state()
                 },
             note_message_data = {},
             hidden_stashes = {}
+        }
+    end
+
+    if not game_state.soulslike.note_message_data then
+        game_state.soulslike.note_message_data = {}
+    end
+
+    if not game_state.soulslike.hidden_stashes then
+        game_state.soulslike.hidden_stashes = {}
+    end
+
+    if not game_state.soulslike.created_stashes then
+        game_state.soulslike.created_stashes = {}
+    end
+
+    if not game_state.soulslike.spawn_location then
+        game_state.soulslike.spawn_location = {
+            level = nil,
+            position = {
+                x = nil,
+                y = nil,
+                z = nil,
+            },
+            angle = {
+                x = nil,
+                y = nil,
+                z = nil,
+            },
+            level_vertex_id = nil,
+            game_vertex_id = nil,
         }
     end
 
