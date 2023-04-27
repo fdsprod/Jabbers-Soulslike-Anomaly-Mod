@@ -177,7 +177,7 @@
     <string id="ui_mcm_soulslike_hardcore_save_description">
         <text>Kind of like slamming your dick in a hard cover book, Hardcore Saves means manual, quick and campfire saves are all disabled and only one save file will ever exist.  Hardcore Saves only allows saving during sleeping and when respawning.  Keep in mind that because only 1 save file will ever exist, its possible to get stuck in a position where progression is tough if you lose all your gear and have no money to heal or eat.</text>
      </string>
-    <string id="ui_mcm_soulslike_hardcore_is_hardcore_save_enabled">
+    <string id="ui_mcm_soulslike_hardcore_is_enabled">
         <text>Enable Hardcore Saves</text>
     </string>    
     <string id="ui_mcm_soulslike_hardcore_override_campfire_hardcore_saves">
@@ -194,8 +194,11 @@
     <string id="ui_mcm_soulslike_debug_title">
         <text>Developer Settings</text>
     </string>    
-    <string id="ui_mcm_soulslike_debug_debug">
+    <string id="ui_mcm_soulslike_debug_is_enabled">
         <text>Debug Mode</text>
+    </string>  
+    <string id="ui_mcm_soulslike_debug_enable_tips">
+        <text>Show PDA Messages</text>
     </string>    
     <string id="ui_mcm_soulslike_debug_debug_hidden_stashes">
         <text>Debug Hidden Stashes</text>

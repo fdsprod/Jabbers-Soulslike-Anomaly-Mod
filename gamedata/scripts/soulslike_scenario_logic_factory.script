@@ -1,62 +1,66 @@
 
-local function calculate_fatal_hit_info(hits)
-    local data = nil
+
+local function compute_fatal_hit_info(hits)
+    local fatal_hit = nil
+    local agg_hit = {}
+    local max_time = -1
 
     soulslike.debug("Calculating fatal hit:")
     soulslike.debug(hits)
 
     -- Find the final blow
     for _, value in ipairs(hits) do
-        if value.is_fatal and value.draftsman_id then
-            data = value
+        if value.is_fatal then
+            fatal_hit = value
             break
         end
     end
 
-    soulslike.debug("Calculate fatal hit info - Found fatal blow:")
-    soulslike.debug(data)
-
-    -- Convert to an aggregation of damage if there is a well defined killer
-    if data then 
-        local aggregation = {}
-        for _, value in ipairs(hits) do
-            local hit_data = value
-            if hit_data.draftsman_id then
-                local o = aggregation[hit_data.draftsman_id]
-                if not o then
-                    o = { 
-                        type = hit_data.type,
-                        power = 0,
-                        draftsman_id = hit_data.draftsman_id,
-                    }
-                    aggregation[hit_data.draftsman_id] = o
-                end
-                o.power = o.power + hit_data.power
-            end
-        end
-        soulslike.debug("Calculate fatal hit info - aggregation:")
-        soulslike.debug(aggregation)
-        local most_damage = nil
-        for _, agg in pairs(aggregation) do
-            if not most_damage or most_damage.power < agg.power then
-                most_damage = agg
-            end
-        end
-        if not most_damage then
-            soulslike.debug("Calculate fatal hit info - no most damage:")
-            return data
-        end
-        data.type = most_damage.type
-        data.power = most_damage.power
-        data.draftsman_id = most_damage.draftsman_id
+    for _, value in ipairs(hits) do
+        max_time = math.max(max_time, value.time)
     end
 
-    if data and data.draftsman_id then 
-        soulslike.debug("Calculate fatal hit info - Looking up draftsman "..tostring(data.draftsman_id))
-        data.draftsman = level.object_by_id(data.draftsman_id)
+    local min_time = soulslike.MAX_HIT_TIME
+
+    -- Convert to an aggregation of damage if there is a well defined draftsman_type
+    for _, hit_data in ipairs(hits) do
+        hit_data.draftsman = hit_data.draftsman_id and level.object_by_id(hit_data.draftsman_id) or nil
+        local power_weight = (hit_data.time - min_time) / soulslike.MAX_HIT_TIME
+        local draftsman_type = soulslike.entity_type.Other
+        if hit_data.draftsman then
+            if hit_data.draftsman:id() == AC_ID then
+                draftsman_type = soulslike.entity_type.Self
+            elseif IsStalker(hit_data.draftsman) then
+                draftsman_type = soulslike.entity_type.Stalker
+            elseif IsMonster(hit_data.draftsman) then
+                draftsman_type = soulslike.entity_type.Monster
+            elseif IsAnomaly(hit_data.draftsman) then
+                draftsman_type = soulslike.entity_type.Anomaly
+            end    
+        end
+        if not agg_hit[draftsman_type] then
+            agg_hit[draftsman_type] = {
+                draftsman_type = draftsman_type
+            }       
+        end
+        local data = agg_hit[draftsman_type]     
+        data.power = (data.power or 0) + hit_data.power * (power_weight * (hit_data.is_fatal and 2 or 1))
     end
 
-    return data
+    soulslike.debug("Agg Hit Info:")   
+    soulslike.debug(agg_hit)   
+    
+    local result
+    
+    for _, value in ipairs(agg_hit) do
+        if not result or result.power < value.power then
+            result = value
+        end
+    end
+
+    result.fatal_hit = fatal_hit
+
+    return result
 end
 
 local function find_backpack()    
@@ -64,9 +68,18 @@ local function find_backpack()
     local has_backpack = false
     local function find_backpack(_, item)
         local sec = item:section()
-        has_backpack = has_backpack or (item and SYS_GetParam(0, sec, "kind") == "i_backpack")
+        has_backpack = SYS_GetParam(0, sec, "kind") == "i_backpack"
+        if has_backpack then return true end
+        return false
     end
+
     db.actor:iterate_inventory(find_backpack)
+
+    if has_backpack then
+        soulslike.debug("Player has a backpack")
+    else
+        soulslike.debug("Player does not have a backpack")
+    end
     return has_backpack
 end
 
@@ -77,17 +90,17 @@ end
 function create_by_id(scenario_id, state) 
     local scenario = nil
 
-    soulslike.debug("Creating scenario "..tostring(scenario_id))
+    soulslike.debug_tip("Creating scenario "..tostring(scenario_id))
 
     if scenario_id == soulslike.SCENARIOS.Default then
         scenario = soulslike_scenarios.DefaultSoulslikeScenarioLogic(state) 
     end
     
-    if scenario_id ==soulslike.SCENARIOS.RFDetectorStash then 
+    if scenario_id == soulslike.SCENARIOS.RFDetectorStash then 
         scenario = soulslike_scenarios.RFDetectorSoulslikeScenarioLogic(state) 
     end
     
-    if scenario_id ==soulslike.SCENARIOS.HiddenStash then 
+    if scenario_id == soulslike.SCENARIOS.HiddenStash then 
         scenario = soulslike_scenarios.HiddenStashSoulslikeScenarioLogic(state) 
     end
     
@@ -100,35 +113,7 @@ function create_by_id(scenario_id, state)
 end
 
 function create_new(hits)            
-    local fatal_hit = calculate_fatal_hit_info(hits)
-
-    if fatal_hit then    
-        fatal_hit.killer_type = soulslike.entity_type.Other
-        if fatal_hit.draftsman_id then
-            fatal_hit.draftsman = level.object_by_id(fatal_hit.draftsman_id)
-            if IsStalker(fatal_hit.draftsman) then
-                fatal_hit.killer_type = soulslike.entity_type.Stalker
-                soulslike.debug("Player killed by a Stalker named "..fatal_hit.draftsman:name())
-            elseif IsMonster(fatal_hit.draftsman) then
-                fatal_hit.killer_type = soulslike.entity_type.Monster
-                soulslike.debug("Player killed by a Mutant called "..fatal_hit.draftsman:name())
-            elseif IsAnomaly(fatal_hit.draftsman) then
-                fatal_hit.killer_type = soulslike.entity_type.Anomaly
-                soulslike.debug("Player killed by a "..fatal_hit.draftsman:name().." Anomaly")
-            end
-        end
-    end
-
-    if fatal_hit then 
-        soulslike.debug("Player fatal hit was a "..soulslike.hit_type_to_str[fatal_hit.type])
-    end
-
-    -- If there is no draftsman found for the fatal blow
-    -- The killer is likely something like radiation or some other
-    -- DOT
-    if fatal_hit and not fatal_hit.draftsman then 
-        soulslike.debug("Player fatal hit was a "..soulslike.hit_type_to_str[fatal_hit.type])
-    end
+    local hit = compute_fatal_hit_info(hits)
 
     -- We want to be able to debug each scenario using the 
     -- scenario weight to max, and in this case we want to 
@@ -197,7 +182,7 @@ function create_new(hits)
         --       It will be very difficult to get your gear back, prob annoyingly frustrating...
         --       For now, no loss scenario
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})
-    elseif fatal_hit and fatal_hit.killer_type == soulslike.entity_type.Stalker and fatal_hit.draftsman:id() == AC_ID then 
+    elseif hit and hit.draftsman_type == soulslike.entity_type.Self then 
         soulslike.debug("Player killed themself. haha idiot.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
@@ -212,9 +197,9 @@ function create_new(hits)
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
-    elseif fatal_hit and 
-           fatal_hit.killer_type == soulslike.entity_type.Stalker and 
-           fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.relations.NEUTRALS then
+    elseif hit and 
+           hit.draftsman_type == soulslike.entity_type.Stalker and 
+           hit.fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.RELATIONS.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
         rescuer = fatal_hit.draftsman
@@ -222,13 +207,12 @@ function create_new(hits)
         scenario_loot_scalar = 0.0
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})
-    elseif fatal_hit and 
-           fatal_hit.killer_type == soulslike.entity_type.Stalker and 
-           fatal_hit.draftsman:general_goodwill(db.actor) <= soulslike.relations.ENEMIES then
+    elseif hit and 
+           hit.draftsman_type == soulslike.entity_type.Stalker then
         soulslike.debug("Enemy Stalker killed the player.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
-        looter = fatal_hit.draftsman
+        looter = soulslike.find_closest_enemy_stalker()
         scenario_loot_scalar = 1.0
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 0.05})
@@ -239,12 +223,12 @@ function create_new(hits)
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
-    elseif fatal_hit and 
-           fatal_hit.killer_type == soulslike.entity_type.Monster then
+    elseif hit and 
+           hit.draftsman_type == soulslike.entity_type.Monster then
         soulslike.debug("Mutant killed the player.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
-        looter = fatal_hit.draftsman
+        looter = soulslike.find_closest_enemy_mutant()
         scenario_loot_scalar = 1.0
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 0.05})
@@ -255,8 +239,8 @@ function create_new(hits)
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
-    elseif fatal_hit and 
-           fatal_hit.killer_type == soulslike.entity_type.Anomaly then
+    elseif hit and 
+           hit.draftsman_type == soulslike.entity_type.Anomaly then
         soulslike.debug("Player died to an anomaly.")
 
         rescuer = soulslike.find_closest_friendly_stalker()  
@@ -271,9 +255,9 @@ function create_new(hits)
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
         end
-    elseif fatal_hit and 
-           fatal_hit.killer_type == soulslike.entity_type.Other then
-        soulslike.debug("Player died to a DOT of some sort.")
+    elseif hit and 
+           hit.draftsman_type == soulslike.entity_type.Other then
+        soulslike.debug("Player died to damage over time of some sort.")
 
         rescuer = soulslike.find_closest_friendly_stalker()     
         looter = soulslike.find_closest_enemy()   
@@ -338,7 +322,7 @@ function create_new(hits)
     local scenario_id = nil
     for id, value in pairs(available_scenarios) do
         if(roll >= value.min and roll <= value.max) then
-            scenario_id = id
+            scenario_id = value.id
             break
         end
     end
@@ -363,10 +347,10 @@ function create_new(hits)
         scenario_logic:SetLooterType(looter_type)
     end
 
-    if fatal_hit then 
-        scenario_logic:SetKillerType(fatal_hit.killer_type)
-        scenario_logic:SetKiller(fatal_hit.draftsman)
-        scenario_logic:SetFatalHitType(fatal_hit.type)
+    if hit.fatal_hit then 
+        scenario_logic:SetKillerType(hit.fatal_hit.killer_type)
+        scenario_logic:SetKiller(hit.fatal_hit.draftsman)
+        scenario_logic:SetFatalHitType(hit.fatal_hit.type)
     end
 
     return scenario_logic

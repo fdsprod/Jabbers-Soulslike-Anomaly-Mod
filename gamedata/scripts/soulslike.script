@@ -19,7 +19,7 @@ local tools_list = {
 
 local scenario_logic = nil
 
-relations = { 
+RELATIONS = { 
     FRIENDS = 1000,    
     BUDDIES = 500,
     NEUTRALS = 0,
@@ -32,6 +32,7 @@ SCENARIOS = {
     HiddenStash = 3,
     NoLoss = 7,
 }
+
 hit_type_to_str = {
 	[hit.light_burn]    = "Light Burn",
 	[hit.burn]          = "Burn",
@@ -57,8 +58,8 @@ entity_type = {
 -- Classes
 ----------------------------------------
 
-local MAX_HIT_POOL_COUNT = 30
-local MAX_HIT_TIME = 30000
+MAX_HIT_POOL_COUNT = 30
+MAX_HIT_TIME = 30000
 local hit_queue = soulslike_classes.TimedQueue(MAX_HIT_POOL_COUNT, MAX_HIT_TIME)
 
 ----------------------------------------
@@ -89,7 +90,6 @@ end
 ----------------------------------------
 -- DEBUG
 ----------------------------------------
-
 local function print_table (tbl, indent)
     if not indent then
         indent = 0
@@ -154,6 +154,32 @@ function error(output)
     log("ERROR", output)
 end
 
+function debug_tip(text, delay)
+    debug(text)
+
+    if not soulslike_mcm.show_debug_tips() then
+        return
+    end
+
+    local text = tostring(text)
+
+    if not db.actor then
+        return
+    end
+    
+    local ico = "ui_inGame2_Dengi_otdani"
+    local text_color = utils_xml.get_color("pda_white")
+
+    text = text_color .. text
+
+    if delay == nil then
+        delay = 6000
+    end
+
+    news_manager.send_tip(db.actor, text, nil, ico, delay)
+end
+
+
 ----------------------------------------
 -- Globals
 ----------------------------------------
@@ -199,6 +225,7 @@ function get_soulslike_state()
         }
     end
 
+    -- Backward save compatibility
     if not game_state.soulslike.note_message_data then
         game_state.soulslike.note_message_data = {}
     end
@@ -247,7 +274,6 @@ function set_spawn(show_message)
 	state.spawn_location.game_vertex_id = se_actor.m_game_vertex_id
     
     debug("Saved spawn location data:")
-    debug(state)    
             
     if show_message then
         local str = game.translate_string("st_soulslike_spawn_location_set")
@@ -262,6 +288,9 @@ function find_closest_enemy()
 	local gg = game_graph()
     local level_name = level.name()
 
+    if not sim then return end
+    if not gg then return end
+
 	for i=1,65534 do
 		local se_obj = sim:object(i)
 		if se_obj and (level_name == sim:level_name(gg:vertex(se_obj.m_game_vertex_id):level_id())) then
@@ -269,7 +298,7 @@ function find_closest_enemy()
 			local sec = se_obj:section_name()
             local is_valid = false
 
-			if IsStalker(nil,cls) and sfind(sec,"sim_default_") and se_obj:alive() then
+			if IsStalker(nil,cls) and string.find(sec,"sim_default_") and se_obj:alive() then
 				local comm = se_obj:community()
 				if (comm ~= "trader") and (comm ~= "zombied") then
 					is_valid = true
@@ -279,17 +308,74 @@ function find_closest_enemy()
 			end
 
             if is_valid then
-                local dist = se_obj:position():distance_to_sqr(se_obj:position())
-                if enemy_dist > dist then
-                    local comm = se_obj:character_community()
-                    debug("Found enemy "..se_obj:name().." from the "..comm.." community "..tostring(dist).." meters away.")
-                    enemy = se_obj
+                local dist = se_obj.position:distance_to_sqr(db.actor:position())
+                if enemy_dist > dist then                    
+                    if IsStalker(nil,cls) then
+                        local comm = se_obj:community()
+                        debug("Found enemy "..se_obj:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                        enemy = se_obj
+                    elseif IsMonster(nil,cls) then
+                        enemy = se_obj
+                    end
                 end
             end
 		end
 	end
 
     return enemy
+end
+
+function find_closest_enemy_mutant()
+    local enemy = nil
+    local enemy_dist = 150
+	local sim = alife()
+	local gg = game_graph()
+    local level_name = level.name()
+
+    if not sim then return end
+    if not gg then return end
+
+	for i=1,65534 do
+		local se_obj = sim:object(i)
+		if se_obj and (level_name == sim:level_name(gg:vertex(se_obj.m_game_vertex_id):level_id())) then
+            local cls = se_obj:clsid()
+
+            if IsMonster(nil,cls) then
+                local dist = se_obj.position:distance_to_sqr(db.actor:position())
+                if enemy_dist > dist then                    
+                    if IsMonster(nil,cls) then
+                        enemy = se_obj
+                    end
+                end
+            end
+		end
+	end
+
+    return enemy
+end
+
+function find_closest_enemy_stalker()  
+    local friend = nil
+    local friend_dist = 100000
+
+	for i=1, #db.OnlineStalkers do
+		local id = db.OnlineStalkers[i]
+		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
+
+        if npc then
+            local dist = npc:position():distance_to_sqr(db.actor:position())
+            local is_friend = npc:general_goodwill(db.actor) <= RELATIONS.ENEMIES
+            
+            if npc:alive() and is_friend and friend_dist > dist and (not get_object_story_id(id)) then
+                local comm = npc:character_community()
+                debug("Found friend "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                friend = npc
+                friend_dist = dist
+            end
+        end
+    end
+
+    return friend
 end
 
 function find_closest_friendly_stalker()  
@@ -302,7 +388,7 @@ function find_closest_friendly_stalker()
 
         if npc then
             local dist = npc:position():distance_to_sqr(db.actor:position())
-            local is_friend = npc:general_goodwill(db.actor) >= relations.NEUTRALS
+            local is_friend = npc:general_goodwill(db.actor) >= RELATIONS.ENEMIES
             
             if npc:alive() and is_friend and friend_dist > dist and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
@@ -450,10 +536,10 @@ local function try_send_inventory_examined_message(stash_id)
     local data = get_soulslike_state()
     local stash_data = data.created_stashes[stash_id]
 
-    if stash_data and not stash_data.examine then        
-        debug('Stash not yet examined.')
+    if stash_data and not stash_data.examine then  
         local lost_items = stash_data.lost_items
-
+      
+        debug('Stash not yet examined.')
         debug(lost_items)
 
         if #lost_items > 0 then
@@ -498,11 +584,9 @@ local function actor_on_item_take_from_box(box,obj)
         return
     end
 
-    local data = get_soulslike_state()
+    local state = get_soulslike_state()
     local id = box:id()
 
-    debug('Player opened stash id '..tostring(id))
-    
 	if (box:section() == "inv_backpack") then
         if (box:is_inv_box_empty()) then
             hide_hud_inventory()
@@ -512,7 +596,7 @@ local function actor_on_item_take_from_box(box,obj)
             if se_obj then
                 alife_release(se_obj)
                 try_send_inventory_examined_message(id)
-                data.created_stashes[id] = nil
+                state.created_stashes[id] = nil
             end
         end
 	end
@@ -523,11 +607,11 @@ local function actor_on_stash_remove(data)
         return
     end
 
-    local data = get_soulslike_state()
+    local state = get_soulslike_state()
 
-    if data.created_stashes[data.stash_id] then
+    if state.created_stashes[data.stash_id] then
         data.cancel = true    
-        try_send_inventory_examined_message(data.stash_id)
+        try_send_inventory_examined_message(state.stash_id)
     end
 end
 
@@ -550,6 +634,8 @@ local function on_console_execute(name, ...)
             
                 local uuid = get_soulslike_state().uuid	
                 local fs = getFS()
+                if not fs then return end
+                
                 local flist = fs:file_list_open_ex("$game_saves$",bit_or(FS.FS_ListFiles,FS.FS_RootOnly),"*.scoc")
                 local f_cnt = flist:Size()
             
@@ -734,6 +820,7 @@ local function actor_on_before_hit(shit, ...)
         type = shit.type,
         power = shit.power,
         is_fatal = is_fatal,
+        time = time_global(),
         draftsman_id = shit.draftsman and shit.draftsman:id() or nil,
     })
     
@@ -742,7 +829,7 @@ end
 
 function on_game_start()
     debug('Version: '..version)
-
+    
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
     RegisterScriptCallback("actor_on_item_take_from_box", actor_on_item_take_from_box)
     RegisterScriptCallback("actor_on_before_death", actor_on_before_death)

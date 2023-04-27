@@ -179,8 +179,6 @@ end
 class "SoulslikeScenarioLogic"
 
 function SoulslikeScenarioLogic:__init(state)   
-    soulslike.debug("SoulslikeScenarioLogic:__init") 
-
     if not initialized then
         initialize()
     end
@@ -272,11 +270,19 @@ function SoulslikeScenarioLogic:SetLootScalar(scenario_loot_scalar)
 end
 
 function SoulslikeScenarioLogic:SetRescuer(npc)
-	self.logic_state.rescuer_id = npc:id()
+    if npc and (type(npc.id) == "function") then
+        self.logic_state.rescuer_id = npc:id()
+    elseif npc and npc.id then
+        self.logic_state.rescuer_id = npc.id
+	end
 end
 
 function SoulslikeScenarioLogic:SetLooter(npc)
-	self.logic_state.looter_id = npc:id()
+    if npc and (type(npc.id) == "function") then
+        self.logic_state.looter_id = npc:id()
+    elseif npc and npc.id then
+        self.logic_state.looter_id = npc.id
+	end
 end
 
 function SoulslikeScenarioLogic:SetLooterType(entity_type)
@@ -285,7 +291,11 @@ function SoulslikeScenarioLogic:SetLooterType(entity_type)
 end
 
 function SoulslikeScenarioLogic:SetKiller(npc)
-	self.logic_state.killer_id = npc:id()
+    if npc and (type(npc.id) == "function") then
+        self.logic_state.killer_id = npc:id()
+    elseif npc and npc.id then
+        self.logic_state.killer_id = npc.id
+	end
 end
 
 function SoulslikeScenarioLogic:SetKillerType(entity_type)
@@ -297,15 +307,11 @@ function SoulslikeScenarioLogic:SetFatalHitType(hit_type)
 end
 
 function SoulslikeScenarioLogic:destroy()
-    soulslike.debug("SoulslikeScenarioLogic:destroy")
-
 	self.logic_state = nil
     self.game_state = nil
 end
 
 function SoulslikeScenarioLogic:HealActor()
-    soulslike.debug("SoulslikeScenarioLogic:HealActor")
-
     local heath = 1 - self.logic_state.health_loss_percent
 
 	db.actor:set_health_ex(heath)
@@ -316,12 +322,12 @@ function SoulslikeScenarioLogic:HealActor()
 
     save_var(db.actor,'grw_in_water',nil)
 	
-    arszi_psy.set_psy_health(1.0)
+    if arszi_psy then 
+        arszi_psy.set_psy_health(1.0)
+    end
 end
 
 function SoulslikeScenarioLogic:ApplyRankLoss()
-    soulslike.debug("SoulslikeScenarioLogic:ApplyRankLoss")
-
     local rank = db.actor:character_rank()
     local loss_percent = self.logic_state.rank_loss_percent
     local rank_loss = math.abs(rank * loss_percent)
@@ -333,8 +339,6 @@ function SoulslikeScenarioLogic:ApplyRankLoss()
 end
 
 function SoulslikeScenarioLogic:ApplyRepLoss()
-    soulslike.debug("SoulslikeScenarioLogic:ApplyRepLoss")
-
     local rep = db.actor:character_reputation()
     local loss_percent = self.logic_state.rep_loss_percent
     local rep_loss = math.abs(rep * loss_percent)
@@ -346,8 +350,6 @@ function SoulslikeScenarioLogic:ApplyRepLoss()
 end
 
 function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_percent)
-    soulslike.debug("SoulslikeScenarioLogic:ApplyItemConditionLoss")
-
     local cond = item:condition()
     local sec = item:section()
     local degrade_factor = cond * condition_loss_percent
@@ -371,8 +373,6 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_perc
 end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
-    soulslike.debug("SoulslikeScenarioLogic:ApplyTransferItemsPreConditions")
-
     local is_magazine					= magazine_binder and magazine_binder.is_magazine
     local is_carried_mag				= magazine_binder and magazine_binder.is_carried_mag
     local toggle_carried_mag			= magazine_binder and magazine_binder.toggle_carried_mag
@@ -391,12 +391,9 @@ function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
 end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
-    soulslike.debug("SoulslikeScenarioLogic:ApplyTransferItemsPostConditions")
 end
 
 function SoulslikeScenarioLogic:HandleItemsAndRespawn() 
-    soulslike.debug("SoulslikeScenarioLogic:HandleItemsAndRespawn")
-
     self:ApplyTransferItemsPreConditions()
 
     local actor = db.actor
@@ -442,8 +439,6 @@ end
 
 
 function SoulslikeScenarioLogic:OnDeath()  
-    soulslike.debug("SoulslikeScenarioLogic:OnDeath")
-
     bind_stalker_ext.invulnerable_time = time_global() + 30000
 
     self:HealActor()
@@ -494,24 +489,18 @@ function SoulslikeScenarioLogic:GiveFoodAndWater()
 end
 
 function SoulslikeScenarioLogic:GiveMeds()
-    soulslike.debug("SoulslikeScenarioLogic:GiveMeds")
 end
 
 function SoulslikeScenarioLogic:GiveWeapon()
-    soulslike.debug("SoulslikeScenarioLogic:GiveWeapon")
 end
 
 function SoulslikeScenarioLogic:GiveOutfit()
-    soulslike.debug("SoulslikeScenarioLogic:GiveOutfit")
 end
 
 function SoulslikeScenarioLogic:GiveMask()
-    soulslike.debug("SoulslikeScenarioLogic:GiveMask")
 end
 
 function SoulslikeScenarioLogic:SpawnAmbush()
-    soulslike.debug("SoulslikeScenarioLogic:SpawnAmbush")
-
     local loss_chance_dice_roll = math.random(0, 100)
     local spawns = {}
     
@@ -574,7 +563,7 @@ function SoulslikeScenarioLogic:SpawnAmbush()
         end
     end
     
-    soulslike.debug("Spawning ambush "..section)   
+    soulslike.debug_tip("Spawning ambush "..section)   
     
     local class = ini_sys:r_string_ex(section,"class")
     local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
@@ -606,6 +595,7 @@ function SoulslikeScenarioLogic:SpawnAmbush()
             if (prop.squad) then
                 se_obj:create_npc(nil, pos, lvid, gvid)
                 local sim = alife()
+                if not sim then return end
                 for k in se_obj:squad_members() do
                     local se_npc = k.object or k.id and sim:object(k.id)
                     if (se_npc) then
@@ -631,8 +621,6 @@ function SoulslikeScenarioLogic:SpawnAmbush()
 end
 
 function SoulslikeScenarioLogic:OnComplete()
-    soulslike.debug("SoulslikeScenarioLogic:OnComplete")
-
     self:GiveFoodAndWater()
     self:GiveMeds()
     self:GiveWeapon()
@@ -652,9 +640,6 @@ function SoulslikeScenarioLogic:OnComplete()
 end
 
 function SoulslikeScenarioLogic:RespawnActor()
-    soulslike.debug("SoulslikeScenarioLogic:RespawnActor")
-    soulslike.debug("Respawning actor at last sleep location")
-        
     local position = vector():set(self.game_state.spawn_location.position.x, self.game_state.spawn_location.position.y, self.game_state.spawn_location.position.z)   
     local level_vertex_id = self.game_state.spawn_location.level_vertex_id
     local game_vertex_id = self.game_state.spawn_location.game_vertex_id  
@@ -690,8 +675,6 @@ function SoulslikeScenarioLogic:SendWakeupMessage()
 end
 
 function SoulslikeScenarioLogic:AdvanceTime()
-    soulslike.debug("SoulslikeScenarioLogic:AdvanceTime")
-
     self.logic_state.is_advancing_time = true
 
     xr_effects.disable_ui(db.actor, nil)
@@ -710,8 +693,6 @@ function SoulslikeScenarioLogic:AdvanceTime()
 end
 
 function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
-    soulslike.debug("SoulslikeScenarioLogic:StopSurgeAndStorm") 
-
     -- skip surge due to bug with killing actor on switch
     surge_manager.stop_surge()    
     if (psi_storm_manager.get_psi_storm_manager().started) then
@@ -720,7 +701,10 @@ function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
 end
 
 function SoulslikeScenarioLogic:IsItemLossAllowed(item)
-    soulslike.debug("SoulslikeScenarioLogic:IsItemLossAllowed") 
+    -- If the player died in the water, no items will be lost...
+    -- A sort of i dont want to touch the gear in the water and get irradiated
+    -- play from the looter.
+    if self.logic_state.player_died_in_water then return false end
 
     local sec = item:section()
     local is_grenade = IsGrenade(item)
@@ -756,8 +740,6 @@ function SoulslikeScenarioLogic:IsItemLossAllowed(item)
 end
 
 function SoulslikeScenarioLogic:TryStalkerLooter(item, container, looter)
-    soulslike.debug("SoulslikeScenarioLogic:TryEnemyLooter") 
-
     local sec = item:section()
     local to_id = container:id()
 
@@ -772,8 +754,6 @@ function SoulslikeScenarioLogic:TryStalkerLooter(item, container, looter)
 end
 
 function SoulslikeScenarioLogic:TryMonsterLooter(item, container, looter)
-    soulslike.debug("SoulslikeScenarioLogic:TryEnemyLooter") 
-
     local sec = item:section()
     local to_id = container:id()
     local is_mutant_meat = SYS_GetParam(0, sec, "kind") == "i_mutant_raw"
@@ -794,8 +774,6 @@ function SoulslikeScenarioLogic:TryMonsterLooter(item, container, looter)
 end
 
 function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
-    soulslike.debug("SoulslikeScenarioLogic:TryTarkovLooter") 
-
     local loss_chance_dice_roll = math.random(0, 100)
     local sec = item:section()
     local is_grenade = IsGrenade(item)
@@ -845,8 +823,6 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
 end
 
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
-    soulslike.debug("SoulslikeScenarioLogic:TransferItem") 
-
     local sec = item:section()
     local to_id = container:id()
 
@@ -899,7 +875,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
             local is_looter_stalker = self.logic_state.looter_type == soulslike.entity_type.Stalker
             local is_looter_mutant = self.logic_state.looter_type == soulslike.entity_type.Monster
 
-            if looter and is_looter_stalker and self:TryEnemyLooter(item, container, looter) then
+            if looter and is_looter_stalker and self:TryStalkerLooter(item, container, looter) then
                 return false
             end
 
@@ -927,8 +903,6 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
 end
 
 function SoulslikeScenarioLogic:TransferItems(to_id)
-    soulslike.debug("SoulslikeScenarioLogic:TransferItems") 
-
     local container = level.object_by_id(to_id)
     local enemy_looter = self.logic_state.looter_id and level.object_by_id(self.logic_state.looter_id) or nil
 
@@ -956,7 +930,6 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
 end
 
 function SoulslikeScenarioLogic:OnRespawn()
-    soulslike.debug("SoulslikeScenarioLogic:OnRespawn")
 
     bind_stalker_ext.invulnerable_time = time_global() + 1
 
@@ -979,33 +952,27 @@ end
 class "DefaultSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function DefaultSoulslikeScenarioLogic:__init(state) super (state)
-    soulslike.debug("DefaultSoulslikeScenarioLogic:__init") 
 	self.logic_state.scenario_id = soulslike.SCENARIOS.Legacy
 end
 
 function DefaultSoulslikeScenarioLogic:CreateStash()
-    soulslike.debug("DefaultSoulslikeScenarioLogic:CreateStash") 
-
     soulslike.debug("Creating stash")    
 
     local actor = db.actor
     local se_stash = alife_create("inv_backpack", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())  
     
-    if (se_stash) then
+    if se_stash then
         self.game_state.created_stashes[se_stash.id] = {
             lost_items = {},
             examine = false
         } 
+        self.logic_state.stash_id = se_stash.id 
     end
-
-    self.logic_state.stash_id = se_stash.id
 
     return se_stash
 end
 
 function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
-    soulslike.debug("DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
-
     self.logic_state.story.has_single_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.stash_id, "secondary_task_location", db.actor:character_name() .. "'s items")
 end
@@ -1020,13 +987,10 @@ end
 class "RFDetectorSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function RFDetectorSoulslikeScenarioLogic:__init(state) super (state)
-    soulslike.debug("RFDetectorSoulslikeScenarioLogic:__init") 
 	self.logic_state.scenario_id = soulslike.SCENARIOS.RFDetectorStash
 end
 
 function RFDetectorSoulslikeScenarioLogic:CreateStash()
-    soulslike.debug("RFDetectorSoulslikeScenarioLogic:CreateStash") 
-
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
@@ -1050,25 +1014,23 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
             lost_items = {},
             examine = false
         } 
-    end
 
-    if not self.game_state.hidden_stashes then
-        self.game_state.hidden_stashes = {}
-    end
-
-    self.logic_state.hidden_stash_id = se_stash.id
-    self.logic_state.treasure_stash_id = id
-
-    self.game_state.hidden_stashes[id] = {
-        stash_id = se_stash.id,
-        radio_id = id
-    }                
+        if not self.game_state.hidden_stashes then
+            self.game_state.hidden_stashes = {}
+        end
+    
+        self.logic_state.hidden_stash_id = se_stash.id
+        self.logic_state.treasure_stash_id = id
+    
+        self.game_state.hidden_stashes[id] = {
+            stash_id = se_stash.id,
+            radio_id = id
+        }   
+    end             
     return se_stash
 end
 
 function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
-    soulslike.debug("RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
-
     local lvl = level.name()
     soulslike.debug("Added radio target to level: "..lvl)
     self.logic_state.story.radio_freq = math.random(30,  300)
@@ -1095,12 +1057,10 @@ end
 class "HiddenStashSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function HiddenStashSoulslikeScenarioLogic:__init(state) super (state)
-    soulslike.debug("HiddenStashSoulslikeScenarioLogic:__init") 
 	self.logic_state.scenario_id = soulslike.SCENARIOS.HiddenStash
 end
 
 function HiddenStashSoulslikeScenarioLogic:CreateStash()
-    soulslike.debug("HiddenStashSoulslikeScenarioLogic:CreateStash") 
 
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
@@ -1126,25 +1086,23 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
             lost_items = {},
             examine = false
         } 
+
+        if not self.game_state.hidden_stashes then
+            self.game_state.hidden_stashes = {}
+        end
+    
+        self.logic_state.hidden_stash_id = se_stash.id
+        self.logic_state.treasure_stash_id = id
+    
+        self.game_state.hidden_stashes[id] = {
+            stash_id = se_stash.id,
+        } 
     end
-
-    if not self.game_state.hidden_stashes then
-        self.game_state.hidden_stashes = {}
-    end
-
-    self.logic_state.hidden_stash_id = se_stash.id
-    self.logic_state.treasure_stash_id = id
-
-    self.game_state.hidden_stashes[id] = {
-        stash_id = se_stash.id,
-    } 
 
     return se_stash
 end
 
 function HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
-    soulslike.debug("HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions") 
-
     soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))     
 
     local value = game.translate_string("st_soulslike_your_items")
@@ -1160,21 +1118,17 @@ end
 class "NoLossSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function NoLossSoulslikeScenarioLogic:__init(state) super (state)  
-    soulslike.debug("NoLossSoulslikeScenarioLogic:__init")   
 	self.logic_state.scenario_id = soulslike.SCENARIOS.NoLoss
 end
 
  function NoLossSoulslikeScenarioLogic:CreateStash()
-     soulslike.debug("NoLossSoulslikeScenarioLogic:CreateStash") 
      return nil
 end
 
  function NoLossSoulslikeScenarioLogic:TransferItems(_)
-     soulslike.debug("NoLossSoulslikeScenarioLogic:TransferItems")
      -- Do Nothing 
 end
 
 function NoLossSoulslikeScenarioLogic:IsItemLossAllowed(item)
-    soulslike.debug("NoLossSoulslikeScenarioLogic:IsItemLossAllowed") 
     return false
 end
