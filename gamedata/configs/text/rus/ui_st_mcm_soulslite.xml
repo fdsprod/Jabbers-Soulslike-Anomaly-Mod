@@ -6,10 +6,13 @@
 
     <!--General-->
     <string id="ui_mcm_soulslike_general">
+        <text>Общий</text>
+    </string>
+    <string id="ui_mcm_soulslike_general_title">
         <text>Jabbers' Soulslike Настройки</text>
     </string>
 
-    <string id="ui_mcm_soulslike_general_title">
+    <string id="ui_mcm_soulslike_general_description">
         <text>Мод Soulslike привносит в Сталкер элементы игр в стиле Souls. После смерти вас спасает случайный сталкер в зоне. Он возвращает вас в установленное место последнего спавна, где вы просыпаетесь и находите сообщение от него о том, как вас нашли и на что он пошёл, чтобы доставить вас в безопасное место. Предметы, которые были на вашем персонаже, могут быть найдены, некоторые могут быть потеряны, а состояние ухудшено в зависимости от настроек.</text>
      </string>
 
