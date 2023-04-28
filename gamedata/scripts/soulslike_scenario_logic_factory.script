@@ -203,7 +203,7 @@ function create_new(hits)
            hit.fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.RELATIONS.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
-        rescuer = fatal_hit.draftsman
+        rescuer = hit.draftsman
         looter = nil
         scenario_loot_scalar = 0.0
 
