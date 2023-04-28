@@ -6,11 +6,11 @@
     </string>
 
     <string id="st_soulslike_your_items">
-        <text>Stash with some of your items</text>
+        <text>Тайник с некоторыми из ваших предметов</text>
     </string>
 
     <string id="set_spawn_button">
-        <text>Set Spawn</text>
+        <text>Установить спавн</text>
     </string>
 
     <string id="st_soulslike_spawn_location_set">

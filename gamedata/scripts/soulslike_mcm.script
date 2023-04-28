@@ -394,6 +394,12 @@ function on_mcm_load()
                 def = false
             },
             {
+                id = "debug_squad_spawns",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
                 id = "debug_item_loss",
                 type = "check",
                 val = 1,
@@ -577,6 +583,10 @@ end
 
 function debug_hidden_stashes()
     return is_debug_enabled() and get_config("debug/debug_hidden_stashes", false)
+end 
+
+function debug_squad_spawns()
+    return is_debug_enabled() and get_config("debug/debug_squad_spawns", false)
 end 
 
 function debug_item_loss()

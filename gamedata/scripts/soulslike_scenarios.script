@@ -440,6 +440,10 @@ end
 
 
 function SoulslikeScenarioLogic:OnDeath()  
+    if not self.logic_state.scenario_id  then
+        error("Soulslike: No scenario id defined!")
+    end
+
     bind_stalker_ext.invulnerable_time = time_global() + 30000
 
     self:HealActor()
@@ -583,33 +587,35 @@ function SoulslikeScenarioLogic:SpawnAmbush()
         local is_squad = string.find(group,"Squad")
         local cant_spawn_actor = string.find(group,"NPC") or string.find(group,"Physic")
 
-        if (is_squad) then
+        if is_squad then
             prop.no_id = true
             prop.squad = true
-        elseif (cant_spawn_actor) then
+        elseif cant_spawn_actor then
             prop.no_id = true
         end
 
         local se_obj = section and alife_create(section, pos, lvid, gvid)
 
         if se_obj then
-            if (prop.squad) then
+            if prop.squad then
                 se_obj:create_npc(nil, pos, lvid, gvid)
                 local sim = alife()
                 if not sim then return end
                 for k in se_obj:squad_members() do
                     local se_npc = k.object or k.id and sim:object(k.id)
                     if (se_npc) then
-                        level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", 'Uh Oh!') 
+                        if soulslike_mcm.debug_squad_spawns() then
+                            level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", "DEBUG: Spawn "..se_npc:name()) 
+                        end
                         SIMBOARD:setup_squad_and_group(se_npc)
                         SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
                     end 
                 end
-
                 soulslike.debug(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
-                        
             else
-                level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", 'Uh Oh!') 
+                if soulslike_mcm.debug_squad_spawns() then
+                    level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", "DEBUG: Spawn "..se_npc:name()) 
+                end
                 soulslike.debug(strformat("Spawned object [%s] (%s)", section, se_obj.id))
             end
         else
@@ -953,7 +959,7 @@ end
 class "DefaultSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function DefaultSoulslikeScenarioLogic:__init(state) super (state)
-	self.logic_state.scenario_id = soulslike.SCENARIOS.Legacy
+	self.logic_state.scenario_id = soulslike.SCENARIOS.Default
 end
 
 function DefaultSoulslikeScenarioLogic:CreateStash()

@@ -327,7 +327,7 @@ end
 
 function find_closest_enemy_mutant()
     local enemy = nil
-    local enemy_dist = 150
+    local enemy_dist = 75
 	local sim = alife()
 	local gg = game_graph()
     local level_name = level.name()
@@ -491,7 +491,8 @@ local function actor_on_before_death(who, flags)
 
     debug('Actor died')
 	game_statistics.increment_statistic("deaths")
-	    
+
+    hit_queue:Invalidate()	    
     scenario_logic = soulslike_scenario_logic_factory.create_new(hit_queue:Values())
     
     if scenario_logic then 
@@ -727,7 +728,11 @@ local function load_state(data)
 
     local data = get_soulslike_state()
 
-    if data.logic_state and data.logic_state.scenario_id then
+    if not data.logic_state then
+        debug("No logic state")  
+    elseif data.logic_state and not data.logic_state.scenario_id then
+        warn("Logic state exists without scenario id")   
+    elseif data.logic_state and data.logic_state.scenario_id then
         -- Reinitialize the last scenario using the saved logic state.
         scenario_logic = soulslike_scenario_logic_factory.create_by_id(data.logic_state.scenario_id, data.logic_state)
     end

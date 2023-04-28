@@ -50,10 +50,12 @@ local function compute_fatal_hit_info(hits)
     soulslike.debug("Agg Hit Info:")   
     soulslike.debug(agg_hit)   
     
-    local result
+    local result = nil
     
-    for _, value in ipairs(agg_hit) do
-        if not result or result.power < value.power then
+    for _, value in pairs(agg_hit) do
+        if not result then
+            result = value
+        elseif result.power < value.power then
             result = value
         end
     end
@@ -61,6 +63,7 @@ local function compute_fatal_hit_info(hits)
     if result then
         result.fatal_hit = fatal_hit
     end
+
     return result
 end
 
@@ -115,7 +118,10 @@ end
 
 function create_new(hits)            
     local hit = compute_fatal_hit_info(hits)
-
+    
+    if hit then
+        soulslike.debug("Fatal Hit Type: "..tostring(hit.draftsman_type))
+    end
     -- We want to be able to debug each scenario using the 
     -- scenario weight to max, and in this case we want to 
     -- be able to remove the default scenario so its always
