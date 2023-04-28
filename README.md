@@ -24,9 +24,8 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
 
 - 100% Customizable experience through MCM
 - 100% (as far as I know) conflict free from other mods.  Jabbers' Soulslike Mod does not overwrite any scripts or ltx files and because of this it should not interfere with any other mods. If it does please let me know so I can resolve.
-- Upon death
- - Respawn locations can be set at any bed
- - Stash with some or all of the players items drops on the ground.
+- Respawn locations can be set at any bed
+- Scenario based respawn based on who/what killed you
  - Rank/rep loss % (configurable)
  - Possibility of having to find your items in a hidden stash with a RF detector (configurable)
  - Item condition/loss scales based on rank in order to not hinder the players early game progress.

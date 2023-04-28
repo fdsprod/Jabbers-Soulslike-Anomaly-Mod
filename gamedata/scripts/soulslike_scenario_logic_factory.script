@@ -206,6 +206,7 @@ function create_new(hits)
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
     elseif hit and 
            hit.draftsman_type == soulslike.entity_type.Stalker and 
+           hit.fatal_hit and
            hit.fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.RELATIONS.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
