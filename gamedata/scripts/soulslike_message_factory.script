@@ -5,17 +5,6 @@ local function rescuer_initial_msg_factory()
         "st_soulslike_rescuer_initial_3",
         "st_soulslike_rescuer_initial_4",
         "st_soulslike_rescuer_initial_5",
-        "st_soulslike_rescuer_initial_6",
-        "st_soulslike_rescuer_initial_7",
-        "st_soulslike_rescuer_initial_8",
-        "st_soulslike_rescuer_initial_9",
-        "st_soulslike_rescuer_initial_10",
-        "st_soulslike_rescuer_initial_11",
-        "st_soulslike_rescuer_initial_12",
-        "st_soulslike_rescuer_initial_13",
-        "st_soulslike_rescuer_initial_14",
-        "st_soulslike_rescuer_initial_15",
-        "st_soulslike_rescuer_initial_16",
     }
 
     return game.translate_string(messages[math.random(#messages)])
@@ -40,17 +29,6 @@ local function rescuer_pda_marker_msg_factory()
         "st_soulslike_rescuer_pda_3",
         "st_soulslike_rescuer_pda_4",
         "st_soulslike_rescuer_pda_5",
-        "st_soulslike_rescuer_pda_6",
-        "st_soulslike_rescuer_pda_7",
-        "st_soulslike_rescuer_pda_8",
-        "st_soulslike_rescuer_pda_9",
-        "st_soulslike_rescuer_pda_10",
-        "st_soulslike_rescuer_pda_11",
-        "st_soulslike_rescuer_pda_12",
-        "st_soulslike_rescuer_pda_13",
-        "st_soulslike_rescuer_pda_14",
-        "st_soulslike_rescuer_pda_15",
-        "st_soulslike_rescuer_pda_16",
     }
 
     return game.translate_string(messages[math.random(#messages)])
@@ -63,17 +41,6 @@ local function rescuer_used_items_msg_factory()
         "st_soulslike_rescuer_used_items_3",
         "st_soulslike_rescuer_used_items_4",
         "st_soulslike_rescuer_used_items_5",
-        "st_soulslike_rescuer_used_items_6",
-        "st_soulslike_rescuer_used_items_7",
-        "st_soulslike_rescuer_used_items_8",
-        "st_soulslike_rescuer_used_items_9",
-        "st_soulslike_rescuer_used_items_10",
-        "st_soulslike_rescuer_used_items_11",
-        "st_soulslike_rescuer_used_items_12",
-        "st_soulslike_rescuer_used_items_13",
-        "st_soulslike_rescuer_used_items_14",
-        "st_soulslike_rescuer_used_items_15",
-        "st_soulslike_rescuer_used_items_16",
     }
 
     return game.translate_string(messages[math.random(#messages)])
@@ -86,16 +53,6 @@ local function rescuer_stay_safe_msg_factory()
         "st_soulslike_rescuer_stay_safe_3",
         "st_soulslike_rescuer_stay_safe_4",
         "st_soulslike_rescuer_stay_safe_5",
-        "st_soulslike_rescuer_stay_safe_6",
-        "st_soulslike_rescuer_stay_safe_7",
-        "st_soulslike_rescuer_stay_safe_8",
-        "st_soulslike_rescuer_stay_safe_9",
-        "st_soulslike_rescuer_stay_safe_10",
-        "st_soulslike_rescuer_stay_safe_11",
-        "st_soulslike_rescuer_stay_safe_12",
-        "st_soulslike_rescuer_stay_safe_13",
-        "st_soulslike_rescuer_stay_safe_14",
-        "st_soulslike_rescuer_stay_safe_15",
     }
 
     return game.translate_string(messages[math.random(#messages)])
@@ -108,12 +65,6 @@ local function rescuer_moster_looter_msg_factory(enemy_name, enemy_comm)
         "st_soulslike_rescuer_monster_looter_3",
         "st_soulslike_rescuer_monster_looter_4",
         "st_soulslike_rescuer_monster_looter_5",
-        "st_soulslike_rescuer_monster_looter_6",
-        "st_soulslike_rescuer_monster_looter_7",
-        "st_soulslike_rescuer_monster_looter_8",
-        "st_soulslike_rescuer_monster_looter_9",
-        "st_soulslike_rescuer_monster_looter_10",
-        "st_soulslike_rescuer_monster_looter_11",
     }
     
     return game.translate_string(messages[math.random(#messages)])
@@ -126,16 +77,6 @@ local function rescuer_enemy_looter_msg_factory(enemy_name, enemy_comm)
         "st_soulslike_rescuer_enemy_looter_3",
         "st_soulslike_rescuer_enemy_looter_4",
         "st_soulslike_rescuer_enemy_looter_5",
-        "st_soulslike_rescuer_enemy_looter_6",
-        "st_soulslike_rescuer_enemy_looter_7",
-        "st_soulslike_rescuer_enemy_looter_8",
-        "st_soulslike_rescuer_enemy_looter_9",
-        "st_soulslike_rescuer_enemy_looter_10",
-        "st_soulslike_rescuer_enemy_looter_11",
-        "st_soulslike_rescuer_enemy_looter_12",
-        "st_soulslike_rescuer_enemy_looter_13",
-        "st_soulslike_rescuer_enemy_looter_14",
-        "st_soulslike_rescuer_enemy_looter_15",
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), enemy_comm, enemy_name)
@@ -160,17 +101,6 @@ local function rescuer_enemy_radio_freq_msg_factory(freq)
         "st_soulslike_rescuer_radio_freq_3",
         "st_soulslike_rescuer_radio_freq_4",
         "st_soulslike_rescuer_radio_freq_5",
-        "st_soulslike_rescuer_radio_freq_6",
-        "st_soulslike_rescuer_radio_freq_7",
-        "st_soulslike_rescuer_radio_freq_8",
-        "st_soulslike_rescuer_radio_freq_9",
-        "st_soulslike_rescuer_radio_freq_10",
-        "st_soulslike_rescuer_radio_freq_11",
-        "st_soulslike_rescuer_radio_freq_12",
-        "st_soulslike_rescuer_radio_freq_13",
-        "st_soulslike_rescuer_radio_freq_14",
-        "st_soulslike_rescuer_radio_freq_15",
-        "st_soulslike_rescuer_radio_freq_16",
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), freq)
@@ -183,9 +113,6 @@ local function rescuer_hidden_stash_msg_factory(freq)
         "st_soulslike_hidden_stash_3",
         "st_soulslike_hidden_stash_4",
         "st_soulslike_hidden_stash_5",
-        "st_soulslike_hidden_stash_6",
-        "st_soulslike_hidden_stash_7",
-        "st_soulslike_hidden_stash_8",
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), freq)
@@ -198,12 +125,6 @@ local function recuer_indoor_msg_factory(level_name)
         "st_soulslike_rescuer_indoor_3",
         "st_soulslike_rescuer_indoor_4",
         "st_soulslike_rescuer_indoor_5",
-        "st_soulslike_rescuer_indoor_6",
-        "st_soulslike_rescuer_indoor_7",
-        "st_soulslike_rescuer_indoor_8",
-        "st_soulslike_rescuer_indoor_9",
-        "st_soulslike_rescuer_indoor_10",
-        "st_soulslike_rescuer_indoor_11",
     }
     
     return strformat(game.translate_string(messages[math.random(#messages)]), level_name)
