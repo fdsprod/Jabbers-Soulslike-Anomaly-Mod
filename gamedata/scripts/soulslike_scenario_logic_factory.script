@@ -58,8 +58,9 @@ local function compute_fatal_hit_info(hits)
         end
     end
 
-    result.fatal_hit = fatal_hit
-
+    if result then
+        result.fatal_hit = fatal_hit
+    end
     return result
 end
 
@@ -330,7 +331,7 @@ function create_new(hits)
     if scenario_id == nil then
         soulslike.debug("ERROR: Unable to determine scenario from roll: "..tostring(roll))
         soulslike.debug(available_scenarios)  
-        scenario_id = soulslike.SCENARIOS.NoLoss163
+        scenario_id = soulslike.SCENARIOS.NoLoss
     end
 
     local scenario_logic = create_by_id(scenario_id)
@@ -347,7 +348,7 @@ function create_new(hits)
         scenario_logic:SetLooterType(looter_type)
     end
 
-    if hit.fatal_hit then 
+    if hit and hit.fatal_hit then 
         scenario_logic:SetKillerType(hit.fatal_hit.killer_type)
         scenario_logic:SetKiller(hit.fatal_hit.draftsman)
         scenario_logic:SetFatalHitType(hit.fatal_hit.type)

@@ -2,15 +2,15 @@
 <string_table>
 
 	<string id="st_soulslike_rescuers_radio_frequency_note_name">
-		<text>Rescuer's Note</text>
+		<text>Примечание спасателя</text>
 	</string>
     
 	<string id="st_soulslike_rescuers_radio_frequency_note_desc">
-		<text>A note written by one of the stalker that rescued you.</text>
+		<text>Примечание, написанное одним из сталкеров, который тебя спас.</text>
 	</string>
 
 	<string id="st_soulslike_rescuers_radio_frequency_note_message">
-		<text>The note contains information about where your items are. It says to use an RF receiver with the frequency %s in %s</text>
+		<text>В записке указана информация о месте, где находятся ваши вещи. Там написано, что нужно использовать радиоприемник с частотой %s в %s.</text>
 	</string>
 
 </string_table>

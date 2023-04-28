@@ -30,7 +30,7 @@ SCENARIOS = {
     Default = 1,
     RFDetectorStash = 2,
     HiddenStash = 3,
-    NoLoss = 7,
+    NoLoss = 4,
 }
 
 hit_type_to_str = {
@@ -161,7 +161,7 @@ function debug_tip(text, delay)
         return
     end
 
-    local text = tostring(text)
+    local text = "[Soulslike] "..tostring(text)
 
     if not db.actor then
         return
@@ -478,7 +478,6 @@ end
 -- Game Callbacks
 ----------------------------------------
 
-
 local function actor_on_before_death(who, flags)    
     if not IsSoulslikeMode() then
         return
@@ -693,6 +692,8 @@ local function physic_object_on_use_callback(box, who)
     local stash_data = data.hidden_stashes[id]
     local stash_id = stash_data.stash_id
     local stash = level.object_by_id(stash_id)
+    
+    try_send_inventory_examined_message(stash_id)
 
     if not stash then        
         debug("Not expected, unable to find stash id linked to Invbox.. ")
@@ -704,10 +705,10 @@ local function physic_object_on_use_callback(box, who)
     end
 
     if stash_data.radio_id then
-	    item_radio.clear_stash(stash_data.radio_id) 
+        debug("Clearing radio stash "..tostring(stash_data.radio_id))  
+	    item_radio.clear_stash(stash_data.radio_level, stash_data.radio_id) 
     end 
-
-	item_radio.clear_stash(stash_data.stash_id) 
+ 
 
     debug("Transfering items from hidden stash "..tostring(id).." to static stash "..tostring(stash_id))    
     stash:iterate_inventory_box(transfer_item)      
@@ -726,7 +727,7 @@ local function load_state(data)
 
     local data = get_soulslike_state()
 
-    if data.logic_state then
+    if data.logic_state and data.logic_state.scenario_id then
         -- Reinitialize the last scenario using the saved logic state.
         scenario_logic = soulslike_scenario_logic_factory.create_by_id(data.logic_state.scenario_id, data.logic_state)
     end
@@ -802,10 +803,25 @@ local function actor_on_sleep(hours)
     end
 end
 
-local function actor_on_before_hit(shit, ...)
+local detour_actor_on_before_hit = nil
+
+local function actor_on_before_hit(shit, bone_id, flags)
+    if not IsSoulslikeMode() then
+        if detour_actor_on_before_hit then
+            detour_actor_on_before_hit(shit, bone_id, flags)
+        end
+        return
+    end
+
+    local damage = shit.power
+    if grok_actor_damage_balancer and grok_actor_damage_balancer.damage then
+        debug("Using damage from Grok's Damage Balancer")
+        damage = grok_actor_damage_balancer.damage
+    end
+
     debug("Player hit:")
     debug("shit.type: "..tostring(hit_type_to_str[shit.type]))
-    debug("shit.power: "..tostring(shit.power))
+    debug("shit.power: "..tostring(damage))
     debug("shit.impulse: "..tostring(shit.impulse))
     debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
 
@@ -818,7 +834,7 @@ local function actor_on_before_hit(shit, ...)
 
     hit_queue:Enqueue({ 
         type = shit.type,
-        power = shit.power,
+        power = damage,
         is_fatal = is_fatal,
         time = time_global(),
         draftsman_id = shit.draftsman and shit.draftsman:id() or nil,

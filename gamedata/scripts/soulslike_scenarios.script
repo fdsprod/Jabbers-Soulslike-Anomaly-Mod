@@ -191,6 +191,7 @@ function SoulslikeScenarioLogic:__init(state)
         local rank = db.actor:character_rank()
         
         if soulslike_mcm.debug_item_loss() then
+            soulslike.debug("Debugging item loss, setting max rank:")
             rank = 56000
         end
         
@@ -1022,9 +1023,11 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
         self.logic_state.hidden_stash_id = se_stash.id
         self.logic_state.treasure_stash_id = id
     
+        local lvl = level.name()
         self.game_state.hidden_stashes[id] = {
             stash_id = se_stash.id,
-            radio_id = id
+            radio_id = id,
+            radio_level = lvl
         }   
     end             
     return se_stash
@@ -1034,7 +1037,7 @@ function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     local lvl = level.name()
     soulslike.debug("Added radio target to level: "..lvl)
     self.logic_state.story.radio_freq = math.random(30,  300)
-    item_radio.add_stash(lvl, self.logic_state.hidden_stash_id, self.logic_state.story.radio_freq) 
+    item_radio.add_stash(lvl, self.logic_state.treasure_stash_id, self.logic_state.story.radio_freq) 
 
     if soulslike_mcm.debug_hidden_stashes() then
         soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))
