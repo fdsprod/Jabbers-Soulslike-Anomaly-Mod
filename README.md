@@ -24,9 +24,8 @@ DISCLAIMER: Stop crying, this mod is suppose to make the game harder. Because of
 
 - 100% Customizable experience through MCM
 - 100% (as far as I know) conflict free from other mods.  Jabbers' Soulslike Mod does not overwrite any scripts or ltx files and because of this it should not interfere with any other mods. If it does please let me know so I can resolve.
-- Upon death
- - Respawn locations can be set at any bed
- - Stash with some or all of the players items drops on the ground.
+- Respawn locations can be set at any bed
+- Scenario based respawn based on who/what killed you
  - Rank/rep loss % (configurable)
  - Possibility of having to find your items in a hidden stash with a RF detector (configurable)
  - Item condition/loss scales based on rank in order to not hinder the players early game progress.
@@ -83,13 +82,8 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODOs**
-- Offset the radius of the PDA death location 
-- Create an item that needs to be used to set a respawn point (optional with mcm)
-- Add task for RF detector scenario so that the radio freq can be referenced in the future
-- Add a task to the players PDA for all scenarios (similar to above, but RF Detector scenario takes priority for now)
-- Random chance for the player gear is just in a stash marked on the PDA
-- Random chance for the player gear is scattered in mutliple locations within a zone and marked on the PDA
 - Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
-- If the player dies to another Stalker, random chance that the stalker is dead somewhere close to where the player died and the body is persisted and lootable with some of the players gear.
-- Random chance for players gear stash to be a ambush location (need to figure out how this works)
-- Random chance that if the player dies with a lot of mutant meat or food, there will be boars/cats/dogs within the area of the stash as if attracted by the smell
+- Chance to bring some/all weapon/outfit/headgear back based on reputation (maybe this is at the cost of reputation)
+- Chance to have rescuer give handgun/ammo/meds based on rep (maybe this is at the cost of reputation)
+- Insurance system?
+- Breaking a tent causes your spawn location to no longer exist, warn about this and revert to (where?)..
