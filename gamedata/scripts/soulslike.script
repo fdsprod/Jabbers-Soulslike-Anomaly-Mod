@@ -848,6 +848,29 @@ local function actor_on_before_hit(shit, bone_id, flags)
     debug("is_fatal: "..tostring(is_fatal))
 end
 
+local function npc_on_net_spawn(npc, se_obj)
+
+    local state = get_soulslike_state()
+    if npc and IsStalker(npc) and state.tracked_ambushers and state.tracked_ambushers[npc:id()] then
+        debug("Setting up ambushers "..tostring(npc:id()))
+        local ambusher_state = state.tracked_ambushers[npc:id()]
+        local position = vector():set(ambusher_state.position.x, ambusher_state.position.y, ambusher_state.position.z)
+           
+        npc:set_mental_state(ambusher_state.mental_state)
+        npc:set_body_state(ambusher_state.body_state)
+        npc:set_movement_type(ambusher_state.movement_type)
+        npc:set_sight(ambusher_state.sight_type, nil, 0)
+        npc:set_desired_position(position)
+        npc:set_desired_direction()
+
+        if soulslike_mcm.debug_squad_spawns() then
+            level.map_add_object_spot_ser(npc:id(), "secondary_task_location", "DEBUG: Ambush NPC") 
+        end
+
+        state.tracked_ambushers[npc:id()] = nil
+    end
+end
+
 function on_game_start()
     debug('Version: '..version)
     
@@ -863,4 +886,5 @@ function on_game_start()
 	RegisterScriptCallback("on_console_execute", on_console_execute)
     RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+    RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
 end

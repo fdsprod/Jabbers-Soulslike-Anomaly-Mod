@@ -112,18 +112,22 @@ local mutant_spawns = {
 }
 
 local stalker_spawns = {
+    --Loner
+    { section = "stalker_sim_squad_novice",      community = "stalker",     weight = 1.00,  type = stalker_spawn_type.Novice },
+    { section = "stalker_sim_squad_advanced",    community = "stalker",     weight = 0.50,  type = stalker_spawn_type.Advanced },
+    { section = "stalker_sim_squad_veteran",     community = "stalker",     weight = 0.10,  type = stalker_spawn_type.Veteran },
     --Bandit
     { section = "bandit_sim_squad_novice",      community = "bandit",       weight = 1.00,  type = stalker_spawn_type.Novice },
     { section = "bandit_sim_squad_advanced",    community = "bandit",       weight = 0.50,  type = stalker_spawn_type.Advanced },
     { section = "bandit_sim_squad_veteran",     community = "bandit",       weight = 0.10,  type = stalker_spawn_type.Veteran },
     --Merc
-    { section = "merc_sim_squad_novice",        community = "merc",         weight = 0.75,  type = stalker_spawn_type.Novice },
-    { section = "merc_sim_squad_advanced",      community = "merc",         weight = 0.25,  type = stalker_spawn_type.Advanced },
-    { section = "merc_sim_squad_veteran",       community = "merc",         weight = 0.10,  type = stalker_spawn_type.Veteran },
+    { section = "merc_sim_squad_novice",        community = "killer",       weight = 0.75,  type = stalker_spawn_type.Novice },
+    { section = "merc_sim_squad_advanced",      community = "killer",       weight = 0.25,  type = stalker_spawn_type.Advanced },
+    { section = "merc_sim_squad_veteran",       community = "killer",       weight = 0.10,  type = stalker_spawn_type.Veteran },
     --Duty
-    { section = "duty_sim_squad_novice",        community = "duty",         weight = 1.00,  type = stalker_spawn_type.Novice },
-    { section = "duty_sim_squad_advanced",      community = "duty",         weight = 0.10,  type = stalker_spawn_type.Advanced },
-    { section = "duty_sim_squad_veteran",       community = "duty",         weight = 0.10,  type = stalker_spawn_type.Veteran },
+    { section = "duty_sim_squad_novice",        community = "dolg",         weight = 1.00,  type = stalker_spawn_type.Novice },
+    { section = "duty_sim_squad_advanced",      community = "dolg",         weight = 0.10,  type = stalker_spawn_type.Advanced },
+    { section = "duty_sim_squad_veteran",       community = "dolg",         weight = 0.10,  type = stalker_spawn_type.Veteran },
     --Freedom
     { section = "freedom_sim_squad_novice",     community = "freedom",      weight = 1.00,  type = stalker_spawn_type.Novice },
     { section = "freedom_sim_squad_advanced",   community = "freedom",      weight = 0.10,  type = stalker_spawn_type.Advanced },
@@ -141,35 +145,31 @@ local stalker_spawns = {
     { section = "renegade_sim_squad_novice",    community = "renegade",     weight = 0.50,  type = stalker_spawn_type.Novice },
     { section = "renegade_sim_squad_advanced",  community = "renegade",     weight = 0.20,  type = stalker_spawn_type.Advanced },
     { section = "renegade_sim_squad_veteran",   community = "renegade",     weight = 0.10,  type = stalker_spawn_type.Veteran },
+    --Clear Sky
+    { section = "csky_sim_squad_novice",        community = "csky",         weight = 0.50,  type = stalker_spawn_type.Novice },
+    { section = "csky_sim_squad_advanced",      community = "csky",         weight = 0.20,  type = stalker_spawn_type.Advanced },
+    { section = "csky_sim_squad_veteran",       community = "csky",         weight = 0.10,  type = stalker_spawn_type.Veteran },
+    --Monolith
+    { section = "monolith_sim_squad_novice",    community = "monolith",     weight = 0.50,  type = stalker_spawn_type.Novice },
+    { section = "monolith_sim_squad_advanced",  community = "monolith",     weight = 0.20,  type = stalker_spawn_type.Advanced },
+    { section = "monolith_sim_squad_veteran",   community = "monolith",     weight = 0.10,  type = stalker_spawn_type.Veteran },
+    --Sin
+    { section = "greh_sim_squad_novice",        community = "greh",         weight = 0.50,  type = stalker_spawn_type.Novice },
+    { section = "greh_sim_squad_advanced",      community = "greh",         weight = 0.20,  type = stalker_spawn_type.Advanced },
+    { section = "greh_sim_squad_veteran",       community = "greh",         weight = 0.10,  type = stalker_spawn_type.Veteran },
+    --UNISG
+    { section = "isg_sim_squad_novice",         community = "isg",          weight = 0.50,  type = stalker_spawn_type.Novice },
+    { section = "isg_sim_squad_advanced",       community = "isg",          weight = 0.20,  type = stalker_spawn_type.Advanced },
+    { section = "isg_sim_squad_veteran",        community = "isg",          weight = 0.10,  type = stalker_spawn_type.Veteran },
+    --Ecologist
+    { section = "ecolog_sim_squad_novice",      community = "ecolog",       weight = 0.50,  type = stalker_spawn_type.Novice },
+    { section = "ecolog_sim_squad_advanced",    community = "ecolog",       weight = 0.20,  type = stalker_spawn_type.Advanced },
+    { section = "ecolog_sim_squad_veteran",     community = "ecolog",       weight = 0.10,  type = stalker_spawn_type.Veteran },
 }
 
 local initialized = false
 
 local function initialize()
-    local weight_sum = 0
-    for _, value in pairs(mutant_spawns) do
-        weight_sum = weight_sum + value.weight
-    end
-
-    local min = 0
-    for _, value in pairs(mutant_spawns) do
-        value.min = min + 1
-        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
-        min = value.max
-    end
-    
-    weight_sum = 0
-    for _, value in pairs(stalker_spawns) do
-        weight_sum = weight_sum + value.weight
-    end
-
-    min = 0
-    for _, value in pairs(stalker_spawns) do
-        value.min = min + 1
-        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
-        min = value.max
-    end
-
     initialized = true
 end
 ---------------------------------------------------------
@@ -505,10 +505,36 @@ end
 function SoulslikeScenarioLogic:GiveMask()
 end
 
+function SoulslikeScenarioLogic:TrackAmbusher(id, mental_state, body_state, movement_type, sight_type, position, level_vertex_id, game_vertex_id)
+    if not self.game_state.tracked_ambushers then
+        self.game_state.tracked_ambushers = {}
+    end
+    self.game_state.tracked_ambushers[id] = {
+        mental_state = mental_state, 
+        body_state = body_state, 
+        movement_type = movement_type, 
+        sight_type = sight_type, 
+        position = position,
+        level_vertex_id = level_vertex_id,
+        game_vertex_id = game_vertex_id
+    }
+end
+
 function SoulslikeScenarioLogic:SpawnAmbush()
+    soulslike.debug("Checking ambush chance.")
     local loss_chance_dice_roll = math.random(0, 100)
     local spawns = {}
+    local sim = alife()
+
+    if not sim then return end
     
+    local debug_spawn = soulslike_mcm.debug_always_spawn_ambush()
+
+    if debug_spawn then
+        soulslike.debug("Ambush debugging enabled")
+        loss_chance_dice_roll = 0
+    end
+
     soulslike.debug({
         killer_type = self.logic_state.killer_type,
         has_mutant_bait = self.logic_state.has_mutant_bait,
@@ -527,6 +553,7 @@ function SoulslikeScenarioLogic:SpawnAmbush()
                (spawn.type == mutant_spawn_type.Dog and self.logic_state.allow_dogs_ambush) or
                (spawn.type == mutant_spawn_type.Cat and self.logic_state.allow_cats_ambush) or
                (spawn.type == mutant_spawn_type.Snork and self.logic_state.allow_snorks_ambush) or
+               (spawn.type == mutant_spawn_type.Burer and self.logic_state.allow_burer_ambush) or
                (spawn.type == mutant_spawn_type.BloodSucker and self.logic_state.allow_bloodsucker_ambush) or
                (spawn.type == mutant_spawn_type.Chimera and self.logic_state.allow_chimera_ambush) or
                (spawn.type == mutant_spawn_type.Controller and self.logic_state.allow_controller_ambush) then                
@@ -535,33 +562,53 @@ function SoulslikeScenarioLogic:SpawnAmbush()
         end
     elseif self.logic_state.killer_type == soulslike.entity_type.Stalker and
            loss_chance_dice_roll < self.logic_state.stalker_ambush_chance * 100 then 
-        local community = self.logic_state.killer:character_community()    
-        soulslike.debug("Setting up stalker spawn table.")
-        for _, spawn in pairs(stalker_spawns) do
-            if spawn.community == community then
-                if (spawn.type == stalker_spawn_type.Novice and self.logic_state.allow_stalker_novice_ambush) or
-                   (spawn.type == stalker_spawn_type.Advanced and self.logic_state.allow_stalker_advanced_ambush) or
-                   (spawn.type == stalker_spawn_type.Veteran and self.logic_state.allow_stalker_veteran_ambush) or
-                   (spawn.type == stalker_spawn_type.Sniper and self.logic_state.allow_stalker_sniper_ambush) then
-                    table.insert(spawns, spawn)
+        local killer = self.logic_state.killer_id and sim:object(self.logic_state.killer_id) or nil
+        
+        if killer then
+            soulslike.debug("Setting up stalker spawn table.")
+            local community = killer:community()    
+            soulslike.debug("killer community - "..community)
+            for _, spawn in pairs(stalker_spawns) do
+                if spawn.community == community then
+                    soulslike.debug(spawn)
+                    if (spawn.type == stalker_spawn_type.Novice and self.logic_state.allow_stalker_novice_ambush) or
+                       (spawn.type == stalker_spawn_type.Advanced and self.logic_state.allow_stalker_advanced_ambush) or
+                       (spawn.type == stalker_spawn_type.Veteran and self.logic_state.allow_stalker_veteran_ambush) or
+                       (spawn.type == stalker_spawn_type.Sniper and self.logic_state.allow_stalker_sniper_ambush) then
+                        soulslike.debug("Spawn accepted.")
+                        table.insert(spawns, spawn)
+                    end
                 end
             end
         end
     else
-        return
-    end
-    
-    if #spawns == 0 then
-        soulslike.debug("No valid spawns for ambush")
+        soulslike.debug("No ambush scenario detected.")
         return
     end
                
     soulslike.debug("Spawns:")
     soulslike.debug(spawns)    
+    
+    if table.get_length(spawns) == 0 then
+        soulslike.debug("No valid spawns for ambush")
+        return
+    end
+
+    local weight_sum = 0
+    for _, value in pairs(spawns) do
+        weight_sum = weight_sum + value.weight
+    end
+
+    local min = 0
+    for _, value in pairs(spawns) do
+        value.min = min + 1
+        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
+        min = value.max
+    end
 
     local roll = math.random(1, 100)    
     local section = nil
-    for _, value in pairs(mutant_spawns) do
+    for _, value in pairs(spawns) do
         if(roll >= value.min and roll <= value.max) then
             section = value.section
             break
@@ -583,45 +630,53 @@ function SoulslikeScenarioLogic:SpawnAmbush()
         local lvid = self.logic_state.death_location.level_vertex_id
         local gvid = self.logic_state.death_location.game_vertex_id
         local group = obj_to_spawn_classes[class]
-        local prop = {}
-        local is_squad = string.find(group,"Squad")
-        local cant_spawn_actor = string.find(group,"NPC") or string.find(group,"Physic")
-
-        if is_squad then
-            prop.no_id = true
-            prop.squad = true
-        elseif cant_spawn_actor then
-            prop.no_id = true
-        end
-
+        local is_squad = string.find(group, "Squad")
         local se_obj = section and alife_create(section, pos, lvid, gvid)
 
         if se_obj then
-            if prop.squad then
+            if is_squad then
                 se_obj:create_npc(nil, pos, lvid, gvid)
                 local sim = alife()
                 if not sim then return end
                 for k in se_obj:squad_members() do
                     local se_npc = k.object or k.id and sim:object(k.id)
                     if (se_npc) then
-                        if soulslike_mcm.debug_squad_spawns() then
-                            level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", "DEBUG: Spawn "..se_npc:name()) 
-                        end
                         SIMBOARD:setup_squad_and_group(se_npc)
                         SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
+                        
+                        -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
+                        self:TrackAmbusher(
+                            k.id, 
+                            anim.look_around,
+                            move.standing,
+                            move.stand,
+                            look.search,
+                            self.logic_state.death_location.position)
                     end 
                 end
-                soulslike.debug(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
-            else
                 if soulslike_mcm.debug_squad_spawns() then
-                    level.map_add_object_spot_ser(se_npc.id, "secondary_task_location", "DEBUG: Spawn "..se_npc:name()) 
+                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
                 end
-                soulslike.debug(strformat("Spawned object [%s] (%s)", section, se_obj.id))
+                soulslike.debug_tip(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
+            else
+                -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
+                self:TrackAmbusher(
+                    se_obj.id, 
+                    anim.look_around,
+                    move.standing,
+                    move.stand,
+                    look.search,
+                    self.logic_state.death_location.position,
+                    lvid,
+                    gvid)
+                if soulslike_mcm.debug_squad_spawns() then
+                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
+                end
+                soulslike.debug_tip(strformat("Spawned object [%s] (%s)", section, se_obj.id))
             end
         else
             soulslike.debug(strformat("No server object made for [%s]", section))
-        end
-                
+        end                
     else
         soulslike.debug("No nearby smarts, to dumb")
     end
@@ -702,8 +757,11 @@ end
 function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
     -- skip surge due to bug with killing actor on switch
     surge_manager.stop_surge()    
-    if (psi_storm_manager.get_psi_storm_manager().started) then
-        psi_storm_manager.get_psi_storm_manager().finish(true)
+    
+    local psi_storm_manager = psi_storm_manager.get_psi_storm_manager()
+
+    if (psi_storm_manager.started) then
+        psi_storm_manager:finish(true)
     end
 end
 

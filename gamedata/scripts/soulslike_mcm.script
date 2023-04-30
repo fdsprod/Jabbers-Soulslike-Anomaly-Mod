@@ -434,6 +434,12 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = false
+            },
+            {
+                id = "debug_always_spawn_ambush",
+                type = "check",
+                val = 1,
+                def = false
             }
         },
     }
@@ -615,4 +621,8 @@ end
 
 function debug_the_hidden_stash_scenario()
     return is_debug_enabled() and get_config("debug/debug_the_hidden_stash_scenario", false)
+end 
+
+function debug_always_spawn_ambush()
+    return is_debug_enabled() and get_config("debug/debug_always_spawn_ambush", false)
 end 

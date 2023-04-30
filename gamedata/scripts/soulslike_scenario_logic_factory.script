@@ -356,7 +356,7 @@ function create_new(hits)
     end
 
     if hit and hit.fatal_hit then 
-        scenario_logic:SetKillerType(hit.fatal_hit.killer_type)
+        scenario_logic:SetKillerType(hit.draftsman_type)
         scenario_logic:SetKiller(hit.fatal_hit.draftsman)
         scenario_logic:SetFatalHitType(hit.fatal_hit.type)
     end
