@@ -108,13 +108,10 @@ function create_by_id(scenario_id, state)
         scenario = soulslike_scenarios.HiddenStashSoulslikeScenarioLogic(state) 
     end
     
-<<<<<<< HEAD
     if scenario_id == soulslike.SCENARIOS.NoLoss then 
         scenario = soulslike_scenarios.NoLossSoulslikeScenarioLogic(state) 
     end
     
-=======
->>>>>>> main
     if scenario == nil then
         soulslike.debug("Unrecognized Scenario Id: "..tostring(scenario_id)) 
         scenario = soulslike_scenarios.DefaultSoulslikeScenarioLogic(state) 

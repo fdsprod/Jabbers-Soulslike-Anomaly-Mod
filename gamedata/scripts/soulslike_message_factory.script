@@ -166,11 +166,7 @@ function create(rescuer, params)
             end       
         end
         msg = msg.." "..rescuer_stay_safe_msg_factory()
-<<<<<<< HEAD
         return msg
-=======
-        news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
->>>>>>> main
     else
         local msg = game.translate_string("st_soulslike_rescuer_initial_generic")
         if params.gave_food_or_water then
@@ -182,11 +178,6 @@ function create(rescuer, params)
         if params.radio_freq then
             msg = msg.." "..game.translate_string(strformat("st_soulslike_rescuer_radio_generic", params.radio_freq))
         end
-		local ui_sender = news_manager.tips_icons['default']
-<<<<<<< HEAD
         return msg
-=======
-        db.actor:give_game_news("", msg, ui_sender, 0, 20000)
->>>>>>> main
     end  
 end
