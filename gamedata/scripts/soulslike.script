@@ -5,7 +5,11 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
+<<<<<<< HEAD
 local version = "0.23-beta"
+=======
+local version = "0.21-beta"
+>>>>>>> main
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -66,6 +70,7 @@ local hit_queue = soulslike_classes.TimedQueue(MAX_HIT_POOL_COUNT, MAX_HIT_TIME)
 -- Helpers
 ----------------------------------------
 
+<<<<<<< HEAD
 function try(func, ...)
 	local status, error_or_result = pcall(func, ...)
 	if not status then
@@ -76,6 +81,8 @@ function try(func, ...)
 	end
 end
 
+=======
+>>>>>>> main
 function math.clamp(x, min, max)
     if x < min then return min end
     if x > max then return max end
@@ -830,6 +837,7 @@ local function actor_on_before_hit(shit, bone_id, flags)
 
     local damage = shit.power
     if grok_actor_damage_balancer and grok_actor_damage_balancer.damage then
+<<<<<<< HEAD
         --debug("Using damage from Grok's Damage Balancer")
         damage = grok_actor_damage_balancer.damage
     end
@@ -842,6 +850,20 @@ local function actor_on_before_hit(shit, bone_id, flags)
 
     if shit.draftsman then
         --debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
+=======
+        debug("Using damage from Grok's Damage Balancer")
+        damage = grok_actor_damage_balancer.damage
+    end
+
+    debug("Player hit:")
+    debug("shit.type: "..tostring(hit_type_to_str[shit.type]))
+    debug("shit.power: "..tostring(damage))
+    debug("shit.impulse: "..tostring(shit.impulse))
+    debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
+
+    if shit.draftsman then
+        debug("shit.draftsman: "..(shit and shit.draftsman:name() or "<nil>"))
+>>>>>>> main
     end
 
     local health = db.actor.health
@@ -855,6 +877,7 @@ local function actor_on_before_hit(shit, bone_id, flags)
         draftsman_id = shit.draftsman and shit.draftsman:id() or nil,
     })
     
+<<<<<<< HEAD
     --debug("is_fatal: "..tostring(is_fatal))
 end
 
@@ -862,6 +885,13 @@ local function npc_on_net_spawn(npc, se_obj)
     if not IsSoulslikeMode() then
         return
     end
+=======
+    debug("is_fatal: "..tostring(is_fatal))
+end
+
+local function npc_on_net_spawn(npc, se_obj)
+
+>>>>>>> main
     local state = get_soulslike_state()
     if npc and IsStalker(npc) and state.tracked_ambushers and state.tracked_ambushers[npc:id()] then
         debug("Setting up ambushers "..tostring(npc:id()))
@@ -898,5 +928,9 @@ function on_game_start()
 	RegisterScriptCallback("on_console_execute", on_console_execute)
     RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+<<<<<<< HEAD
     --RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
+=======
+    RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
+>>>>>>> main
 end

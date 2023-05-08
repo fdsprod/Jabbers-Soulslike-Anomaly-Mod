@@ -12,14 +12,22 @@ function TimedQueue:Clear()
     self.data = {}
     self.first = 0
     self.last = -1
+<<<<<<< HEAD
     --soulslike.debug("TimedQueue:Clear")
+=======
+    soulslike.debug("TimedQueue:Clear")
+>>>>>>> main
 end
 
 function TimedQueue:Enqueue(value)
     value.__cached_time = time_global()
     self.last = self.last + 1
     self.data[self.last] = value
+<<<<<<< HEAD
     --soulslike.debug("TimedQueue:Enqueue")
+=======
+    soulslike.debug("TimedQueue:Enqueue")
+>>>>>>> main
 end
 
 function TimedQueue:Dequeue()
@@ -31,7 +39,11 @@ function TimedQueue:Dequeue()
         self.data[self.first] = nil
         self.first = self.first + 1
     end
+<<<<<<< HEAD
     --soulslike.debug("TimedQueue:Dequeue")
+=======
+    soulslike.debug("TimedQueue:Dequeue")
+>>>>>>> main
     return result
 end
 
@@ -47,10 +59,17 @@ end
 
 
 function TimedQueue:Values()
+<<<<<<< HEAD
     --soulslike.debug("TimedQueue:Values")
     --soulslike.debug(self.data)
     local values = {}
     for _,v in pairs(self.data) do
+=======
+    soulslike.debug("TimedQueue:Values")
+    soulslike.debug(self.data)
+    local values = {}
+    for i,v in ipairs(self.data) do
+>>>>>>> main
         if v then
             table.insert(values, v)
         end
@@ -65,7 +84,11 @@ function TimedQueue:Invalidate()
             break
         end
         if next.__cached_time + self.expiriation_ms < time_global() then
+<<<<<<< HEAD
             --soulslike.debug("TimedQueue:Dequeue_time")
+=======
+            soulslike.debug("TimedQueue:Dequeue_time")
+>>>>>>> main
             self:Dequeue()
         else
             break;
