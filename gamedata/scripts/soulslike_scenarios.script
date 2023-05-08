@@ -6,6 +6,20 @@ local ignore_list = {
     ["device_pda_2"] = true,
     ["device_pda_3"] = true,
     ["wpn_knife"] = true,
+<<<<<<< HEAD
+    ["wpn_knife2"] = true,
+    ["wpn_knife3"] = true,
+    ["wpn_knife4"] = true,
+    ["wpn_knife5"] = true,
+    ["wpn_knife6"] = true,
+    ["wpn_knife7"] = true,
+    ["wpn_knife8"] = true,
+    ["wpn_knife9"] = true,
+    ["wpn_axe"] = true,
+    ["wpn_axe2"] = true,
+    ["wpn_axe3"] = true,
+=======
+>>>>>>> main
 }
 
 local obj_to_spawn_classes = {
@@ -167,11 +181,14 @@ local stalker_spawns = {
     { section = "ecolog_sim_squad_veteran",     community = "ecolog",       weight = 0.10,  type = stalker_spawn_type.Veteran },
 }
 
+<<<<<<< HEAD
+=======
 local initialized = false
 
 local function initialize()
     initialized = true
 end
+>>>>>>> main
 ---------------------------------------------------------
 -- Base Scenario Class 
 ---------------------------------------------------------
@@ -179,10 +196,13 @@ end
 class "SoulslikeScenarioLogic"
 
 function SoulslikeScenarioLogic:__init(state)   
+<<<<<<< HEAD
+=======
     if not initialized then
         initialize()
     end
 
+>>>>>>> main
     if state then 
         self.logic_state = state
         soulslike.debug("Scenario created with state:")
@@ -418,11 +438,21 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
             local pack = level.object_by_id(se_stash.id)
 
             if pack then
+<<<<<<< HEAD
+                soulslike.try(function()                         
+                    soulslike.debug("Stash exists in game")
+
+                    self:TransferItems(se_stash.id)   
+                    self:ApplyTransferItemsPostConditions()
+                    self:RespawnActor()
+                end)
+=======
                 soulslike.debug("Stash exists in game")
 
                 self:TransferItems(se_stash.id)   
                 self:ApplyTransferItemsPostConditions()
                 self:RespawnActor()
+>>>>>>> main
                 return true
             else
                 soulslike.debug("Stash does not yet exist in game")            
@@ -445,6 +475,10 @@ function SoulslikeScenarioLogic:OnDeath()
     end
 
     bind_stalker_ext.invulnerable_time = time_global() + 30000
+<<<<<<< HEAD
+    actor_status.deactivate_hud()
+=======
+>>>>>>> main
 
     self:HealActor()
     self:ApplyRankLoss()
@@ -464,14 +498,21 @@ function SoulslikeScenarioLogic:GiveFoodAndWater()
     soulslike.debug({satiety = satiety})
     if satiety < 0.5 then
         self.logic_state.story.gave_food_or_water = true  
+<<<<<<< HEAD
+=======
         --soulslike.debug("HACK updating satiety.")
+>>>>>>> main
 	    db.actor.satiety = 0.5
     end
 
 	-- Thirst
 	local thirst = 1 - actor_status_thirst.get_water_deprivation()		-- 1 full
+<<<<<<< HEAD
+	local red_icon_thirst = 1 - normalize(5760, 0, 10000) -- def 0.424 red
+=======
 	local red_icon_thirst = 5760
 	red_icon_thirst = 1 - normalize(red_icon_thirst, 0, 10000)		-- def 0.424 red
+>>>>>>> main
 	
     thirst = normalize(thirst, red_icon_thirst, 1)
     thirst = math.clamp(thirst / 5.65, 0, 0.185)
@@ -707,7 +748,10 @@ function SoulslikeScenarioLogic:RespawnActor()
     local game_vertex_id = self.game_state.spawn_location.game_vertex_id  
     
     level.add_pp_effector("black_infinite.ppe", 5606, true)
+<<<<<<< HEAD
+=======
     actor_status.deactivate_hud()
+>>>>>>> main
 
     local function respawn()
         ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
@@ -723,6 +767,21 @@ function SoulslikeScenarioLogic:SendWakeupMessage()
 
     local rescuer;
     if self.logic_state.rescuer_id then 
+<<<<<<< HEAD
+        soulslike.debug("Looking up rescuer id "..tostring(self.logic_state.rescuer_id)) 
+        rescuer = alife_object(self.logic_state.rescuer_id)
+    end
+    
+    soulslike.debug("Creating message.") 
+    local msg = soulslike_message_factory.create(rescuer, self.logic_state.story)
+    soulslike.debug("Message created: "..msg)
+
+    if rescuer then
+        soulslike.debug("Sending tip to player from rescuer.") 
+        news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
+    else
+        soulslike.debug("No rescuer, its a mystery...") 
+=======
         rescuer = alife_object(self.logic_state.rescuer_id)
     end
     
@@ -731,6 +790,7 @@ function SoulslikeScenarioLogic:SendWakeupMessage()
     if rescuer then
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
     else
+>>>>>>> main
 		local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
     end  
@@ -880,7 +940,11 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
             self.logic_state.got_tarkoved = true
         end
             
+<<<<<<< HEAD
+        soulslike.debug("Transfering item "..sec.." to container")
+=======
         soulslike.debug("Transfering item "..sec)
+>>>>>>> main
         db.actor:transfer_item(item, container)
         return true
     end
