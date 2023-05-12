@@ -1096,7 +1096,7 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
     
         local lvl = level.name()
         self.game_state.hidden_stashes[id] = {
-            stash_id = se_stash.id,
+            stash_id = se_stash.id, 
             radio_id = id,
             radio_level = lvl
         }   
