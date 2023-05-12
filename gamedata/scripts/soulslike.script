@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.23-beta"
+local version = "0.24-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -708,6 +708,7 @@ local function physic_object_on_use_callback(box, who)
 
     if not stash then        
         debug("Not expected, unable to find stash id linked to Invbox.. ")
+        return 
     end
 
     local function transfer_item(temp,item)
