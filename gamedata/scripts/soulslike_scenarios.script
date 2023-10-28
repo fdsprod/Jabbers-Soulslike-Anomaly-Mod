@@ -19,6 +19,11 @@ local ignore_list = {
     ["wpn_axe3"] = true,
 }
 
+local additional_ignore_list = { -- used by easier soulslike mod
+    ["medkit"] = true,
+    ["bandage"] = true,
+}
+
 local obj_to_spawn_classes = {
     -- kind
     ["AI_STL_S"]    = "NPC (Stalker)",
@@ -899,6 +904,35 @@ end
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
     local to_id = container:id()
+    local do_not_allow_basic_items_lost = self.logic_state.do_not_allow_basic_items_lost_on_death
+
+    if do_not_allow_basic_items_lost then
+        soulslike.debug("Do not allow basic items lost was true")
+        if IsWeapon(item) then
+            soulslike.debug("Item is weapon and wont be transfered: "..sec)
+            return false
+        end
+
+        if IsHeadgear(item) then
+            soulslike.debug("Item is headgear and wont be transfered: "..sec)
+            return false
+        end
+
+        if IsOutfit(item) then
+            soulslike.debug("Item is outfit and wont be transfered: "..sec)
+            return false
+        end
+        
+        if IsAmmo(item) then
+            soulslike.debug("Item is ammo and wont be transfered: "..sec)
+            return false
+        end
+
+        if additional_ignore_list[sec] then
+            soulslike.debug("Item is in additional ignore list: "..sec)
+            return false
+        end
+    end
 
     if ignore_list[sec] then
         soulslike.debug("Item is in ignore list: "..sec)

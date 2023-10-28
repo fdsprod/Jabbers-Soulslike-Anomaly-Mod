@@ -124,6 +124,13 @@ function on_mcm_load()
                 def = 0.05
             },
             {
+                id = "do_not_allow_basic_items_lost_on_death",
+                type = "check",
+                text = "ui_mcm_soulslike_items_allow_basic_items_lost_on_death",
+                val = 1,
+                def = false
+            },
+            {
                 id = "allow_weapon_loss",
                 type = "check",
                 val = 1,
@@ -515,6 +522,10 @@ end
 function allow_weapon_loss()
     return get_config("items/allow_weapon_loss", true)
 end 
+
+function get_do_not_allow_basic_items_lost_on_death()
+    return get_config("items/do_not_allow_basic_items_lost_on_death", false)
+end
 
 -- Ambush
 function mutant_ambush_chance()
