@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.24-beta"
+local version = "0.26-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -706,11 +706,6 @@ local function physic_object_on_use_callback(box, who)
     
     try_send_inventory_examined_message(stash_id)
 
-    if not stash then        
-        debug("Not expected, unable to find stash id linked to Invbox.. ")
-        return 
-    end
-
     local function transfer_item(temp,item)
         debug("Transfering item "..item:section())    
         stash:transfer_item(item, box)
@@ -720,9 +715,14 @@ local function physic_object_on_use_callback(box, who)
         debug("Clearing radio stash "..tostring(stash_data.radio_id))  
 	    item_radio.clear_stash(stash_data.radio_level, stash_data.radio_id) 
     end 
- 
 
     debug("Transfering items from hidden stash "..tostring(id).." to static stash "..tostring(stash_id))    
+    
+    if not stash then        
+        warn("Not expected, unable to find stash id linked to Invbox.. ")
+        return 
+    end
+
     stash:iterate_inventory_box(transfer_item)      
     alife_release(stash)
 

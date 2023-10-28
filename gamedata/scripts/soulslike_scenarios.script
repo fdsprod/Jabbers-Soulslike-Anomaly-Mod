@@ -420,13 +420,13 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
             local pack = level.object_by_id(se_stash.id)
 
             if pack then
-                soulslike.try(function()                         
+                --soulslike.try(function()                         
                     soulslike.debug("Stash exists in game")
 
                     self:TransferItems(se_stash.id)   
                     self:ApplyTransferItemsPostConditions()
                     self:RespawnActor()
-                end)
+                --end)
                 return true
             else
                 soulslike.debug("Stash does not yet exist in game")            
@@ -705,6 +705,7 @@ function SoulslikeScenarioLogic:OnComplete()
 end
 
 function SoulslikeScenarioLogic:RespawnActor()
+    soulslike.debug("Respawning actor")
     local position = vector():set(self.game_state.spawn_location.position.x, self.game_state.spawn_location.position.y, self.game_state.spawn_location.position.z)   
     local level_vertex_id = self.game_state.spawn_location.level_vertex_id
     local game_vertex_id = self.game_state.spawn_location.game_vertex_id  
@@ -712,6 +713,7 @@ function SoulslikeScenarioLogic:RespawnActor()
     level.add_pp_effector("black_infinite.ppe", 5606, true)
 
     local function respawn()
+        soulslike.debug("Changing levels")
         ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
         return true
     end
@@ -1045,7 +1047,7 @@ function DefaultSoulslikeScenarioLogic:CreateStash()
 end
 
 function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
-    self.logic_state.story.has_single_pda_marker = true
+    self.logic_state.story.has_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.stash_id, "secondary_task_location", db.actor:character_name() .. "'s items")
 end
 
