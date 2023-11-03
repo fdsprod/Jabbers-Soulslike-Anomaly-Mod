@@ -189,24 +189,24 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_scenarios_description",
                 clr = {255, 255 ,255 ,255},
             },
-            -- {
-            --     id = "rf_detector_scenario_weight",
-            --     type = "track",
-            --     val = 2,
-            --     min = 0.0,
-            --     max = 1.0,
-            --     step = 0.01,
-            --     def = 0.10
-            -- },
-            -- {
-            --     id = "hidden_stash_scenario_weight",
-            --     type = "track",
-            --     val = 2,
-            --     min = 0.0,
-            --     max = 1.0,
-            --     step = 0.01,
-            --     def = 0.10
-            -- },
+            {
+                id = "rf_detector_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
+            {
+                id = "hidden_stash_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
             {
                 id = "looter_npcs_marked",
                 type = "check",

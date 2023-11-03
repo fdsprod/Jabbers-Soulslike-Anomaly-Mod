@@ -702,12 +702,30 @@ local function physic_object_on_use_callback(box, who)
     local id = box:id()
     local stash_data = data.hidden_stashes[id]
     local stash_id = stash_data.stash_id
+    local se_obj = alife_object(stash_id)
+	local stash = level.object_by_id(stash_id)
+    
+    if not stash then        
+        warn("Not expected, unable to find stash id linked to "..tostring(id)..".  Please save and reload near the stash to see if it solves the issue.")
+        return 
+    end
+    
+    local sim = alife();
+
+    if not sim then return end
+
+    if se_obj and not se_obj.online then 
+        se_obj:switch_online()
+    end
+    
+    sim:set_switch_online(stash_id,true)
+    sim:set_switch_offline(stash_id,false)  
     
     try_send_inventory_examined_message(stash_id)
 
     local function transfer_item(temp,item)
         debug("Transfering item "..item:section())    
-        box:transfer_item(item, box)
+        stash:transfer_item(item, box)
     end
 
     if stash_data.radio_id then
@@ -717,12 +735,6 @@ local function physic_object_on_use_callback(box, who)
 
     debug("Transfering items from hidden stash "..tostring(id).." to static stash "..tostring(stash_id))    
     
-	local stash = level.object_by_id(stash_id)
-    
-    if not stash then        
-        warn("Not expected, unable to find stash id linked to "..tostring(id)..".  Please save and reload near the stash to see if it solves the issue.")
-        return 
-    end
 
     stash:iterate_inventory_box(transfer_item)      
     alife_release(stash)
@@ -791,45 +803,43 @@ local function on_game_load()
     debug("On game load.")
 
     local data = get_soulslike_state()
+    local sim = alife()
 
-    -- Attempt to bring hidden stashes back online when looting, doesn't work, leaving for reference
-    -- local sim = alife()
-
-    -- if sim then
-    --     debug("Updating position and status of hidden stashes.")
-    --     for box_id, value in pairs(data.hidden_stashes) do
-    --         local se_hidden_stash = alife_object(value.stash_id)
-    --         local se_box = alife_object(box_id)
+    if sim then
+        debug("Updating position and status of hidden stashes.")
+        for box_id, value in pairs(data.hidden_stashes) do
+            local se_hidden_stash = alife_object(value.stash_id)
+            local se_box = alife_object(box_id)
             
-    --         if not se_hidden_stash then 
-    --             debug("Unable to find hidden stash "..tostring(value.stash_id)) 
-    --         elseif not se_box then 
-    --             debug("Unable to find box id "..tostring(box_id))
-    --         else
-    --             debug("Moving hidden stash"..tostring(value.stash_id))
-    --             sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
-    --             debug("Setting hidden stash online")
-    --             if not se_box.online then
-    --                 se_box:switch_online()
-    --             end
+            if not se_hidden_stash then 
+                debug("Unable to find hidden stash "..tostring(value.stash_id)) 
+            elseif not se_box then 
+                debug("Unable to find box id "..tostring(box_id))
+            else
+                debug("Moving hidden stash"..tostring(value.stash_id))
+                sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
+                debug("Setting hidden stash online")
+                if not se_box.online then
+                    se_box:switch_online()
+                end
                 
-    --             for i=1,65534 do 
-    --                 local se_obj = sim:object(i)
-    --                 if (se_obj and se_obj.parent_id == id) then 
-    --                     debug("Moving "..se_obj.section.." id:"..tostring(value.stash_id))
-    --                     sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
-    --                     if se_obj then 
-    --                         if not se_obj.online then
-    --                             debug("Setting "..se_obj.section.." online")
-    --                             se_obj:switch_online()
-    --                         end
-    --                     end
-    --                 end
-    --             end                            
+                for i=1,65534 do 
+                    local se_obj = sim:object(i)
+                    if (se_obj and se_obj.parent_id == id) then 
+                        debug("Moving "..se_obj.section.." id:"..tostring(value.stash_id))
+                        sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
+                        if se_obj then 
+                            if not se_obj.online then
+                                debug("Setting "..se_obj.section.." online")
+                                se_obj:switch_online()
+                            end
+                        end
+                    end
+                end                            
 
-    --         end 
-    --     end 
-    -- end   
+            end 
+        end 
+    end   
 
     -- Write out an identifier so we can use it later
     -- to identify other saves with the same ID if the 
