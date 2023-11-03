@@ -50,8 +50,11 @@
     <string id="ui_mcm_soulslike_items_title">
         <text>Item Settings</text>
     </string>
-    <string id="ui_mcm_soulslike_items_allow_basic_items_lost_on_death">
-        <text>If you prefer easier mode, imo closer to pure DarkSouls expierience you can disable weapon, armour and ammo loss on death.</text>
+    <string id="ui_mcm_soulslike_items_keep_equipped_items_on_death">
+        <text>Keep Equipped Items On Death</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_allow_desc">
+        <text>The settings below apply to items dropped on death.  Each of the item types below have a chance to be permanenently lost unless you uncheck them.</text>
     </string>
     <string id="ui_mcm_soulslike_items_allow_weapon_loss">
         <text>Allow Weapon Loss</text>

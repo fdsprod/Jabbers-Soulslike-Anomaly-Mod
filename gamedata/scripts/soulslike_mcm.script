@@ -100,6 +100,12 @@ function on_mcm_load()
                 spacing = 20
             },
             {
+                id = "keep_equipped_items_on_death",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
                 id = "desc_mcm",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_scalar_description",
@@ -124,11 +130,10 @@ function on_mcm_load()
                 def = 0.05
             },
             {
-                id = "do_not_allow_basic_items_lost_on_death",
-                type = "check",
-                text = "ui_mcm_soulslike_items_allow_basic_items_lost_on_death",
-                val = 1,
-                def = false
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_items_allow_desc",
+                clr = {255, 255 ,255 ,255},
             },
             {
                 id = "allow_weapon_loss",
@@ -184,24 +189,24 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_scenarios_description",
                 clr = {255, 255 ,255 ,255},
             },
-            {
-                id = "rf_detector_scenario_weight",
-                type = "track",
-                val = 2,
-                min = 0.0,
-                max = 1.0,
-                step = 0.01,
-                def = 0.10
-            },
-            {
-                id = "hidden_stash_scenario_weight",
-                type = "track",
-                val = 2,
-                min = 0.0,
-                max = 1.0,
-                step = 0.01,
-                def = 0.10
-            },
+            -- {
+            --     id = "rf_detector_scenario_weight",
+            --     type = "track",
+            --     val = 2,
+            --     min = 0.0,
+            --     max = 1.0,
+            --     step = 0.01,
+            --     def = 0.10
+            -- },
+            -- {
+            --     id = "hidden_stash_scenario_weight",
+            --     type = "track",
+            --     val = 2,
+            --     min = 0.0,
+            --     max = 1.0,
+            --     step = 0.01,
+            --     def = 0.10
+            -- },
             {
                 id = "looter_npcs_marked",
                 type = "check",
@@ -479,19 +484,19 @@ function are_looter_npcs_marked()
 end 
 
 function rf_detector_scenario_weight()
-    return get_config("scenarios/rf_detector_scenario_weight", 0.10)
+    return  0.0--get_config("scenarios/rf_detector_scenario_weight", 0.10)
 end 
 
 function hidden_stash_scenario_weight()
-    return get_config("scenarios/hidden_stash_scenario_weight", 0.10)
+    return 0.0--get_config("scenarios/hidden_stash_scenario_weight", 0.10)
 end 
 
 function scattered_stash_scenario_weight()
-    return get_config("scenarios/scattered_stash_scenario_weight", 0.02)
+    return  0.0--get_config("scenarios/scattered_stash_scenario_weight", 0.02)
 end 
 
 function nearby_dead_stalker_scenario_weight()
-    return get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
+    return  0.0--get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
 end 
 
 -- Items
@@ -523,8 +528,8 @@ function allow_weapon_loss()
     return get_config("items/allow_weapon_loss", true)
 end 
 
-function get_do_not_allow_basic_items_lost_on_death()
-    return get_config("items/do_not_allow_basic_items_lost_on_death", false)
+function get_keep_equipped_items_on_death()
+    return get_config("items/keep_equipped_items_on_death", false)
 end
 
 -- Ambush

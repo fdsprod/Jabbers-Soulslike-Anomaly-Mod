@@ -206,8 +206,8 @@ function create_new(hits)
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
         end 
 
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
     elseif hit and 
            hit.draftsman_type == soulslike.entity_type.Stalker and 
            hit.fatal_hit and
@@ -233,8 +233,8 @@ function create_new(hits)
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
         end
 
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
     elseif hit and 
            hit.draftsman_type == soulslike.entity_type.Monster then
         soulslike.debug("Mutant killed the player.")
@@ -249,8 +249,8 @@ function create_new(hits)
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
         end
 
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+        --table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
     elseif hit and 
            hit.draftsman_type == soulslike.entity_type.Anomaly then
         soulslike.debug("Player died to an anomaly.")
@@ -263,9 +263,9 @@ function create_new(hits)
 
         if has_backpack then
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
-        else
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        --else
+            --table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+            --table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
         end
     elseif hit and 
            hit.draftsman_type == soulslike.entity_type.Other then
@@ -279,9 +279,9 @@ function create_new(hits)
 
         if has_backpack then
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
-        else
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        -- else
+        --     table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+        --     table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
         end
     else
         soulslike.warn("I have no idea how the player died.")
@@ -294,9 +294,9 @@ function create_new(hits)
 
         if has_backpack then
             table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = 1.0})
-        else
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
-            table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
+        -- else
+        --     table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
+        --     table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
         end
     end
 
