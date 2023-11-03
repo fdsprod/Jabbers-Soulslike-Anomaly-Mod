@@ -484,19 +484,19 @@ function are_looter_npcs_marked()
 end 
 
 function rf_detector_scenario_weight()
-    return  0.0--get_config("scenarios/rf_detector_scenario_weight", 0.10)
+    return  get_config("scenarios/rf_detector_scenario_weight", 0.10)
 end 
 
 function hidden_stash_scenario_weight()
-    return 0.0--get_config("scenarios/hidden_stash_scenario_weight", 0.10)
+    return get_config("scenarios/hidden_stash_scenario_weight", 0.10)
 end 
 
 function scattered_stash_scenario_weight()
-    return  0.0--get_config("scenarios/scattered_stash_scenario_weight", 0.02)
+    return  get_config("scenarios/scattered_stash_scenario_weight", 0.02)
 end 
 
 function nearby_dead_stalker_scenario_weight()
-    return  0.0--get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
+    return  get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
 end 
 
 -- Items
