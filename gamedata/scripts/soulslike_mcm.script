@@ -100,6 +100,12 @@ function on_mcm_load()
                 spacing = 20
             },
             {
+                id = "keep_equipped_items_on_death",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
                 id = "desc_mcm",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_scalar_description",
@@ -122,6 +128,12 @@ function on_mcm_load()
                 max = 0.25,
                 step = 0.01,
                 def = 0.05
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_items_allow_desc",
+                clr = {255, 255 ,255 ,255},
             },
             {
                 id = "allow_weapon_loss",
@@ -472,7 +484,7 @@ function are_looter_npcs_marked()
 end 
 
 function rf_detector_scenario_weight()
-    return get_config("scenarios/rf_detector_scenario_weight", 0.10)
+    return  get_config("scenarios/rf_detector_scenario_weight", 0.10)
 end 
 
 function hidden_stash_scenario_weight()
@@ -480,11 +492,11 @@ function hidden_stash_scenario_weight()
 end 
 
 function scattered_stash_scenario_weight()
-    return get_config("scenarios/scattered_stash_scenario_weight", 0.02)
+    return  get_config("scenarios/scattered_stash_scenario_weight", 0.02)
 end 
 
 function nearby_dead_stalker_scenario_weight()
-    return get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
+    return  get_config("scenarios/nearby_dead_stalker_scenario_weight", 0.10)
 end 
 
 -- Items
@@ -515,6 +527,10 @@ end
 function allow_weapon_loss()
     return get_config("items/allow_weapon_loss", true)
 end 
+
+function get_keep_equipped_items_on_death()
+    return get_config("items/keep_equipped_items_on_death", false)
+end
 
 -- Ambush
 function mutant_ambush_chance()

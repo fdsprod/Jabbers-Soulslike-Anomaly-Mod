@@ -5,6 +5,7 @@ local ignore_list = {
     ["device_pda_1"] = true,
     ["device_pda_2"] = true,
     ["device_pda_3"] = true,
+    ["detector_radio"] = true,
     ["wpn_knife"] = true,
     ["wpn_knife2"] = true,
     ["wpn_knife3"] = true,
@@ -17,6 +18,8 @@ local ignore_list = {
     ["wpn_axe"] = true,
     ["wpn_axe2"] = true,
     ["wpn_axe3"] = true,
+    ["bandage"] = true,
+    ["medkit"] = true,
 }
 
 local obj_to_spawn_classes = {
@@ -178,6 +181,16 @@ local stalker_spawns = {
     { section = "ecolog_sim_squad_veteran",     community = "ecolog",       weight = 0.10,  type = stalker_spawn_type.Veteran },
 }
 
+local function is_equipped(id) 
+    for i=1,12 do
+        slot = db.actor:item_in_slot(i)
+        if (slot and slot:id() == id) then
+            can_sell = false
+            break
+        end
+    end
+end
+
 ---------------------------------------------------------
 -- Base Scenario Class 
 ---------------------------------------------------------
@@ -203,6 +216,7 @@ function SoulslikeScenarioLogic:__init(state)
             rank = rank,
             ranked_chance = ranked_chance,
             item_condition_loss_percent = math.clamp(ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1),
+            keep_equipped_items_on_death = soulslike_mcm.get_keep_equipped_items_on_death(),
             item_loss_scalar = soulslike_mcm.get_item_loss_scalar(),
             health_loss_percent = soulslike_mcm.get_health_loss_percent(),
             rank_loss_percent = soulslike_mcm.rank_loss_percent(),
@@ -899,6 +913,14 @@ end
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
     local to_id = container:id()
+    local keep_equipped_items_on_death = self.logic_state.keep_equipped_items_on_death
+
+    if keep_equipped_items_on_death then
+        if is_equipped(item:id()) then
+            soulslike.debug("Do not allow equipped item to be transfered to stash: "..sec)
+            return false
+        end
+    end
 
     if ignore_list[sec] then
         soulslike.debug("Item is in ignore list: "..sec)
@@ -1080,10 +1102,22 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
 
     soulslike.debug("Random stash found: "..tostring(id))    
 
-    local actor = db.actor
-    local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+    local se_treasure = alife_object(id)
+
+    -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
+    if not se_treasure then return nil end
+
+    local se_stash = alife_create("hidden_box", se_treasure.position, se_treasure.m_level_vertex_id, se_treasure.m_game_vertex_id)
 
     if (se_stash) then
+        local sim = alife()
+    
+        if sim then
+            -- force strictly online
+            sim:set_switch_online(se_stash.id,true)
+            sim:set_switch_offline(se_stash.id,false)
+        end   
+        
         self.game_state.created_stashes[se_stash.id] = {
             lost_items = {},
             examine = false
