@@ -182,13 +182,15 @@ local stalker_spawns = {
 }
 
 local function is_equipped(id) 
+    local is_equipped = false
     for i=1,12 do
         slot = db.actor:item_in_slot(i)
         if (slot and slot:id() == id) then
-            can_sell = false
+            is_equipped = true
             break
         end
     end
+    return is_equipped
 end
 
 ---------------------------------------------------------
@@ -803,7 +805,7 @@ function SoulslikeScenarioLogic:IsItemLossAllowed(item)
     local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
     local is_toolkit = IsToolkit(item)
     local is_loss_allowed = true
-    
+
     if is_weapon and not self.logic_state.allow_weapon_loss then   
         soulslike.debug("Not allowed to lose weapon "..sec)
         is_loss_allowed = false
@@ -913,14 +915,6 @@ end
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
     local to_id = container:id()
-    local keep_equipped_items_on_death = self.logic_state.keep_equipped_items_on_death
-
-    if keep_equipped_items_on_death then
-        if is_equipped(item:id()) then
-            soulslike.debug("Do not allow equipped item to be transfered to stash: "..sec)
-            return false
-        end
-    end
 
     if ignore_list[sec] then
         soulslike.debug("Item is in ignore list: "..sec)
@@ -931,7 +925,14 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         soulslike.debug("Item quest item: "..sec)
         return false
     end
-    
+
+    local keep_equipped_items_on_death = self.logic_state.keep_equipped_items_on_death
+
+    if keep_equipped_items_on_death and is_equipped(item:id()) then
+        soulslike.debug("Not allowed tolose equipped item "..sec)
+        return false
+    end
+
     local is_loss_allowed = self:IsItemLossAllowed(item)
 
     if is_loss_allowed then
