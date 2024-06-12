@@ -410,6 +410,7 @@ function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
 end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
+    soulslike.debug("BASE Applying post conditions")
 end
 
 function SoulslikeScenarioLogic:HandleItemsAndRespawn() 
@@ -439,8 +440,9 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
                 --soulslike.try(function()                         
                     soulslike.debug("Stash exists in game")
 
-                    self:TransferItems(se_stash.id)   
+                    self:TransferItems(se_stash.id)         
                     self:ApplyTransferItemsPostConditions()
+                    soulslike.debug("Applying post conditions")
                     self:RespawnActor()
                 --end)
                 return true
@@ -633,71 +635,73 @@ function SoulslikeScenarioLogic:SpawnAmbush()
             break
         end
     end
-    
-    soulslike.debug_tip("Spawning ambush "..section)   
-    
-    local class = ini_sys:r_string_ex(section,"class")
-    local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
 
-    if kind then class = kind end
+    if section then    
+        soulslike.debug_tip("Spawning ambush "..section)   
+        
+        local class = ini_sys:r_string_ex(section,"class")
+        local kind = ini_sys:r_string_ex(section,"kind") -- special class name for the sake of correct listing
 
-    if self.logic_state.death_location.position.x then
-        local pos = vector():set(
-            self.logic_state.death_location.position.x, 
-            self.logic_state.death_location.position.y, 
-            self.logic_state.death_location.position.z)   
-        local lvid = self.logic_state.death_location.level_vertex_id
-        local gvid = self.logic_state.death_location.game_vertex_id
-        local group = obj_to_spawn_classes[class]
-        local is_squad = string.find(group, "Squad")
-        local se_obj = section and alife_create(section, pos, lvid, gvid)
+        if kind then class = kind end
 
-        if se_obj then
-            if is_squad then
-                se_obj:create_npc(nil, pos, lvid, gvid)
-                local sim = alife()
-                if not sim then return end
-                for k in se_obj:squad_members() do
-                    local se_npc = k.object or k.id and sim:object(k.id)
-                    if (se_npc) then
-                        SIMBOARD:setup_squad_and_group(se_npc)
-                        SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
-                        
-                        -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
-                        self:TrackAmbusher(
-                            k.id, 
-                            anim.look_around,
-                            move.standing,
-                            move.stand,
-                            look.search,
-                            self.logic_state.death_location.position)
-                    end 
+        if self.logic_state.death_location.position.x then
+            local pos = vector():set(
+                self.logic_state.death_location.position.x, 
+                self.logic_state.death_location.position.y, 
+                self.logic_state.death_location.position.z)   
+            local lvid = self.logic_state.death_location.level_vertex_id
+            local gvid = self.logic_state.death_location.game_vertex_id
+            local group = obj_to_spawn_classes[class]
+            local is_squad = string.find(group, "Squad")
+            local se_obj = section and alife_create(section, pos, lvid, gvid)
+
+            if se_obj then
+                if is_squad then
+                    se_obj:create_npc(nil, pos, lvid, gvid)
+                    local sim = alife()
+                    if not sim then return end
+                    for k in se_obj:squad_members() do
+                        local se_npc = k.object or k.id and sim:object(k.id)
+                        if (se_npc) then
+                            SIMBOARD:setup_squad_and_group(se_npc)
+                            SendScriptCallback("squad_on_npc_creation", se_obj, se_npc)
+                            
+                            -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
+                            self:TrackAmbusher(
+                                k.id, 
+                                anim.look_around,
+                                move.standing,
+                                move.stand,
+                                look.search,
+                                self.logic_state.death_location.position)
+                        end 
+                    end
+                    if soulslike_mcm.debug_squad_spawns() then
+                        level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
+                    end
+                    soulslike.debug_tip(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
+                else
+                    -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
+                    self:TrackAmbusher(
+                        se_obj.id, 
+                        anim.look_around,
+                        move.standing,
+                        move.stand,
+                        look.search,
+                        self.logic_state.death_location.position,
+                        lvid,
+                        gvid)
+                    if soulslike_mcm.debug_squad_spawns() then
+                        level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
+                    end
+                    soulslike.debug_tip(strformat("Spawned object [%s] (%s)", section, se_obj.id))
                 end
-                if soulslike_mcm.debug_squad_spawns() then
-                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
-                end
-                soulslike.debug_tip(strformat("Spawned squad [%s] (%s)", section, se_obj.id))
             else
-                -- TODO: Need to have them guard (this is code for stalkers... not sure what to do about mutants)
-                self:TrackAmbusher(
-                    se_obj.id, 
-                    anim.look_around,
-                    move.standing,
-                    move.stand,
-                    look.search,
-                    self.logic_state.death_location.position,
-                    lvid,
-                    gvid)
-                if soulslike_mcm.debug_squad_spawns() then
-                    level.map_add_object_spot_ser(se_obj.id, "secondary_task_location", "DEBUG: Spawn "..section) 
-                end
-                soulslike.debug_tip(strformat("Spawned object [%s] (%s)", section, se_obj.id))
-            end
+                soulslike.debug(strformat("No server object made for [%s]", section))
+            end                
         else
-            soulslike.debug(strformat("No server object made for [%s]", section))
-        end                
-    else
-        soulslike.debug("No nearby smarts, to dumb")
+            soulslike.debug("No nearby smarts, to dumb")
+        end
     end
 end
 
@@ -961,8 +965,6 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         -- We never want to delete the players backpack
         -- since it makes up the created stash
         if loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then          
-            loss_chance_dice_roll = math.random(0, 100)
-
             -- This shit is going to be funny as fuck for me to know 
             -- that there is a 1% chance for this to happen 
             if looter and self:TryTarkovLooter(item, container, looter) then
@@ -1012,8 +1014,10 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
         self:TransferItem(item, container, enemy_looter)
     end
     db.actor:iterate_inventory(release_actor_item)
+    soulslike.debug("Transfering items complete")
 
-    if enemy_looter and self.logic_state.looter and self.logic_state.looter_type == soulslike.entity_type.Stalker then        
+    if enemy_looter and self.logic_state.looter and self.logic_state.looter_type == soulslike.entity_type.Stalker then      
+        soulslike.debug("Recording enemy looter")  
         self.logic_state.story.enemy = {
             name = enemy_looter:character_name(),
             community = enemy_looter:character_community(),
@@ -1021,6 +1025,7 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
         }
 
         if self.logic_state.are_looter_npcs_marked then
+            soulslike.debug("Marking looter on pda")
             level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", self.logic_state.enemy_looter_name)            
         end
     end
@@ -1070,6 +1075,7 @@ function DefaultSoulslikeScenarioLogic:CreateStash()
 end
 
 function DefaultSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
+    soulslike.debug("Applying post conditions")
     self.logic_state.story.has_pda_marker = true
     level.map_add_object_spot_ser(self.logic_state.stash_id, "secondary_task_location", db.actor:character_name() .. "'s items")
 end
@@ -1142,6 +1148,7 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
 end
 
 function RFDetectorSoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
+    soulslike.debug("Applying post conditions")
     local lvl = level.name()
     soulslike.debug("Added radio target to level: "..lvl)
     self.logic_state.story.radio_freq = math.random(30,  300)
@@ -1214,6 +1221,7 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
 end
 
 function HiddenStashSoulslikeScenarioLogic:ApplyTransferItemsPostConditions() 
+    soulslike.debug("Applying post conditions")
     soulslike.debug("Adding PDA marker "..tostring(self.logic_state.treasure_stash_id))     
 
     local value = game.translate_string("st_soulslike_your_items")

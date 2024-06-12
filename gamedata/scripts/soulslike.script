@@ -5,7 +5,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.28-beta"
+local version = "0.29-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -707,6 +707,8 @@ local function physic_object_on_use_callback(box, who)
     
     if not stash then        
         warn("Not expected, unable to find stash id linked to "..tostring(id)..".  Please save and reload near the stash to see if it solves the issue.")
+        debug("Removing INVALID PDA marker "..tostring(id))   
+        level.map_remove_object_spot(id, "secondary_task_location")
         return 
     end
     
@@ -936,10 +938,15 @@ local function npc_on_net_spawn(npc, se_obj)
     end
 end
 
+local function actor_on_first_update()
+    debug("actor_on_first_update")
+end
+
 function on_game_start()
     debug('Version: '..version)
     
     RegisterScriptCallback("actor_on_stash_remove", actor_on_stash_remove)
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
     RegisterScriptCallback("actor_on_item_take_from_box", actor_on_item_take_from_box)
     RegisterScriptCallback("actor_on_before_death", actor_on_before_death)
     RegisterScriptCallback("on_before_save_input", on_before_save_input)
