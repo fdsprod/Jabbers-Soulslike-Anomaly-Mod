@@ -84,6 +84,8 @@ local obj_to_spawn_classes = {
     ["AI_PHANT"]    = "Phantom",
 }
 
+local dte = demonized_time_events
+
 local mutant_spawn_type = {
     Boar = 1,
     Flesh = 2,
@@ -413,6 +415,13 @@ function SoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
     soulslike.debug("BASE Applying post conditions")
 end
 
+function SoulslikeScenarioLogic:TransferAndRespawn(to_id)
+    soulslike.debug("BASE TransferAndRespawn")
+    self:TransferItems(to_id)         
+    self:ApplyTransferItemsPostConditions()
+    self:RespawnActor()
+end
+
 function SoulslikeScenarioLogic:HandleItemsAndRespawn() 
     self:ApplyTransferItemsPreConditions()
 
@@ -433,18 +442,11 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
     if se_stash then
         soulslike.debug("Stash created "..tostring(se_stash.id))
 
-        local function transfer_and_respawn()
-            local pack = level.object_by_id(se_stash.id)
+        local function wait_for_stash_creation(id, scenario)
+            local pack = level.object_by_id(id)
 
             if pack then
-                --soulslike.try(function()                         
-                    soulslike.debug("Stash exists in game")
-
-                    self:TransferItems(se_stash.id)         
-                    self:ApplyTransferItemsPostConditions()
-                    soulslike.debug("Applying post conditions")
-                    self:RespawnActor()
-                --end)
+                scenario:TransferAndRespawn(id)
                 return true
             else
                 soulslike.debug("Stash does not yet exist in game")            
@@ -453,7 +455,11 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
         end
         
         --We have to create a timer to give the game time to spawn the backpack.
-        CreateTimeEvent(0, "transfer_and_respawn", 0, transfer_and_respawn)
+        if dte then
+            dte.CreateTimeEvent(1980, "wait_for_stash_creation", 0, wait_for_stash_creation, se_stash.id, self)
+        else
+            CreateTimeEvent(1980, "wait_for_stash_creation", 0, wait_for_stash_creation, se_stash.id, self)
+        end
     else    
         soulslike.debug("Stash was not created")
         self:RespawnActor()
@@ -732,12 +738,18 @@ function SoulslikeScenarioLogic:RespawnActor()
     
     level.add_pp_effector("black_infinite.ppe", 5606, true)
 
-    local function respawn()
+    local function respawn(position, level_vertex_id, game_vertex_id)
         soulslike.debug("Changing levels")
         ChangeLevel(position, level_vertex_id, game_vertex_id, VEC_ZERO, false)
         return true
     end
-    CreateTimeEvent(0, "respawn", 1, respawn)
+
+    --We have to create a timer to give the game time to spawn the backpack.
+    if dte then
+        dte.CreateTimeEvent(0, "respawn", 1, respawn, position, level_vertex_id, game_vertex_id)
+    else
+        CreateTimeEvent(0, "respawn", 1, respawn, position, level_vertex_id, game_vertex_id)
+    end
 
     self:StopSurgeAndStorm()
 end
@@ -943,7 +955,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         local loss_chance_dice_roll = math.random(0, 100)
         local loss_chance = math.floor(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar * 100)
         
-        loss_chance = math.clamp(loss_chance, 0, 100) * self.logic_state.scenario_loot_scalar
+        loss_chance = math.clamp(loss_chance, 0, 100) * (self.logic_state.scenario_loot_scalar or 0)
 
         local is_mutant_meat = SYS_GetParam(0, sec, "kind") == "i_mutant_raw"
         local is_food = SYS_GetParam(0, sec, "kind") == "i_food"
@@ -1026,7 +1038,7 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
 
         if self.logic_state.are_looter_npcs_marked then
             soulslike.debug("Marking looter on pda")
-            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", self.logic_state.enemy_looter_name)            
+            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", enemy_looter:character_name())            
         end
     end
 end
