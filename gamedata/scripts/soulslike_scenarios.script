@@ -213,15 +213,24 @@ function SoulslikeScenarioLogic:__init(state)
             soulslike.debug("Debugging item loss, setting max rank:")
             rank = 56000
         end
+
+        local ignore_rank_item_loss = soulslike_mcm.ignore_rank_when_computing_item_loss_chance()
+        local ignore_rank_item_condition_loss = soulslike_mcm.ignore_rank_when_computing_item_condition_loss()
         
-        local ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank) / math.log(1000) * 1.5, 0, 50) / 66
+        local ranked_chance = 0
+        if not ignore_rank_item_loss or not ignore_rank_item_condition_loss then
+            ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank) / math.log(1000) * 1.5, 0, 50) / 66
+        end
+        
         soulslike.debug("Creating logic state.")
         self.logic_state = {
             rank = rank,
             ranked_chance = ranked_chance,
-            item_condition_loss_percent = math.clamp(ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1),
+            item_condition_loss_percent = math.clamp((ignore_rank_item_condition_loss and 1 or ranked_chance) * soulslike_mcm.get_item_condition_loss_percent(), 0, 1),
             keep_equipped_items_on_death = soulslike_mcm.get_keep_equipped_items_on_death(),
             item_loss_scalar = soulslike_mcm.get_item_loss_scalar(),
+            ignore_rank_item_loss = ignore_rank_item_loss,
+            ignore_rank_item_condition_loss = ignore_rank_item_condition_loss,
             health_loss_percent = soulslike_mcm.get_health_loss_percent(),
             rank_loss_percent = soulslike_mcm.rank_loss_percent(),
             rep_loss_percent = soulslike_mcm.rep_loss_percent(),
@@ -984,13 +993,15 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
 
     if is_loss_allowed then
         local loss_chance_dice_roll = math.random(0, 100)
-        local loss_chance = math.floor(self.logic_state.item_loss_scalar)
-
-        --if(soulslike_mcm.allow_ranked_based_loss_chance()) then
-        --loss_chance = loss_chance + math.floor(self.logic_state.rank_loss_percent)
-        --end
- 
-        loss_chance = math.clamp(loss_chance * 100 , 0, 100) * (self.logic_state.scenario_loot_scalar or 0)
+        local loss_chance
+        if self.logic_state.ignore_rank_item_loss then
+            -- Ignore rank: use max base chance (0.75) * scalar
+            loss_chance = math.clamp(0.75 * self.logic_state.item_loss_scalar, 0, 1) * 100
+        else
+            -- Use ranked chance * scalar
+            loss_chance = math.clamp(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar, 0, 1) * 100
+        end
+        loss_chance = math.floor(loss_chance * (self.logic_state.scenario_loot_scalar or 1))
 
         local is_mutant_meat = SYS_GetParam(0, sec, "kind") == "i_mutant_raw"
         local is_food = SYS_GetParam(0, sec, "kind") == "i_food"
@@ -999,10 +1010,20 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         self.logic_state.has_mutant_bait =         
             self.logic_state.has_mutant_bait or is_mutant_meat or is_food or is_mutant_belt
 
-        if self.logic_state.item_condition_loss_percent > 0 then
-            self:ApplyItemConditionLoss(item, container, self.logic_state.item_condition_loss_percent)                
+        -- Item condition loss logic
+        local condition_loss_percent
+        if self.logic_state.ignore_rank_item_condition_loss then
+            -- Ignore rank: use max base condition loss (1.0) * scalar
+            condition_loss_percent = math.clamp(1.0 * soulslike_mcm.get_item_condition_loss_percent(), 0, 1)
+        else
+            -- Use ranked chance * scalar
+            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1)
         end
-            
+
+        if condition_loss_percent > 0 then
+            self:ApplyItemConditionLoss(item, container, condition_loss_percent)
+        end
+        
         -- We never want to delete the players backpack
         -- since it makes up the created stash
         if loss_chance ~= 0 and loss_chance_dice_roll < loss_chance then          

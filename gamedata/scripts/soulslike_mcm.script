@@ -532,6 +532,14 @@ function get_keep_equipped_items_on_death()
     return get_config("items/keep_equipped_items_on_death", false)
 end
 
+function ignore_rank_when_computing_item_loss_chance()
+    return get_config("items/ignore_rank_when_computing_item_loss_chance", false)
+end
+
+function ignore_rank_when_computing_item_condition_loss()
+    return get_config("items/ignore_rank_when_computing_item_condition_loss", false)
+end
+
 -- Ambush
 function mutant_ambush_chance()
     return get_config("ambush/mutant_ambush_chance", 0.5)
@@ -641,4 +649,4 @@ end
 
 function debug_always_spawn_ambush()
     return is_debug_enabled() and get_config("debug/debug_always_spawn_ambush", false)
-end 
+end
