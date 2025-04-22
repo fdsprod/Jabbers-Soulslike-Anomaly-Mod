@@ -163,7 +163,7 @@ function create_new(hits)
         scenario_loot_scalar = 1
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = 1.0})
-    elseif soulslike_mcm.debug_the_rf_scenario() then
+    elseif soulslike_mcm.debug_the_hidden_stash_scenario() then
         soulslike.debug("Debugging hidden stash scenario.")
 
         rescuer = soulslike.find_closest_friendly_stalker()

@@ -106,7 +106,7 @@ local function rescuer_enemy_radio_freq_msg_factory(freq)
     return strformat(game.translate_string(messages[math.random(#messages)]), freq)
 end
 
-local function rescuer_hidden_stash_msg_factory(freq)
+local function rescuer_hidden_stash_msg_factory()
     local messages = {
         "st_soulslike_hidden_stash_1",
         "st_soulslike_hidden_stash_2",
@@ -115,7 +115,7 @@ local function rescuer_hidden_stash_msg_factory(freq)
         "st_soulslike_hidden_stash_5",
     }
     
-    return strformat(game.translate_string(messages[math.random(#messages)]), freq)
+    return game.translate_string(messages[math.random(#messages)])
 end
 
 local function recuer_indoor_msg_factory(level_name)

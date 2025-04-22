@@ -78,14 +78,40 @@
         <text>Item loss scalar</text>
     </string>
     <string id="ui_mcm_soulslike_items_item_loss_scalar_desc">
-        <text>At max rank your character has a 75% chance to lose each item on death.  The Item loss scalar allows you to manage that loss to your liking.  At the default value of 0.20 (or 20%) your maximum loss chance per item would be 15%.  You should set this to a value that suits your accetable level of item loss. Examples: 0.10 = 7.5%, 0.20 = 15%, 0.30 = 22%, 0.40 = 30%... you get the idea yet?</text>
+        <text>At max rank, your character has a base 75% chance to lose each item on death. However, the Item Loss Scalar allows you to adjust this loss probability to better suit your preferences. By default, the scalar is set to 0.20 (20%), which reduces the maximum item loss chance to 15% per item.
+
+You can customize this scalar to align with your tolerance for item loss. For example:
+
+    Setting the scalar to 0.10 (10%) reduces the loss chance to 7.5% per item.
+    At 0.30 (30%), the loss chance increases to 22.5% per item.
+    With 0.40 (40%), it goes up to 30% per item.
+    Adjust the scalar to find the balance between risk and reward that works best for your playstyle!</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignore_rank_when_computing_item_loss_chance">
+        <text>Ignore Rank when computing item loss chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignore_rank_when_computing_item_loss_chance_desc">
+        <text>Maybe you like to drag your balls in glass and then dip them into rubbing alcohol... who am I to judge.  This will make item loss chance a bit more punishing by ignoring your rank when computing what is lost.</text>
     </string>
     
     <string id="ui_mcm_soulslike_items_item_condition_loss_scalar">
         <text>Item condition loss scalar</text>
     </string>
     <string id="ui_mcm_soulslike_items_item_condition_loss_scalar_desc">
-        <text>At max rank your character will lose 18 condition on each item on death.  The Item condition loss scalar allows you to manage that loss to your liking.  At the default value of 0.05 (or 5%) your maximum condition loss per item would be 3.7.  You should set this to a value that suits your accetable level of item condition loss. Examples: 0.05 = 3.7, 0.10 = 7.4, 0.15 = 11... you get the idea yet?</text>
+        <text>At max rank, your character will lose 18 condition points on each item upon death. The Item Condition Loss Scalar lets you adjust this loss to better match your preferences. By default, the scalar is set to 0.05 (5%), which reduces the maximum condition loss per item to 3.7 points.
+
+You can tweak this scalar to reflect your desired level of item condition loss. For example:
+
+    A scalar of 0.05 (5%) results in a condition loss of 3.7 points per item.
+    At 0.10 (10%), the condition loss increases to 7.4 points per item.
+    With 0.15 (15%), the loss reaches 11 points per item.
+    Set this value to balance risk and durability in a way that fits your playstyle!</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignore_rank_when_computing_item_loss_chance">
+        <text>Ignore Rank when computing item condition loss</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignore_rank_when_computing_item_loss_chance_desc">
+        <text>I'm guessing you like to have someone step on your balls with high heels, what ever floats your boat.  This will make item condition loss a bit more punishing by ignoring your rank when computing condition loss.</text>
     </string>
     
     <!--Scenarios-->

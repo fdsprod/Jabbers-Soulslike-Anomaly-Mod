@@ -370,7 +370,7 @@ function SoulslikeScenarioLogic:ApplyRepLoss()
 	game_statistics.check_for_reputation_change()
 end
 
-function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_percent)
+function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, condition_loss_percent)
     local cond = item:condition()
     local sec = item:section()
     local degrade_factor = cond * condition_loss_percent
@@ -378,19 +378,48 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, condition_loss_perc
     local is_weapon = (IsWeapon(item) and not is_grenade)
     local is_outfit = IsOutfit(item) 
     local is_headgear = IsHeadgear(item)
+    local to_id = container:id()
     
     local use_condition = utils_item.is_degradable(item, sec)
     local has_cond = use_condition or is_weapon or is_outfit or is_headgear
 
     if has_cond then
-        soulslike.debug("Degrading ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
-        -- utils_item.degrade releases the item if the condition is 0
-        local condition = utils_item.degrade(item, degrade_factor)
-        return condition
-    end
+        if is_weapon then
+            if not item_parts then
+                soulslike.debug("Cannot find item_parts, skipping weapon degradation.")
+                return
+            end
 
-    -- No condition to be returned.
-    return nil
+            local parts = item_parts.get_parts_con(item)
+
+            if not parts then
+                soulslike.debug("Item ".. sec.. " has no parts")
+                return
+            end
+
+            for sec,part in pairs(parts) do
+                degrade_factor = part * condition_loss_percent
+                cond = math.clamp(degrade_factor, 0.01, 0.99)
+
+                soulslike.debug("Degrading part ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+                soulslike.debug("Creating part "..sec.." with condition "..tostring(cond)) 
+                
+                parts[sec] = cond
+            end
+
+            item_parts.set_parts_con(item:id(), parts)
+        else
+            soulslike.debug("Degrading item ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+            -- utils_item.degrade releases the item if the condition is 0
+            local condition = utils_item.degrade(item, degrade_factor)
+            
+            if condition == 0 then
+                soulslike.debug("Item ".. sec.. " was degraded into oblivion")
+                self.logic_state.story.items_were_lost = true
+                table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+            end
+        end
+    end
 end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
@@ -910,11 +939,13 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
             local se_result = alife_create(sec, looter:position(), looter:level_vertex_id(), looter:game_vertex_id(), looter:id(), false)
 			local data_result = utils_stpk.get_item_data(se_result)
 			
-            data_result.condition = clamp((condition / 100) , min_con_obj , max_con_obj)
+            data_result.condition = math.clamp((condition / 100) , min_con_obj , max_con_obj)
 			utils_stpk.set_item_data(data_result,se_result)
 			alife():register(se_result)
 
             parts[sec] = -1 -- KEKW 
+            item_parts.set_parts_con(item:id(), parts)
+            
             -- TODO: Spawn part on looter
             self.logic_state.looter = true
             -- TODO: Add message text for this 
@@ -953,9 +984,13 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
 
     if is_loss_allowed then
         local loss_chance_dice_roll = math.random(0, 100)
-        local loss_chance = math.floor(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar * 100)
-        
-        loss_chance = math.clamp(loss_chance, 0, 100) * (self.logic_state.scenario_loot_scalar or 0)
+        local loss_chance = math.floor(self.logic_state.item_loss_scalar)
+
+        --if(soulslike_mcm.allow_ranked_based_loss_chance()) then
+        --loss_chance = loss_chance + math.floor(self.logic_state.rank_loss_percent)
+        --end
+ 
+        loss_chance = math.clamp(loss_chance * 100 , 0, 100) * (self.logic_state.scenario_loot_scalar or 0)
 
         local is_mutant_meat = SYS_GetParam(0, sec, "kind") == "i_mutant_raw"
         local is_food = SYS_GetParam(0, sec, "kind") == "i_food"
@@ -965,13 +1000,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
             self.logic_state.has_mutant_bait or is_mutant_meat or is_food or is_mutant_belt
 
         if self.logic_state.item_condition_loss_percent > 0 then
-            local condition = self:ApplyItemConditionLoss(item, self.logic_state.item_condition_loss_percent)
-                
-            if condition == 0 then
-                soulslike.debug("Item ".. sec.. " was degraded into oblivion")
-                self.logic_state.story.items_were_lost = true
-                table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
-            end
+            self:ApplyItemConditionLoss(item, container, self.logic_state.item_condition_loss_percent)                
         end
             
         -- We never want to delete the players backpack
