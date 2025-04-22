@@ -1,4 +1,3 @@
-
 --[[
 	Jabbers
 	05APR2023
@@ -51,7 +50,7 @@ entity_type = {
     Monster = 2,
     Anomaly = 3,
     Self = 4,
-    Other = 4
+    Other = 5
 }
 
 ----------------------------------------
@@ -195,7 +194,7 @@ end
 ----------------------------------------
 
 function _G.IsSoulslikeMode()
-	return not IsHardcoreMode() and axr_main.config and axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true or alife_storage_manager.get_state().enable_soulslike_mode == true
+    return (not IsHardcoreMode()) and axr_main.config and (axr_main.config:r_value("character_creation","new_game_soulslike_mode",1) == true) or (alife_storage_manager.get_state().enable_soulslike_mode == true)
 end
 
 function _G.IsToolkit(o, s)
@@ -365,8 +364,8 @@ function find_closest_enemy_mutant()
 end
 
 function find_closest_enemy_stalker()  
-    local friend = nil
-    local friend_dist = 100000
+    local enemy = nil
+    local enemy_dist = 100000
 
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
@@ -374,23 +373,23 @@ function find_closest_enemy_stalker()
 
         if npc then
             local dist = npc:position():distance_to_sqr(db.actor:position())
-            local is_friend = npc:general_goodwill(db.actor) <= RELATIONS.ENEMIES
+            local is_enemy = npc:general_goodwill(db.actor) <= RELATIONS.ENEMIES
             
-            if npc:alive() and is_friend and friend_dist > dist and (not get_object_story_id(id)) then
+            if npc:alive() and is_enemy and enemy_dist > dist and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
-                debug("Found friend "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
-                friend = npc
-                friend_dist = dist
+                debug("Found enemy "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
+                enemy = npc
+                enemy_dist = dist
             end
         end
     end
 
-    return friend
+    return enemy
 end
 
 function find_closest_friendly_stalker()  
-    local friend = nil
-    local friend_dist = 100000
+    local friendly = nil
+    local friendly_dist = 100000
 
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
@@ -400,16 +399,16 @@ function find_closest_friendly_stalker()
             local dist = npc:position():distance_to_sqr(db.actor:position())
             local is_friend = npc:general_goodwill(db.actor) >= RELATIONS.ENEMIES
             
-            if npc:alive() and is_friend and friend_dist > dist and (not get_object_story_id(id)) then
+            if npc:alive() and is_friend and friendly_dist > dist and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
                 debug("Found friend "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
-                friend = npc
-                friend_dist = dist
+                friendly = npc
+                friendly_dist = dist
             end
         end
     end
 
-    return friend
+    return friendly
 end
 
 function force_save(type)
