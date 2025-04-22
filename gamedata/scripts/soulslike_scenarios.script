@@ -995,10 +995,8 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         local loss_chance_dice_roll = math.random(0, 100)
         local loss_chance
         if self.logic_state.ignore_rank_item_loss then
-            -- Ignore rank: use max base chance (0.75) * scalar
-            loss_chance = math.clamp(0.75 * self.logic_state.item_loss_scalar, 0, 1) * 100
+            loss_chance = math.clamp(self.logic_state.item_loss_scalar, 0, 1) * 100
         else
-            -- Use ranked chance * scalar
             loss_chance = math.clamp(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar, 0, 1) * 100
         end
         loss_chance = math.floor(loss_chance * (self.logic_state.scenario_loot_scalar or 1))
@@ -1010,14 +1008,11 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         self.logic_state.has_mutant_bait =         
             self.logic_state.has_mutant_bait or is_mutant_meat or is_food or is_mutant_belt
 
-        -- Item condition loss logic
         local condition_loss_percent
         if self.logic_state.ignore_rank_item_condition_loss then
-            -- Ignore rank: use max base condition loss (1.0) * scalar
-            condition_loss_percent = math.clamp(1.0 * soulslike_mcm.get_item_condition_loss_percent(), 0, 1)
+            condition_loss_percent = math.clamp(0.75 * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) * 100
         else
-            -- Use ranked chance * scalar
-            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1)
+            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) * 100
         end
 
         if condition_loss_percent > 0 then
