@@ -493,7 +493,7 @@ local function actor_on_before_death(who, flags)
     end
 
     -- Pretty sure this fixes arena fights, still need to test
-	if has_alife_info("bar_arena_fight") then
+	if has_alife_info("bar_arena_fight") or has_alife_info("bar_arena_start") then
         debug('Actor was in an arena fight, ignoring death.')
 		return
 	end
