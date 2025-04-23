@@ -147,7 +147,7 @@ function create_new(hits)
         rescuer = soulslike.find_closest_friendly_stalker()
         scenario_loot_scalar = 0
       
-        table.insert(available_scenarios, {id = soulslike.SCENARIOS., min = 0, max = 0, weight = 1.0})      
+        table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})      
     elseif soulslike_mcm.debug_the_default_scenario() then
         soulslike.debug("Debugging default scenario.")
         rescuer = soulslike.find_closest_friendly_stalker()
