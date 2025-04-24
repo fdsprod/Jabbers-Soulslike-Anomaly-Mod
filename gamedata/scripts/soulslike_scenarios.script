@@ -413,6 +413,9 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, conditio
                 local degrade_amount = (con * condition_loss_percent)
                 local degraded_con = con - degrade_amount
 
+                -- Round with no decimals
+                degrade_amount = math.floor(degrade_amount + 0.5)
+
                 soulslike.debug("Degrading part ".. sec.. " condition ".. tostring(con).." by "..tostring(degrade_amount).." to "..tostring(degraded_con))
                 
                 parts[sec] = math.clamp(degraded_con, 1, 100)
