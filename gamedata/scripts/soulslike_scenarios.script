@@ -382,7 +382,10 @@ end
 function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, condition_loss_percent)
     local cond = item:condition()
     local sec = item:section()
-    local degrade_factor = cond * condition_loss_percent
+
+    soulslike.debug("Item ".. sec.. " condition ".. tostring(cond).." before degradation")
+    soulslike.debug("Item ".. sec.. " condition loss percent ".. tostring(condition_loss_percent))
+    
     local is_grenade = IsGrenade(item)
     local is_weapon = (IsWeapon(item) and not is_grenade)
     local is_outfit = IsOutfit(item) 
@@ -395,7 +398,7 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, conditio
     if has_cond then
         if is_weapon then
             if not item_parts then
-                soulslike.debug("Cannot find item_parts, skipping weapon degradation.")
+                soulslike.debug("Cannot find item_parts, skipping degradation.")
                 return
             end
 
@@ -406,23 +409,20 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, conditio
                 return
             end
 
-            for sec,part in pairs(parts) do
-                degrade_factor = part * condition_loss_percent
-                -- round to no decimals
-                degrade_factor = math.floor(degrade_factor * 100) / 100
-                cond = math.clamp(degrade_factor, 0.01, 0.99)
+            for sec,con in pairs(parts) do
+                local degrade_amount = (con * condition_loss_percent)
+                local degraded_con = con - degrade_amount
 
-                soulslike.debug("Degrading part ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
-                soulslike.debug("Creating part "..sec.." with condition "..tostring(cond)) 
+                soulslike.debug("Degrading part ".. sec.. " condition ".. tostring(con).." by "..tostring(degrade_amount).." to "..tostring(degraded_con))
                 
-                parts[sec] = cond
+                parts[sec] = math.clamp(degraded_con, 1, 100)
             end
 
             item_parts.set_parts_con(item:id(), parts)
         else
-            soulslike.debug("Degrading item ".. sec.. " condition ".. tostring(cond).." by "..tostring(degrade_factor))
+            soulslike.debug("Degrading item ".. sec.. " condition ".. tostring(cond).." by "..tostring(condition_loss_percent))
             -- utils_item.degrade releases the item if the condition is 0
-            local condition = utils_item.degrade(item, degrade_factor)
+            local condition = utils_item.degrade(item, condition_loss_percent)
             
             if condition == 0 then
                 soulslike.debug("Item ".. sec.. " was degraded into oblivion")
@@ -1012,9 +1012,9 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
 
         local condition_loss_percent
         if self.logic_state.ignore_rank_item_condition_loss then
-            condition_loss_percent = math.clamp(0.75 * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) * 100
+            condition_loss_percent = math.clamp(soulslike_mcm.get_item_condition_loss_percent(), 0, 1) 
         else
-            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) * 100
+            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) 
         end
 
         if condition_loss_percent > 0 then
