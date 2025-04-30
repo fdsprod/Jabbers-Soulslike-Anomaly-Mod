@@ -1031,7 +1031,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         local is_toolkit = IsToolkit(item)
         -- If not any of the above, treat as 'other'
         if is_outfit then
-             = soulslike_mcm.get_outfit_loss_chance()
+            loss_type_multipler = soulslike_mcm.get_outfit_loss_chance()
         elseif is_weapon then
             loss_type_multipler = soulslike_mcm.get_weapon_loss_chance()
         elseif is_artefact then
