@@ -71,6 +71,9 @@
     <string id="ui_mcm_soulslike_items_allow_tool_loss">
         <text>Allow Tools Loss</text>
     </string>
+    <string id="ui_mcm_soulslike_items_allow_money_loss">
+        <text>Allow Money Loss</text>
+    </string>
     <string id="ui_mcm_soulslike_items_scalar_description">
         <text>Item and condition loss are based on your rank. When you die, the higher rank you are the more likely the chance to lose an item or have the condition reduced. This is to make it easier at the beginning of a new game but as you progress the conciquence of death becomes more and more severe.  See the tooltip on each setting for a more detailed explination.</text>
      </string>
@@ -398,5 +401,17 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>
     <string id="ui_mcm_soulslike_allow_nighttime_respawn_desc">
         <text>If unchecked, respawn will always advance time to morning (7-9am) if you would respawn at night.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_money_loss_max_percent">
+        <text>Max Money Loss %</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_money_loss_chance">
+        <text>Money Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_money_loss_max_percent_desc">
+        <text>Maximum percent of your money that can be lost on death. The actual loss will be a random percent up to this value.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_money_loss_chance_desc">
+        <text>Chance to lose money on death. 1.0 = always, 0.5 = 50% chance, etc.</text>
     </string>
 </string_table>

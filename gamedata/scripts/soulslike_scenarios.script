@@ -523,6 +523,21 @@ function SoulslikeScenarioLogic:OnDeath()
     bind_stalker_ext.invulnerable_time = time_global() + 30000
     actor_status.deactivate_hud()
 
+    -- Money loss logic
+    if soulslike_mcm.allow_money_loss() then
+        local loss_chance = soulslike_mcm.get_money_loss_chance()
+        if math.random() < loss_chance then
+            local max_percent = soulslike_mcm.get_money_loss_max_percent()
+            local percent = math.random() * max_percent
+            local money = db.actor:money()
+            local to_lose = math.floor(money * percent)
+            if to_lose > 0 then
+                db.actor:give_money(-to_lose)
+                soulslike.debug("Lost money on death: "..to_lose)
+            end
+        end
+    end
+
     self:HealActor()
     self:ApplyRankLoss()
     self:ApplyRepLoss()

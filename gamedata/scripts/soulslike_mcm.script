@@ -154,6 +154,13 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_allow_tool_loss"
             },
             {
+                id = "allow_money_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_money_loss"
+            },
+            {
                 id = "desc_mcm",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_scalar_description",
@@ -304,6 +311,26 @@ function on_mcm_load()
                 val = 1,
                 def = true,
                 text = "ui_mcm_soulslike_items_ignore_rank_when_computing_item_condition_loss"
+            },
+            {
+                id = "money_loss_max_percent",
+                type = "track",
+                val = 2,
+                min = 0.01,
+                max = 0.90,
+                step = 0.01,
+                def = 0.10,
+                text = "ui_mcm_soulslike_items_money_loss_max_percent"
+            },
+            {
+                id = "money_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0.01,
+                max = 1.0,
+                step = 0.01,
+                def = 0.5,
+                text = "ui_mcm_soulslike_items_money_loss_chance"
             },
         },
     }
@@ -1084,4 +1111,16 @@ end
 
 function ignore_medkit() 
     return get_config("ignored_items/ignore_medkit", true) 
+end
+
+function allow_money_loss()
+    return get_config("items/allow_money_loss", true)
+end
+
+function get_money_loss_max_percent()
+    return get_config("items/money_loss_max_percent", 0.10)
+end
+
+function get_money_loss_chance()
+    return get_config("items/money_loss_chance", 0.5)
 end
