@@ -330,27 +330,153 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_ignored_items_desc",
                 clr = {255, 255 ,255 ,255},
             },
-            { id = "bolt", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_bolt" },
-            { id = "itm_actor_backpack", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_itm_actor_backpack" },
-            { id = "device_pda", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_device_pda" },
-            { id = "device_pda_1", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_device_pda_1" },
-            { id = "device_pda_2", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_device_pda_2" },
-            { id = "device_pda_3", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_device_pda_3" },
-            { id = "detector_radio", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_detector_radio" },
-            { id = "wpn_knife", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife" },
-            { id = "wpn_knife2", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife2" },
-            { id = "wpn_knife3", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife3" },
-            { id = "wpn_knife4", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife4" },
-            { id = "wpn_knife5", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife5" },
-            { id = "wpn_knife6", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife6" },
-            { id = "wpn_knife7", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife7" },
-            { id = "wpn_knife8", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife8" },
-            { id = "wpn_knife9", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_knife9" },
-            { id = "wpn_axe", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_axe" },
-            { id = "wpn_axe2", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_axe2" },
-            { id = "wpn_axe3", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_wpn_axe3" },
-            { id = "bandage", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_bandage" },
-            { id = "medkit", type = "check", val = 1, def = true, text = "ui_mcm_soulslike_ignored_items_medkit" }
+            {
+                id = "bolt",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_bolt"
+            },
+            {
+                id = "itm_actor_backpack",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_itm_actor_backpack"
+            },
+            {
+                id = "device_pda",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda"
+            },
+            {
+                id = "device_pda_1",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_1"
+            },
+            {
+                id = "device_pda_2",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_2"
+            },
+            {
+                id = "device_pda_3",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_3"
+            },
+            {
+                id = "detector_radio",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_detector_radio"
+            },
+            {
+                id = "wpn_knife",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife"
+            },
+            {
+                id = "wpn_knife2",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife2"
+            },
+            {
+                id = "wpn_knife3",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife3"
+            },
+            {
+                id = "wpn_knife4",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife4"
+            },
+            {
+                id = "wpn_knife5",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife5"
+            },
+            {
+                id = "wpn_knife6",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife6"
+            },
+            {
+                id = "wpn_knife7",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife7"
+            },
+            {
+                id = "wpn_knife8",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife8"
+            },
+            {
+                id = "wpn_knife9",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_knife9"
+            },
+            {
+                id = "wpn_axe",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_axe"
+            },
+            {
+                id = "wpn_axe2",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_axe2"
+            },
+            {
+                id = "wpn_axe3",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_wpn_axe3"
+            },
+            {
+                id = "bandage",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_bandage"
+            },
+            {
+                id = "medkit",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_medkit"
+            }
         },
     }
     
@@ -788,6 +914,11 @@ function rep_loss_percent()
     return get_config("character/rep_loss_percent", 0.02)
 end 
 
+function allow_nighttime_respawn()
+    return get_config("character/allow_nighttime_respawn", true)
+end
+
+
 -- Debug
 function is_debug_enabled() 
     return get_config("debug/is_enabled", false)
@@ -872,27 +1003,85 @@ function get_headgear_condition_loss_chance()
 end
 
 -- Getter functions for ignored items
-function ignore_bolt() return get_config("ignored_items/ignore_bolt", true) end
-function ignore_itm_actor_backpack() return get_config("ignored_items/ignore_itm_actor_backpack", true) end
-function ignore_device_pda() return get_config("ignored_items/ignore_device_pda", true) end
-function ignore_device_pda_1() return get_config("ignored_items/ignore_device_pda_1", true) end
-function ignore_device_pda_2() return get_config("ignored_items/ignore_device_pda_2", true) end
-function ignore_device_pda_3() return get_config("ignored_items/ignore_device_pda_3", true) end
-function ignore_detector_radio() return get_config("ignored_items/ignore_detector_radio", true) end
-function ignore_wpn_knife() return get_config("ignored_items/ignore_wpn_knife", true) end
-function ignore_wpn_knife2() return get_config("ignored_items/ignore_wpn_knife2", true) end
-function ignore_wpn_knife3() return get_config("ignored_items/ignore_wpn_knife3", true) end
-function ignore_wpn_knife4() return get_config("ignored_items/ignore_wpn_knife4", true) end
-function ignore_wpn_knife5() return get_config("ignored_items/ignore_wpn_knife5", true) end
-function ignore_wpn_knife6() return get_config("ignored_items/ignore_wpn_knife6", true) end
-function ignore_wpn_knife7() return get_config("ignored_items/ignore_wpn_knife7", true) end
-function ignore_wpn_knife8() return get_config("ignored_items/ignore_wpn_knife8", true) end
-function ignore_wpn_knife9() return get_config("ignored_items/ignore_wpn_knife9", true) end
-function ignore_wpn_axe() return get_config("ignored_items/ignore_wpn_axe", true) end
-function ignore_wpn_axe2() return get_config("ignored_items/ignore_wpn_axe2", true) end
-function ignore_wpn_axe3() return get_config("ignored_items/ignore_wpn_axe3", true) end
-function ignore_bandage() return get_config("ignored_items/ignore_bandage", true) end
-function ignore_medkit() return get_config("ignored_items/ignore_medkit", true) end
-function allow_nighttime_respawn()
-    return get_config("character/allow_nighttime_respawn", true)
+function ignore_bolt() 
+    return get_config("ignored_items/ignore_bolt", true)
+ end
+ 
+function ignore_itm_actor_backpack()
+     return get_config("ignored_items/ignore_itm_actor_backpack", true) 
+end
+
+function ignore_device_pda() 
+    return get_config("ignored_items/ignore_device_pda", true)
+ end
+
+function ignore_device_pda_1() 
+    return get_config("ignored_items/ignore_device_pda_1", true) 
+end
+
+function ignore_device_pda_2() 
+    return get_config("ignored_items/ignore_device_pda_2", true)
+ end
+function ignore_device_pda_3() 
+    return get_config("ignored_items/ignore_device_pda_3", true) 
+end
+
+function ignore_detector_radio() 
+    return get_config("ignored_items/ignore_detector_radio", true) 
+end
+
+function ignore_wpn_knife() 
+    return get_config("ignored_items/ignore_wpn_knife", true) 
+end
+
+function ignore_wpn_knife2() 
+    return get_config("ignored_items/ignore_wpn_knife2", true) 
+end
+
+function ignore_wpn_knife3() 
+    return get_config("ignored_items/ignore_wpn_knife3", true) 
+end
+
+function ignore_wpn_knife4() 
+    return get_config("ignored_items/ignore_wpn_knife4", true) 
+end
+
+function ignore_wpn_knife5() 
+    return get_config("ignored_items/ignore_wpn_knife5", true) 
+end
+
+function ignore_wpn_knife6() 
+    return get_config("ignored_items/ignore_wpn_knife6", true) 
+end
+
+function ignore_wpn_knife7() 
+    return get_config("ignored_items/ignore_wpn_knife7", true) 
+end
+
+function ignore_wpn_knife8() 
+    return get_config("ignored_items/ignore_wpn_knife8", true) 
+end
+
+function ignore_wpn_knife9()
+     return get_config("ignored_items/ignore_wpn_knife9", true) 
+end
+
+function ignore_wpn_axe()
+     return get_config("ignored_items/ignore_wpn_axe", true)     
+end
+
+function ignore_wpn_axe2() 
+    return get_config("ignored_items/ignore_wpn_axe2", true) 
+end
+
+function ignore_wpn_axe3() 
+    return get_config("ignored_items/ignore_wpn_axe3", true) 
+end
+
+function ignore_bandage() 
+    return get_config("ignored_items/ignore_bandage", true) 
+end
+
+function ignore_medkit() 
+    return get_config("ignored_items/ignore_medkit", true) 
 end
