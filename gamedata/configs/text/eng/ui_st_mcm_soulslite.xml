@@ -253,4 +253,70 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
         <text>Debug Hidden Stash Scenario</text>
     </string>
+    <string id="ui_mcm_soulslike_items_outfit_loss_chance">
+        <text>Outfit Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_outfit_loss_chance_desc">
+        <text>Multiplier for the chance to lose an outfit on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_loss_chance">
+        <text>Weapon Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_loss_chance_desc">
+        <text>Multiplier for the chance to lose a weapon on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artefact_loss_chance">
+        <text>Artefact Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artefact_loss_chance_desc">
+        <text>Multiplier for the chance to lose an artefact on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_loss_chance">
+        <text>Headgear Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_loss_chance_desc">
+        <text>Multiplier for the chance to lose headgear on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_toolkit_loss_chance">
+        <text>Toolkit Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_toolkit_loss_chance_desc">
+        <text>Multiplier for the chance to lose a toolkit on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_other_loss_chance">
+        <text>Other Item Loss Chance</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_other_loss_chance_desc">
+        <text>Multiplier for the chance to lose other items on death. 0 disables loss, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_outfit_condition_loss_chance">
+        <text>Outfit Condition Loss Multiplier</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_outfit_condition_loss_chance_desc">
+        <text>Scales the condition loss chance for outfits on death. 0 disables, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_condition_loss_chance">
+        <text>Weapon Condition Loss Multiplier</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_condition_loss_chance_desc">
+        <text>Scales the condition loss chance for weapons on death. 0 disables, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artefact_condition_loss_chance">
+        <text>Artefact Condition Loss Multiplier</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artefact_condition_loss_chance_desc">
+        <text>Scales the condition loss chance for artefacts on death. 0 disables, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_condition_loss_chance">
+        <text>Headgear Condition Loss Multiplier</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_condition_loss_chance_desc">
+        <text>Scales the condition loss chance for headgear on death. 0 disables, 1 uses the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_loss_chance_per_type_desc">
+        <text>Each item type below can have its loss chance individually scaled. The final loss chance is the product of the base chance and this slider. Set to 0 to disable loss for that type, or 1 to use the full calculated chance.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_condition_loss_per_type_desc">
+        <text>Each item type below can have its condition loss individually scaled. The final condition loss is the product of the base loss and this slider. Set to 0 to disable condition loss for that type, or 1 to use the full calculated loss.</text>
+    </string>
 </string_table>

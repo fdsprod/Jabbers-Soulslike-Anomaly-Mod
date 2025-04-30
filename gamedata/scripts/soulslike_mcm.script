@@ -108,6 +108,47 @@ function on_mcm_load()
             {
                 id = "desc_mcm",
                 type = "desc",
+                text = "ui_mcm_soulslike_items_allow_desc",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "allow_weapon_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_weapon_loss"
+            },
+            {
+                id = "allow_outfit_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_outfit_loss"
+            },
+            {
+                id = "allow_headgear_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_headgear_loss"
+            },
+            {
+                id = "allow_artifact_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_artifact_loss"
+            },
+            {
+                id = "allow_tool_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_items_allow_tool_loss"
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
                 text = "ui_mcm_soulslike_items_scalar_description",
                 clr = {255, 255 ,255 ,255},
             },
@@ -118,7 +159,8 @@ function on_mcm_load()
                 min = 0,
                 max = 0.75,
                 step = 0.01,
-                def = 0.20
+                def = 0.20,
+                text = "ui_mcm_soulslike_items_item_loss_scalar"
             },
             {
                 id = "item_condition_loss_scalar",
@@ -127,56 +169,135 @@ function on_mcm_load()
                 min = 0,
                 max = 0.25,
                 step = 0.01,
-                def = 0.05
+                def = 0.05,
+                text = "ui_mcm_soulslike_items_item_condition_loss_scalar"
             },
             {
                 id = "desc_mcm",
                 type = "desc",
-                text = "ui_mcm_soulslike_items_allow_desc",
+                text = "ui_mcm_soulslike_items_loss_chance_per_type_desc",
                 clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "outfit_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_outfit_loss_chance"
+            },
+            {
+                id = "weapon_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_weapon_loss_chance"
+            },
+            {
+                id = "artefact_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_artefact_loss_chance"
+            },
+            {
+                id = "headgear_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_headgear_loss_chance"
+            },
+            {
+                id = "toolkit_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_toolkit_loss_chance"
+            },
+            {
+                id = "other_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_other_loss_chance"
+            },
+            {
+                id = "desc_mcm",
+                type = "desc",
+                text = "ui_mcm_soulslike_items_condition_loss_per_type_desc",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "outfit_condition_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_outfit_condition_loss_chance"
+            },
+            {
+                id = "weapon_condition_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_weapon_condition_loss_chance"
+            },
+            {
+                id = "artefact_condition_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_artefact_condition_loss_chance"
+            },
+            {
+                id = "headgear_condition_loss_chance",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 1.0,
+                step = 0.01,
+                def = 1.0,
+                text = "ui_mcm_soulslike_items_headgear_condition_loss_chance"
             },
             {
                 id = "ignore_rank_when_computing_item_loss_chance",
                 type = "check",
                 val = 1,
-                def = true
+                def = true,
+                text = "ui_mcm_soulslike_items_ignore_rank_when_computing_item_loss_chance"
             },
             {
                 id = "ignore_rank_when_computing_item_condition_loss",
                 type = "check",
                 val = 1,
-                def = true
+                def = true,
+                text = "ui_mcm_soulslike_items_ignore_rank_when_computing_item_condition_loss"
             },
-            {
-                id = "allow_weapon_loss",
-                type = "check",
-                val = 1,
-                def = true
-            },
-            {
-                id = "allow_outfit_loss",
-                type = "check",
-                val = 1,
-                def = true
-            },
-            {
-                id = "allow_headgear_loss",
-                type = "check",
-                val = 1,
-                def = true
-            },
-            {
-                id = "allow_artifact_loss",
-                type = "check",
-                val = 1,
-                def = true
-            },
-            {
-                id = "allow_tool_loss",
-                type = "check",
-                val = 1,
-                def = true
-            },        
         },
     }
 
@@ -661,4 +782,38 @@ end
 
 function debug_always_spawn_ambush()
     return is_debug_enabled() and get_config("debug/debug_always_spawn_ambush", false)
+end
+
+-- Getter functions for per-type loss chance
+function get_outfit_loss_chance()
+    return get_config("items/outfit_loss_chance", 1.0)
+end
+function get_weapon_loss_chance()
+    return get_config("items/weapon_loss_chance", 1.0)
+end
+function get_artefact_loss_chance()
+    return get_config("items/artefact_loss_chance", 1.0)
+end
+function get_headgear_loss_chance()
+    return get_config("items/headgear_loss_chance", 1.0)
+end
+function get_toolkit_loss_chance()
+    return get_config("items/toolkit_loss_chance", 1.0)
+end
+function get_other_loss_chance()
+    return get_config("items/other_loss_chance", 1.0)
+end
+
+-- Getter functions for per-type condition loss
+function get_outfit_condition_loss_chance()
+    return get_config("items/outfit_condition_loss_chance", 1.0)
+end
+function get_weapon_condition_loss_chance()
+    return get_config("items/weapon_condition_loss_chance", 1.0)
+end
+function get_artefact_condition_loss_chance()
+    return get_config("items/artefact_condition_loss_chance", 1.0)
+end
+function get_headgear_condition_loss_chance()
+    return get_config("items/headgear_condition_loss_chance", 1.0)
 end

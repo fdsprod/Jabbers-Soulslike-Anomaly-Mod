@@ -999,10 +999,30 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     if is_loss_allowed then
         local loss_chance_dice_roll = math.random(0, 100)
         local loss_chance
-        if self.logic_state.ignore_rank_item_loss then
-            loss_chance = math.clamp(self.logic_state.item_loss_scalar, 0, 1) * 100
+        local loss_type_multipler = 1.0
+        local is_outfit = IsOutfit(item)
+        local is_weapon = (IsWeapon(item) and not IsGrenade(item))
+        local is_artefact = IsArtefact(item)
+        local is_headgear = IsHeadgear(item)
+        local is_toolkit = IsToolkit(item)
+        -- If not any of the above, treat as 'other'
+        if is_outfit then
+             = soulslike_mcm.get_outfit_loss_chance()
+        elseif is_weapon then
+            loss_type_multipler = soulslike_mcm.get_weapon_loss_chance()
+        elseif is_artefact then
+            loss_type_multipler = soulslike_mcm.get_artefact_loss_chance()
+        elseif is_headgear then
+            loss_type_multipler = soulslike_mcm.get_headgear_loss_chance()
+        elseif is_toolkit then
+            loss_type_multipler = soulslike_mcm.get_toolkit_loss_chance()
         else
-            loss_chance = math.clamp(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar, 0, 1) * 100
+            loss_type_multipler = soulslike_mcm.get_other_loss_chance()
+        end
+        if self.logic_state.ignore_rank_item_loss then
+            loss_chance = math.clamp(self.logic_state.item_loss_scalar * loss_type_multipler, 0, 1) * 100
+        else
+            loss_chance = math.clamp(self.logic_state.ranked_chance * self.logic_state.item_loss_scalar * loss_type_multipler, 0, 1) * 100
         end
         loss_chance = math.floor(loss_chance * (self.logic_state.scenario_loot_scalar or 1))
 
@@ -1014,10 +1034,20 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
             self.logic_state.has_mutant_bait or is_mutant_meat or is_food or is_mutant_belt
 
         local condition_loss_percent
+        local cond_type_multiplier = 1.0
+
+        if is_outfit then
+            cond_type_multiplier = soulslike_mcm.get_outfit_condition_loss_chance()
+        elseif is_weapon then
+            cond_type_multiplier = soulslike_mcm.get_weapon_condition_loss_chance()
+        elseif is_headgear then
+            cond_type_multiplier = soulslike_mcm.get_headgear_condition_loss_chance()
+        end
+
         if self.logic_state.ignore_rank_item_condition_loss then
-            condition_loss_percent = math.clamp(soulslike_mcm.get_item_condition_loss_percent(), 0, 1) 
+            condition_loss_percent = math.clamp(soulslike_mcm.get_item_condition_loss_percent() * cond_type_multiplier, 0, 1)
         else
-            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent(), 0, 1) 
+            condition_loss_percent = math.clamp(self.logic_state.ranked_chance * soulslike_mcm.get_item_condition_loss_percent() * cond_type_multiplier, 0, 1)
         end
 
         if condition_loss_percent > 0 then
