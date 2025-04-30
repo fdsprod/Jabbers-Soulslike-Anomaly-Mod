@@ -393,4 +393,10 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_ignored_items_medkit">
         <text>Medkit</text>
     </string>
+    <string id="ui_mcm_soulslike_allow_nighttime_respawn">
+        <text>Allow nighttime respawn</text>
+    </string>
+    <string id="ui_mcm_soulslike_allow_nighttime_respawn_desc">
+        <text>If unchecked, respawn will always advance time to morning (7-9am) if you would respawn at night.</text>
+    </string>
 </string_table>

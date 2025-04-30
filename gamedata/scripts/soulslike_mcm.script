@@ -80,6 +80,13 @@ function on_mcm_load()
                 max = 0.75,
                 step = 0.01,
                 def = 0.05
+            },
+            {
+                id = "allow_nighttime_respawn",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_allow_nighttime_respawn"
             }
         },
     }
@@ -886,3 +893,6 @@ function ignore_wpn_axe2() return get_config("ignored_items/ignore_wpn_axe2", tr
 function ignore_wpn_axe3() return get_config("ignored_items/ignore_wpn_axe3", true) end
 function ignore_bandage() return get_config("ignored_items/ignore_bandage", true) end
 function ignore_medkit() return get_config("ignored_items/ignore_medkit", true) end
+function allow_nighttime_respawn()
+    return get_config("character/allow_nighttime_respawn", true)
+end

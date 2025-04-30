@@ -361,4 +361,10 @@
     <string id="ui_mcm_soulslike_ignored_items_medkit">
         <text>Аптечка</text>
     </string>
+    <string id="ui_mcm_soulslike_allow_nighttime_respawn">
+        <text>Разрешить возрождение ночью</text>
+    </string>
+    <string id="ui_mcm_soulslike_allow_nighttime_respawn_desc">
+        <text>Если не отмечено, возрождение всегда будет переносить время на утро (7-9 утра), если вы должны возродиться ночью.</text>
+    </string>
 </string_table>
