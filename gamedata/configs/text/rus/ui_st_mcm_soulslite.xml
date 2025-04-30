@@ -287,4 +287,78 @@
     <string id="ui_mcm_soulslike_items_condition_loss_per_type_desc">
         <text>Каждый тип предмета ниже может иметь индивидуальный множитель потери состояния. Итоговая потеря состояния — это произведение базовой потери и этого ползунка. Установите 0, чтобы отключить потерю состояния для этого типа, или 1 для полной потери.</text>
     </string>
+
+    <!-- Ignored Items -->
+    <string id="ui_mcm_soulslike_ignored_items">
+        <text>Игнорируемые предметы</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_title">
+        <text>Настройки игнорируемых предметов</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_desc">
+        <text>Отмеченные ниже предметы всегда будут игнорироваться и никогда не теряться при смерти, независимо от других настроек.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_bolt">
+        <text>Болт</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_itm_actor_backpack">
+        <text>Рюкзак быстрого сброса</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda">
+        <text>ПДА</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_1">
+        <text>ПДА 1</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_2">
+        <text>ПДА 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_3">
+        <text>ПДА 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_detector_radio">
+        <text>Радио-детектор</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife">
+        <text>Нож</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife2">
+        <text>Нож 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife3">
+        <text>Нож 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife4">
+        <text>Нож 4</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife5">
+        <text>Нож 5</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife6">
+        <text>Нож 6</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife7">
+        <text>Нож 7</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife8">
+        <text>Нож 8</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife9">
+        <text>Нож 9</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe">
+        <text>Топор</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe2">
+        <text>Топор 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe3">
+        <text>Топор 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_bandage">
+        <text>Бинт</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_medkit">
+        <text>Аптечка</text>
+    </string>
 </string_table>

@@ -319,4 +319,78 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_items_condition_loss_per_type_desc">
         <text>Each item type below can have its condition loss individually scaled. The final condition loss is the product of the base loss and this slider. Set to 0 to disable condition loss for that type, or 1 to use the full calculated loss.</text>
     </string>
+
+    <!-- Ignored Items -->
+    <string id="ui_mcm_soulslike_ignored_items">
+        <text>Ignored Items</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_title">
+        <text>Ignored Items Settings</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_desc">
+        <text>Items checked below will always be ignored and never lost on death, regardless of other settings.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_bolt">
+        <text>Bolt</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_itm_actor_backpack">
+        <text>Quick Release Backpack</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda">
+        <text>PDA</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_1">
+        <text>PDA 1</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_2">
+        <text>PDA 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_3">
+        <text>PDA 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_detector_radio">
+        <text>Radio Detector</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife">
+        <text>Knife</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife2">
+        <text>Knife 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife3">
+        <text>Knife 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife4">
+        <text>Knife 4</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife5">
+        <text>Knife 5</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife6">
+        <text>Knife 6</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife7">
+        <text>Knife 7</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife8">
+        <text>Knife 8</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_knife9">
+        <text>Knife 9</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe">
+        <text>Axe</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe2">
+        <text>Axe 2</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_wpn_axe3">
+        <text>Axe 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_bandage">
+        <text>Bandage</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_medkit">
+        <text>Medkit</text>
+    </string>
 </string_table>

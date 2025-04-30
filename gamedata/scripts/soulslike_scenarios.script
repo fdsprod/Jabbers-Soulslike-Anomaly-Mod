@@ -1,26 +1,31 @@
-local ignore_list = {
-    ["bolt"] = true,
-    ["itm_actor_backpack"] = true, -- Quick Release
-    ["device_pda"] = true,
-    ["device_pda_1"] = true,
-    ["device_pda_2"] = true,
-    ["device_pda_3"] = true,
-    ["detector_radio"] = true,
-    ["wpn_knife"] = true,
-    ["wpn_knife2"] = true,
-    ["wpn_knife3"] = true,
-    ["wpn_knife4"] = true,
-    ["wpn_knife5"] = true,
-    ["wpn_knife6"] = true,
-    ["wpn_knife7"] = true,
-    ["wpn_knife8"] = true,
-    ["wpn_knife9"] = true,
-    ["wpn_axe"] = true,
-    ["wpn_axe2"] = true,
-    ["wpn_axe3"] = true,
-    ["bandage"] = true,
-    ["medkit"] = true,
+local ignore_items = {
+    bolt = "ignore_bolt",
+    itm_actor_backpack = "ignore_itm_actor_backpack",
+    device_pda = "ignore_device_pda",
+    device_pda_1 = "ignore_device_pda_1",
+    device_pda_2 = "ignore_device_pda_2",
+    device_pda_3 = "ignore_device_pda_3",
+    detector_radio = "ignore_detector_radio",
+    wpn_knife = "ignore_wpn_knife",
+    wpn_knife2 = "ignore_wpn_knife2",
+    wpn_knife3 = "ignore_wpn_knife3",
+    wpn_knife4 = "ignore_wpn_knife4",
+    wpn_knife5 = "ignore_wpn_knife5",
+    wpn_knife6 = "ignore_wpn_knife6",
+    wpn_knife7 = "ignore_wpn_knife7",
+    wpn_knife8 = "ignore_wpn_knife8",
+    wpn_knife9 = "ignore_wpn_knife9",
+    wpn_axe = "ignore_wpn_axe",
+    wpn_axe2 = "ignore_wpn_axe2",
+    wpn_axe3 = "ignore_wpn_axe3",
+    bandage = "ignore_bandage",
+    medkit = "ignore_medkit"
 }
+
+local function ignore_list(sec)
+    local mcm_func = ignore_items[sec]
+    return mcm_func and soulslike_mcm[mcm_func]() or false
+end
 
 local obj_to_spawn_classes = {
     -- kind
@@ -977,7 +982,7 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
     local to_id = container:id()
 
-    if ignore_list[sec] then
+    if ignore_list(sec) then
         soulslike.debug("Item is in ignore list: "..sec)
         return false
     end
