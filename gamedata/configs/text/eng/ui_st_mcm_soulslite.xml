@@ -226,6 +226,12 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_hardcore_override_campfire_hardcore_saves_desc">
         <text>Sometimes you need that warm fuzzy feeling of comfort you get by saving often.  This allow saving at campfires, even though hardcore saves is enabled.  Keep in mind that when respawning or sleeping your campfire saves will still be deleted if Hardcore Saves is enabled.</text>
     </string>
+    <string id="ui_mcm_soulslike_hardcore_lose_all_items_on_death">
+        <text>Lose all items on death</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc">
+        <text>If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.</text>
+    </string>
 
     <!--Debug-->
     <string id="ui_mcm_soulslike_debug">

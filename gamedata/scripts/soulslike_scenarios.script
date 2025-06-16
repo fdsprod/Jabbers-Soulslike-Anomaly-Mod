@@ -1026,6 +1026,15 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         return false
     end
 
+    -- HARDCORE: Lose all items on death overrides all other logic
+    if soulslike_mcm.lose_all_items_on_death() then
+        soulslike.debug("Lose all items on death is enabled, removing item: "..sec)
+        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+        alife_release(item)
+        self.logic_state.story.items_were_lost = true
+        return false
+    end
+
     local keep_equipped_items_on_death = self.logic_state.keep_equipped_items_on_death
 
     if keep_equipped_items_on_death and is_equipped(item:id()) then
@@ -1390,12 +1399,12 @@ function NoLossSoulslikeScenarioLogic:__init(state) super (state)
     self.logic_state.scenario_id = soulslike.SCENARIOS.NoLoss
 end
 
- function NoLossSoulslikeScenarioLogic:CreateStash()
+function NoLossSoulslikeScenarioLogic:CreateStash()
      return nil
 end
 
- function NoLossSoulslikeScenarioLogic:TransferItems(_)
-     -- Do Nothing 
+function NoLossSoulslikeScenarioLogic:TransferItems(_)
+    -- Do Nothing 
 end
 
 function NoLossSoulslikeScenarioLogic:IsItemLossAllowed(item)

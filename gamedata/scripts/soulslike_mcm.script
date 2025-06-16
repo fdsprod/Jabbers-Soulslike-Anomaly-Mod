@@ -717,6 +717,19 @@ function on_mcm_load()
                 def = false
             },
             {
+                id = "lose_all_items_on_death",
+                type = "check",
+                val = 1,
+                def = false,
+                text = "Lose all items on death",
+            },
+            {
+                id = "lose_all_items_on_death_desc",
+                type = "desc",
+                text = "If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.",
+                clr = {255, 255 ,255 ,0},
+            },
+            {
                 id = "override_campfire_hardcore_saves",
                 type = "check",
                 val = 1,
@@ -1143,6 +1156,11 @@ function allow_rep_loss()
     return get_config("character/allow_rep_loss", true)
 end
 
-function allow_rep_loss()
+function allow_rank_loss()
     return get_config("character/allow_rank_loss", true)
+end
+
+-- Hardcore lose all items option
+function lose_all_items_on_death()
+    return get_config("hardcore/lose_all_items_on_death", false)
 end
