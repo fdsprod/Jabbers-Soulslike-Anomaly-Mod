@@ -64,6 +64,13 @@ function on_mcm_load()
                 def = 0.75
             }, 
             {
+                id = "allow_rank_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_character_allow_rank_loss"
+            },
+            {
                 id = "rank_loss_percent",
                 type = "track",
                 val = 2,
@@ -73,11 +80,18 @@ function on_mcm_load()
                 def = 0.02
             },
             {
+                id = "allow_rep_loss",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_character_allow_rep_loss"
+            },
+            {
                 id = "rep_loss_percent",
                 type = "track",
                 val = 2,
-                min = 0,
-                max = 0.75,
+                min = 0.01,
+                max = 0.90,
                 step = 0.01,
                 def = 0.05
             },
@@ -1123,4 +1137,12 @@ end
 
 function get_money_loss_chance()
     return get_config("items/money_loss_chance", 0.5)
+end
+
+function allow_rep_loss()
+    return get_config("character/allow_rep_loss", true)
+end
+
+function allow_rep_loss()
+    return get_config("character/allow_rank_loss", true)
 end

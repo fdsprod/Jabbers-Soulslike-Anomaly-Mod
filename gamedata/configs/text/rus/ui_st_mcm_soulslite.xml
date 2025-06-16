@@ -45,6 +45,12 @@
     <string id="ui_mcm_soulslike_character_health_loss_on_respawn_desc">
         <text>��� ��������� ������� ��������� � ����� ����. ��� ���������� ��������, ������� ����� ������� ��� �����������. ������: 25% ��������, ��� � ��� ����� 75% �������� ��� �����������. ��������� ����������� � ���, ��� �� ��� ��� ������ ������ ������ � ��� ����������� ��������� ��������� ��������� ��� ������� ����� �������� ���������� � �������� ���� ���� �� �����, ��� �� ������.</text>
     </string>
+    <string id="ui_mcm_soulslike_character_allow_rep_loss">
+        <text>Включить потерю репутации</text>
+    </string>
+    <string id="ui_mcm_soulslike_character_allow_rank_loss">
+        <text>Включить потерю ранга</text>
+    </string>
 
     <!--Items-->
     <string id="ui_mcm_soulslike_items">

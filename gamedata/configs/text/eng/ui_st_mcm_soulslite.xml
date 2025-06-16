@@ -42,7 +42,12 @@
     <string id="ui_mcm_soulslike_character_health_loss_on_respawn_desc">
         <text>This add a bit more difficulty to your playthrough. This is the amount of health that will be removed when you respawn.  Example: 25% means you will have 75% health when you respawn.  The concept here is that you would still be slightly injured and requires you to keep some meds around to heal yourself before trying to continue and retrieve your items from where you died.</text>
     </string>
-
+    <string id="ui_mcm_soulslike_character_allow_rep_loss">
+        <text>Enable Reputation Loss</text>
+    </string>
+    <string id="ui_mcm_soulslike_character_allow_rank_loss">
+        <text>Enable Rank Loss</text>
+    </string>
     <!--Items-->
     <string id="ui_mcm_soulslike_items">
         <text>Items</text>

@@ -289,19 +289,19 @@ function SoulslikeScenarioLogic:__init(state)
 end
 
 function SoulslikeScenarioLogic:SetIsInDoor(player_is_indoor)
-	self.logic_state.player_died_indoor = player_is_indoor
+    self.logic_state.player_died_indoor = player_is_indoor
 end
 
 function SoulslikeScenarioLogic:SetIsInWater(is_in_water)
-	self.logic_state.player_died_in_water = is_in_water
+    self.logic_state.player_died_in_water = is_in_water
 end
 
 function SoulslikeScenarioLogic:SetLevelName(name)
-	self.logic_state.story.level_name = name
+    self.logic_state.story.level_name = name
 end
 
 function SoulslikeScenarioLogic:SetLootScalar(scenario_loot_scalar)
-	self.logic_state.scenario_loot_scalar = scenario_loot_scalar
+    self.logic_state.scenario_loot_scalar = scenario_loot_scalar
 end
 
 function SoulslikeScenarioLogic:SetRescuer(npc)
@@ -309,7 +309,7 @@ function SoulslikeScenarioLogic:SetRescuer(npc)
         self.logic_state.rescuer_id = npc:id()
     elseif npc and npc.id then
         self.logic_state.rescuer_id = npc.id
-	end
+    end
 end
 
 function SoulslikeScenarioLogic:SetLooter(npc)
@@ -317,12 +317,12 @@ function SoulslikeScenarioLogic:SetLooter(npc)
         self.logic_state.looter_id = npc:id()
     elseif npc and npc.id then
         self.logic_state.looter_id = npc.id
-	end
+    end
 end
 
 function SoulslikeScenarioLogic:SetLooterType(entity_type)
-	self.logic_state.looter_type = entity_type
-	self.logic_state.story.looter_type = entity_type
+    self.logic_state.looter_type = entity_type
+    self.logic_state.story.looter_type = entity_type
 end
 
 function SoulslikeScenarioLogic:SetKiller(npc)
@@ -330,58 +330,68 @@ function SoulslikeScenarioLogic:SetKiller(npc)
         self.logic_state.killer_id = npc:id()
     elseif npc and npc.id then
         self.logic_state.killer_id = npc.id
-	end
+    end
 end
 
 function SoulslikeScenarioLogic:SetKillerType(entity_type)
-	self.logic_state.killer_type = entity_type
+    self.logic_state.killer_type = entity_type
 end
 
 function SoulslikeScenarioLogic:SetFatalHitType(hit_type)
-	self.logic_state.fatal_hit_type = hit_type
+    self.logic_state.fatal_hit_type = hit_type
 end
 
 function SoulslikeScenarioLogic:destroy()
-	self.logic_state = nil
+    self.logic_state = nil
     self.game_state = nil
 end
 
 function SoulslikeScenarioLogic:HealActor()
     local heath = 1 - self.logic_state.health_loss_percent
 
-	db.actor:set_health_ex(heath)
-	db.actor.power = 1
-	db.actor.radiation = 0
-	db.actor.bleeding = 1
-	db.actor.psy_health = 1
+    db.actor:set_health_ex(heath)
+    db.actor.power = 1
+    db.actor.radiation = 0
+    db.actor.bleeding = 1
+    db.actor.psy_health = 1
 
     save_var(db.actor,'grw_in_water',nil)
-	
+    
     if arszi_psy then 
         arszi_psy.set_psy_health(1.0)
     end
 end
 
 function SoulslikeScenarioLogic:ApplyRankLoss()
+    if soulslike_mcm.allow_rank_loss() == false then
+        soulslike.debug("Rank loss disabled.")
+        return
+    end
+
     local rank = db.actor:character_rank()
     local loss_percent = self.logic_state.rank_loss_percent
     local rank_loss = math.abs(rank * loss_percent)
 
     soulslike.debug("Player has lost "..tostring(rank_loss).." rank.")
 
-	db.actor:set_character_rank(db.actor:character_rank() + (-rank_loss or 0))
-	game_statistics.check_for_rank_change()
+    db.actor:set_character_rank(db.actor:character_rank() + (-rank_loss or 0))
+    game_statistics.check_for_rank_change()
 end
 
-function SoulslikeScenarioLogic:ApplyRepLoss()
+function SoulslikeScenarioLogic:ApplyReputationLoss()
+    if soulslike_mcm.allow_rep_loss() == false then
+        soulslike.debug("Reputation loss disabled.")
+        return
+    end
+
     local rep = db.actor:character_reputation()
     local loss_percent = self.logic_state.rep_loss_percent
     local rep_loss = math.abs(rep * loss_percent)
 
     soulslike.debug("Player has lost "..tostring(rep_loss).." repuation.")
 
-	db.actor:set_character_reputation(db.actor:character_reputation() + (-rep_loss or 0))
-	game_statistics.check_for_reputation_change()
+    db.actor:set_character_reputation(db.actor:character_reputation() + (-rep_loss or 0))
+    game_statistics.check_for_reputation_change()
 end
 
 function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, condition_loss_percent)
@@ -457,6 +467,10 @@ function SoulslikeScenarioLogic:ApplyTransferItemsPreConditions()
 
     soulslike.debug("Inventory precondition checks")
     db.actor:iterate_inventory(check_item)
+    
+    if magazine_binder and magazine_binder.validate_loadout then
+        magazine_binder.validate_loadout()
+    end
 end
 
 function SoulslikeScenarioLogic:ApplyTransferItemsPostConditions()
@@ -526,29 +540,29 @@ function SoulslikeScenarioLogic:OnDeath()
 
     self:HealActor()
     self:ApplyRankLoss()
-    self:ApplyRepLoss()
+    self:ApplyReputationLoss()
     self:HandleItemsAndRespawn()
 end
 
 function SoulslikeScenarioLogic:GiveFoodAndWater()
-	-- Satiety
-	local conditions = db.actor:cast_Actor():conditions()
-	local satiety = conditions:GetSatiety()
-	local red_icon_satiety = conditions:SatietyCritical() * 0.5
-	
+    -- Satiety
+    local conditions = db.actor:cast_Actor():conditions()
+    local satiety = conditions:GetSatiety()
+    local red_icon_satiety = conditions:SatietyCritical() * 0.5
+    
     satiety = normalize(satiety, red_icon_satiety, 1)
     satiety = math.clamp( satiety / 5.65 , 0, 0.185)
 
     soulslike.debug({satiety = satiety})
     if satiety < 0.5 then
         self.logic_state.story.gave_food_or_water = true  
-	    db.actor.satiety = 0.5
+        db.actor.satiety = 0.5
     end
 
-	-- Thirst
-	local thirst = 1 - actor_status_thirst.get_water_deprivation()		-- 1 full
-	local red_icon_thirst = 1 - normalize(5760, 0, 10000) -- def 0.424 red
-	
+    -- Thirst
+    local thirst = 1 - actor_status_thirst.get_water_deprivation()		-- 1 full
+    local red_icon_thirst = 1 - normalize(5760, 0, 10000) -- def 0.424 red
+    
     thirst = normalize(thirst, red_icon_thirst, 1)
     thirst = math.clamp(thirst / 5.65, 0, 0.185)
 
@@ -840,7 +854,7 @@ function SoulslikeScenarioLogic:SendWakeupMessage()
         news_manager.send_tip(db.actor, msg, nil, rescuer, 20000)
     else
         soulslike.debug("No rescuer, its a mystery...") 
-		local ui_sender = news_manager.tips_icons['default']
+        local ui_sender = news_manager.tips_icons['default']
         db.actor:give_game_news("", msg, ui_sender, 0, 20000)
     end  
 end
@@ -976,11 +990,11 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
             local max_con_obj = 0.999
             local min_con_obj = 0.001
             local se_result = alife_create(sec, looter:position(), looter:level_vertex_id(), looter:game_vertex_id(), looter:id(), false)
-			local data_result = utils_stpk.get_item_data(se_result)
-			
+            local data_result = utils_stpk.get_item_data(se_result)
+            
             data_result.condition = math.clamp((condition / 100) , min_con_obj , max_con_obj)
-			utils_stpk.set_item_data(data_result,se_result)
-			alife():register(se_result)
+            utils_stpk.set_item_data(data_result,se_result)
+            alife():register(se_result)
 
             parts[sec] = -1 -- KEKW 
             item_parts.set_parts_con(item:id(), parts)
@@ -1190,7 +1204,7 @@ end
 class "DefaultSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function DefaultSoulslikeScenarioLogic:__init(state) super (state)
-	self.logic_state.scenario_id = soulslike.SCENARIOS.Default
+    self.logic_state.scenario_id = soulslike.SCENARIOS.Default
 end
 
 function DefaultSoulslikeScenarioLogic:CreateStash()
@@ -1226,7 +1240,7 @@ end
 class "RFDetectorSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function RFDetectorSoulslikeScenarioLogic:__init(state) super (state)
-	self.logic_state.scenario_id = soulslike.SCENARIOS.RFDetectorStash
+    self.logic_state.scenario_id = soulslike.SCENARIOS.RFDetectorStash
 end
 
 function RFDetectorSoulslikeScenarioLogic:CreateStash()
@@ -1311,7 +1325,7 @@ end
 class "HiddenStashSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function HiddenStashSoulslikeScenarioLogic:__init(state) super (state)
-	self.logic_state.scenario_id = soulslike.SCENARIOS.HiddenStash
+    self.logic_state.scenario_id = soulslike.SCENARIOS.HiddenStash
 end
 
 function HiddenStashSoulslikeScenarioLogic:CreateStash()
@@ -1373,7 +1387,7 @@ end
 class "NoLossSoulslikeScenarioLogic" (SoulslikeScenarioLogic)
 
 function NoLossSoulslikeScenarioLogic:__init(state) super (state)  
-	self.logic_state.scenario_id = soulslike.SCENARIOS.NoLoss
+    self.logic_state.scenario_id = soulslike.SCENARIOS.NoLoss
 end
 
  function NoLossSoulslikeScenarioLogic:CreateStash()

@@ -53,10 +53,6 @@ entity_type = {
     Other = 5
 }
 
-----------------------------------------
--- Classes
-----------------------------------------
-
 MAX_HIT_POOL_COUNT = 30
 MAX_HIT_TIME = 30000
 local hit_queue = soulslike_classes.TimedQueue(MAX_HIT_POOL_COUNT, MAX_HIT_TIME)
