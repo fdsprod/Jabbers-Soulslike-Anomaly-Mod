@@ -1,7 +1,7 @@
 --[[
-	Jabbers
-	05APR2023
-	Jabbers' Soulslike Anomaly Mod
+    Jabbers
+    05APR2023
+    Jabbers' Soulslike Anomaly Mod
 --]]
 
 
@@ -140,11 +140,43 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_allow_weapon_loss"
             },
             {
+                id = "weapon_keep_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25,
+                text = "ui_mcm_soulslike_weapon_keep_chance"
+            },
+            {
+                id = "weapon_keep_chance_desc",
+                type = "desc",
+                text = "ui_mcm_soulslike_weapon_keep_chance_desc",
+                clr = {255,255,255,0}
+            },
+            {
                 id = "allow_outfit_loss",
                 type = "check",
                 val = 1,
                 def = true,
                 text = "ui_mcm_soulslike_items_allow_outfit_loss"
+            },
+            {
+                id = "outfit_keep_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25,
+                text = "ui_mcm_soulslike_outfit_keep_chance"
+            },
+            {
+                id = "outfit_keep_chance_desc",
+                type = "desc",
+                text = "ui_mcm_soulslike_outfit_keep_chance_desc",
+                clr = {255,255,255,0}
             },
             {
                 id = "allow_headgear_loss",
@@ -154,11 +186,43 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_allow_headgear_loss"
             },
             {
+                id = "headgear_keep_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25,
+                text = "ui_mcm_soulslike_headgear_keep_chance"
+            },
+            {
+                id = "headgear_keep_chance_desc",
+                type = "desc",
+                text = "ui_mcm_soulslike_headgear_keep_chance_desc",
+                clr = {255,255,255,0}
+            },
+            {
                 id = "allow_artifact_loss",
                 type = "check",
                 val = 1,
                 def = true,
                 text = "ui_mcm_soulslike_items_allow_artifact_loss"
+            },
+            {
+                id = "artifact_keep_chance",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.25,
+                text = "ui_mcm_soulslike_artifact_keep_chance"
+            },
+            {
+                id = "artifact_keep_chance_desc",
+                type = "desc",
+                text = "ui_mcm_soulslike_artifact_keep_chance_desc",
+                clr = {255,255,255,0}
             },
             {
                 id = "allow_tool_loss",

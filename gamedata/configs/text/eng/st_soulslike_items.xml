@@ -1,10 +1,34 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <string_table>
+	<string id="ui_mcm_soulslike_outfit_keep_chance">
+		<text>Chance to keep outfit on death</text>
+	</string>
+	<string id="ui_mcm_soulslike_outfit_keep_chance_desc">
+		<text>When "Allow Outfit Loss" is enabled, this slider sets the chance that your outfit will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
+	</string>
+	<string id="ui_mcm_soulslike_headgear_keep_chance">
+		<text>Chance to keep headgear on death</text>
+	</string>
+	<string id="ui_mcm_soulslike_headgear_keep_chance_desc">
+		<text>When "Allow Headgear Loss" is enabled, this slider sets the chance that your headgear will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
+	</string>
+	<string id="ui_mcm_soulslike_weapon_keep_chance">
+		<text>Chance to keep weapon on death</text>
+	</string>
+	<string id="ui_mcm_soulslike_weapon_keep_chance_desc">
+		<text>When "Allow Weapon Loss" is enabled, this slider sets the chance that your weapon will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
+	</string>
+	<string id="ui_mcm_soulslike_artifact_keep_chance">
+		<text>Chance to keep artifact on death</text>
+	</string>
+	<string id="ui_mcm_soulslike_artifact_keep_chance_desc">
+		<text>When "Allow Artifact Loss" is enabled, this slider sets the chance that your artifact will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
+	</string>
 
 	<string id="st_soulslike_rescuers_radio_frequency_note_name">
 		<text>Rescuer's Note</text>
 	</string>
-    
+	
 	<string id="st_soulslike_rescuers_radio_frequency_note_desc">
 		<text>A note written by one of the stalker that rescued you.</text>
 	</string>

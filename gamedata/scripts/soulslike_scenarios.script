@@ -924,6 +924,31 @@ function SoulslikeScenarioLogic:IsItemLossAllowed(item)
         is_loss_allowed = false
     end
 
+    -- Keep chance logic for each type
+    if is_outfit and self.logic_state.allow_outfit_loss then
+        if math.random() < soulslike_mcm.get_outfit_keep_chance() then
+            soulslike.debug("Rolled to keep outfit "..sec)
+            return false
+        end
+    end
+    if is_headgear and self.logic_state.allow_headgear_loss then
+        if math.random() < soulslike_mcm.get_headgear_keep_chance() then
+            soulslike.debug("Rolled to keep headgear "..sec)
+            return false
+        end
+    end
+    if is_weapon and self.logic_state.allow_weapon_loss then
+        if math.random() < soulslike_mcm.get_weapon_keep_chance() then
+            soulslike.debug("Rolled to keep weapon "..sec)
+            return false
+        end
+    end
+    if is_artefact and self.logic_state.allow_artifact_loss then
+        if math.random() < soulslike_mcm.get_artifact_keep_chance() then
+            soulslike.debug("Rolled to keep artefact "..sec)
+            return false
+        end
+    end
     return is_loss_allowed
 end
 
