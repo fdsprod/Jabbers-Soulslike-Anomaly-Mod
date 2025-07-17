@@ -798,8 +798,7 @@ function SoulslikeScenarioLogic:RespawnActor()
 
     -- Nighttime respawn logic
     if not soulslike_mcm.allow_nighttime_respawn() then
-        local gt = game.get_game_time()
-        local hour = gt:get_Hour()
+        local hour = level.get_time_hours()
         -- If it's before 7am or after 21 (9pm), advance to 7-9am
         if hour < 7 or hour >= 21 then
             local advance_hours = 7 - hour
