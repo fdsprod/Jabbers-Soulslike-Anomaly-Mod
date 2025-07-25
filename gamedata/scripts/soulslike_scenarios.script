@@ -886,69 +886,71 @@ function SoulslikeScenarioLogic:StopSurgeAndStorm(to_id)
         psi_storm_manager:finish(true)
     end
 end
-
 function SoulslikeScenarioLogic:IsItemLossAllowed(item)
-    -- If the player died in the water, no items will be lost...
-    -- A sort of i dont want to touch the gear in the water and get irradiated
-    -- play from the looter.
-    if self.logic_state.player_died_in_water then return false end
+    -- If the player died in the water, no items will be lost
+    if self.logic_state.player_died_in_water then
+        return false
+    end
 
     local sec = item:section()
     local is_grenade = IsGrenade(item)
     local is_artefact = IsArtefact(item)
     local is_weapon = (IsWeapon(item) and not is_grenade)
-    local is_outfit = IsOutfit(item) 
+    local is_outfit = IsOutfit(item)
     local is_headgear = IsHeadgear(item)
     local is_backpack = item and SYS_GetParam(0, sec, "kind") == "i_backpack"
     local is_toolkit = IsToolkit(item)
-    local is_loss_allowed = true
 
-    if is_weapon and not self.logic_state.allow_weapon_loss then   
+    -- Check loss permission for each type
+    if is_weapon and not self.logic_state.allow_weapon_loss then
         soulslike.debug("Not allowed to lose weapon "..sec)
-        is_loss_allowed = false
-    elseif is_artefact and not self.logic_state.allow_artifact_loss then   
+        return false
+    end
+    
+    if is_artefact and not self.logic_state.allow_artifact_loss then
         soulslike.debug("Not allowed to lose artefact "..sec)
-        is_loss_allowed = false
-    elseif is_outfit and not self.logic_state.allow_outfit_loss then   
-        soulslike.debug("Not allowed to lose outfit "..sec)
-        is_loss_allowed = false
-    elseif is_headgear and not self.logic_state.allow_headgear_loss then   
-        soulslike.debug("Not allowed to lose headgear "..sec)
-        is_loss_allowed = false
-    elseif is_toolkit and not self.logic_state.allow_toolkit_loss then   
-        soulslike.debug("Not allowed to lose toolkit "..sec)
-        is_loss_allowed = false
-    elseif is_backpack then            
-        soulslike.debug("Not allowed to lose bakcpack "..sec)
-        is_loss_allowed = false
+        return false
     end
 
-    -- Keep chance logic for each type
-    if is_outfit and self.logic_state.allow_outfit_loss then
-        if math.random() < soulslike_mcm.get_outfit_keep_chance() then
-            soulslike.debug("Rolled to keep outfit "..sec)
-            return false
-        end
+    if is_outfit and not self.logic_state.allow_outfit_loss then
+        soulslike.debug("Not allowed to lose outfit "..sec)
+        return false
     end
-    if is_headgear and self.logic_state.allow_headgear_loss then
-        if math.random() < soulslike_mcm.get_headgear_keep_chance() then
-            soulslike.debug("Rolled to keep headgear "..sec)
-            return false
-        end
+
+    if is_headgear and not self.logic_state.allow_headgear_loss then
+        soulslike.debug("Not allowed to lose headgear "..sec)
+        return false
     end
-    if is_weapon and self.logic_state.allow_weapon_loss then
-        if math.random() < soulslike_mcm.get_weapon_keep_chance() then
-            soulslike.debug("Rolled to keep weapon "..sec)
-            return false
-        end
+
+    if is_toolkit and not self.logic_state.allow_toolkit_loss then
+        soulslike.debug("Not allowed to lose toolkit "..sec)
+        return false
     end
-    if is_artefact and self.logic_state.allow_artifact_loss then
-        if math.random() < soulslike_mcm.get_artifact_keep_chance() then
-            soulslike.debug("Rolled to keep artefact "..sec)
-            return false
-        end
+
+    if is_backpack then
+        soulslike.debug("Not allowed to lose backpack "..sec)
+        return false
     end
-    return is_loss_allowed
+
+    -- Chance logic for each type
+    if is_outfit and self.logic_state.allow_outfit_loss and math.random() >= soulslike_mcm.get_outfit_loss_chance() then
+        soulslike.debug("Rolled to keep outfit "..sec)
+        return false
+    end
+    if is_headgear and self.logic_state.allow_headgear_loss and math.random() >= soulslike_mcm.get_headgear_loss_chance() then
+        soulslike.debug("Rolled to keep headgear "..sec)
+        return false
+    end
+    if is_weapon and self.logic_state.allow_weapon_loss and math.random() >= soulslike_mcm.get_weapon_loss_chance() then
+        soulslike.debug("Rolled to keep weapon "..sec)
+        return false
+    end
+    if is_artefact and self.logic_state.allow_artifact_loss and math.random() >= soulslike_mcm.get_artifact_loss_chance() then
+        soulslike.debug("Rolled to keep artefact "..sec)
+        return false
+    end
+
+    return true
 end
 
 function SoulslikeScenarioLogic:TryStalkerLooter(item, container, looter)

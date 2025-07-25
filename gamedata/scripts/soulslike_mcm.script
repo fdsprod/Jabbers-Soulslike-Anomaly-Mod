@@ -100,7 +100,7 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_allow_nighttime_respawn"
+                text = "ui_mcm_soulslike_character_allow_nighttime_respawn"
             }
         },
     }
@@ -147,7 +147,7 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_weapon_keep_chance"
+                text = "ui_mcm_soulslike_items_weapon_keep_chance"
             },
             {
                 id = "weapon_keep_chance_desc",
@@ -170,7 +170,7 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_outfit_keep_chance"
+                text = "ui_mcm_soulslike_items_outfit_keep_chance"
             },
             {
                 id = "outfit_keep_chance_desc",
@@ -193,7 +193,7 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_headgear_keep_chance"
+                text = "ui_mcm_soulslike_items_headgear_keep_chance"
             },
             {
                 id = "headgear_keep_chance_desc",
@@ -216,7 +216,7 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_artifact_keep_chance"
+                text = "ui_mcm_soulslike_items_artifact_keep_chance"
             },
             {
                 id = "artifact_keep_chance_desc",
