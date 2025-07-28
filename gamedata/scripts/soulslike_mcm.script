@@ -100,7 +100,6 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_character_allow_nighttime_respawn"
             }
         },
     }
@@ -137,7 +136,6 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_items_allow_weapon_loss"
             },
             {
                 id = "weapon_keep_chance",
@@ -147,12 +145,11 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_items_weapon_keep_chance"
             },
             {
                 id = "weapon_keep_chance_desc",
                 type = "desc",
-                text = "ui_mcm_soulslike_weapon_keep_chance_desc",
+                text = "ui_mcm_soulslike_items_weapon_keep_chance_desc",
                 clr = {255,255,255,0}
             },
             {
@@ -160,7 +157,6 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_items_allow_outfit_loss"
             },
             {
                 id = "outfit_keep_chance",
@@ -170,12 +166,11 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_items_outfit_keep_chance"
             },
             {
                 id = "outfit_keep_chance_desc",
                 type = "desc",
-                text = "ui_mcm_soulslike_outfit_keep_chance_desc",
+                text = "ui_mcm_soulslike_items_outfit_keep_chance_desc",
                 clr = {255,255,255,0}
             },
             {
@@ -183,7 +178,6 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_items_allow_headgear_loss"
             },
             {
                 id = "headgear_keep_chance",
@@ -193,12 +187,11 @@ function on_mcm_load()
                 max = 1.0,
                 step = 0.01,
                 def = 0.25,
-                text = "ui_mcm_soulslike_items_headgear_keep_chance"
             },
             {
                 id = "headgear_keep_chance_desc",
                 type = "desc",
-                text = "ui_mcm_soulslike_headgear_keep_chance_desc",
+                text = "ui_mcm_soulslike_items_headgear_keep_chance_desc",
                 clr = {255,255,255,0}
             },
             {
@@ -206,7 +199,6 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = true,
-                text = "ui_mcm_soulslike_items_allow_artifact_loss"
             },
             {
                 id = "artifact_keep_chance",
@@ -221,7 +213,7 @@ function on_mcm_load()
             {
                 id = "artifact_keep_chance_desc",
                 type = "desc",
-                text = "ui_mcm_soulslike_artifact_keep_chance_desc",
+                text = "ui_mcm_soulslike_items_artifact_keep_chance_desc",
                 clr = {255,255,255,0}
             },
             {
@@ -936,6 +928,22 @@ end
 
 function get_item_condition_loss_percent()
     return get_config("items/item_condition_loss_scalar", 0.05)
+end
+
+function get_keep_artifact_chance()
+    return get_config("items/artifact_keep_chance", true)
+end
+
+function get_keep_headgear_chance()
+    return get_config("items/headgear_keep_chance", true)
+end
+
+function get_keep_outfit_chance()
+    return get_config("items/outfit_keep_chance", true)
+end
+
+function get_keep_weapon_chance()
+    return get_config("items/weapon_keep_chance", true)
 end
 
 function allow_toolkit_loss()

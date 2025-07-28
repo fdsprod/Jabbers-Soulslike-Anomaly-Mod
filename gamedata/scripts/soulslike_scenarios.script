@@ -933,19 +933,19 @@ function SoulslikeScenarioLogic:IsItemLossAllowed(item)
     end
 
     -- Chance logic for each type
-    if is_outfit and self.logic_state.allow_outfit_loss and math.random() >= soulslike_mcm.get_outfit_loss_chance() then
+    if is_outfit and self.logic_state.allow_outfit_loss and math.random() < soulslike_mcm.get_keep_outfit_chance() then
         soulslike.debug("Rolled to keep outfit "..sec)
         return false
     end
-    if is_headgear and self.logic_state.allow_headgear_loss and math.random() >= soulslike_mcm.get_headgear_loss_chance() then
+    if is_headgear and self.logic_state.allow_headgear_loss and math.random() < soulslike_mcm.get_keep_headgear_chance() then
         soulslike.debug("Rolled to keep headgear "..sec)
         return false
     end
-    if is_weapon and self.logic_state.allow_weapon_loss and math.random() >= soulslike_mcm.get_weapon_loss_chance() then
+    if is_weapon and self.logic_state.allow_weapon_loss and math.random() < soulslike_mcm.get_keep_weapon_chance() then
         soulslike.debug("Rolled to keep weapon "..sec)
         return false
     end
-    if is_artefact and self.logic_state.allow_artifact_loss and math.random() >= soulslike_mcm.get_artifact_loss_chance() then
+    if is_artefact and self.logic_state.allow_artifact_loss and math.random() < soulslike_mcm.get_keep_artifact_chance() then
         soulslike.debug("Rolled to keep artefact "..sec)
         return false
     end
@@ -1042,11 +1042,6 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
     local to_id = container:id()
 
-    if ignore_list(sec) then
-        soulslike.debug("Item is in ignore list: "..sec)
-        return false
-    end
-
     if ini_sys:r_bool_ex(sec,"quest_item",false) then
         soulslike.debug("Item quest item: "..sec)
         return false
@@ -1058,6 +1053,11 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
         alife_release(item)
         self.logic_state.story.items_were_lost = true
+        return false
+    end
+
+    if ignore_list(sec) then
+        soulslike.debug("Item is in ignore list: "..sec)
         return false
     end
 
