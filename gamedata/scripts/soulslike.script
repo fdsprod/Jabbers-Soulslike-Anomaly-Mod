@@ -732,7 +732,6 @@ local function physic_object_on_use_callback(box, who)
 
     debug("Transfering items from hidden stash "..tostring(id).." to static stash "..tostring(stash_id))    
     
-
     stash:iterate_inventory_box(transfer_item)      
     alife_release(stash)
 

@@ -449,6 +449,13 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_ignored_items_device_pda"
             },
             {
+                id = "device_pda_0",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_0"
+            },
+            {
                 id = "device_pda_1",
                 type = "check",
                 val = 1,
@@ -468,6 +475,34 @@ function on_mcm_load()
                 val = 1,
                 def = true,
                 text = "ui_mcm_soulslike_ignored_items_device_pda_3"
+            },
+            {
+                id = "device_pda_4",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_4"
+            },
+            {
+                id = "device_pda_getac",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_getac"
+            },
+            {
+                id = "device_pda_milspec",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_milspec"
+            },
+            {
+                id = "device_pda_kulon",
+                type = "check",
+                val = 1,
+                def = true,
+                text = "ui_mcm_soulslike_ignored_items_device_pda_kulon"
             },
             {
                 id = "detector_radio",
@@ -1141,6 +1176,10 @@ function ignore_device_pda()
     return get_config("ignored_items/ignore_device_pda", true)
  end
 
+function ignore_device_pda_0() 
+    return get_config("ignored_items/ignore_device_pda_0", true)
+ end
+
 function ignore_device_pda_1() 
     return get_config("ignored_items/ignore_device_pda_1", true) 
 end
@@ -1148,8 +1187,25 @@ end
 function ignore_device_pda_2() 
     return get_config("ignored_items/ignore_device_pda_2", true)
  end
+ 
 function ignore_device_pda_3() 
     return get_config("ignored_items/ignore_device_pda_3", true) 
+end
+
+function ignore_device_pda_4()
+    return get_config("ignored_items/ignore_device_pda_4", true)
+end
+
+function ignore_device_pda_getac()
+    return get_config("ignored_items/ignore_device_pda_getac", true)
+end
+
+function ignore_device_pda_milspec()
+    return get_config("ignored_items/ignore_device_pda_milspec", true)
+end
+
+function ignore_device_pda_kulon()
+    return get_config("ignored_items/ignore_device_pda_kulon", true)
 end
 
 function ignore_detector_radio() 

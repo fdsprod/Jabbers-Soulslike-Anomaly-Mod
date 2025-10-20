@@ -353,6 +353,9 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_ignored_items_device_pda">
         <text>PDA</text>
     </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_0">
+        <text>PDA 0</text>
+    </string>
     <string id="ui_mcm_soulslike_ignored_items_device_pda_1">
         <text>PDA 1</text>
     </string>
@@ -361,6 +364,18 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>
     <string id="ui_mcm_soulslike_ignored_items_device_pda_3">
         <text>PDA 3</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_4">
+        <text>PDA 4</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_getac">
+        <text>GETAC PDA</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_milspec">
+        <text>Milspec PDA</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_kulon">
+        <text>Kulon PDA</text>
     </string>
     <string id="ui_mcm_soulslike_ignored_items_detector_radio">
         <text>Radio Detector</text>
