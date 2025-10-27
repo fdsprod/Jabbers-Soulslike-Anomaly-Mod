@@ -4,3 +4,4 @@
 *.bat
 .github/copilot-instructions.md
 _scripts/* 
+_items/*

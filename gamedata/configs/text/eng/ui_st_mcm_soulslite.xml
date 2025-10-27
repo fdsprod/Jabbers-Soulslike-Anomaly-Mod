@@ -422,6 +422,9 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_ignored_items_medkit">
         <text>Medkit</text>
     </string>
+    <string id="ui_mcm_soulslike_ignored_items_other_desc">
+        <text>This is a comma separated list of item IDs that will be ignored.</text>
+    </string>
     <string id="ui_mcm_soulslike_character_allow_nighttime_respawn">
         <text>Allow nighttime respawn</text>
     </string>

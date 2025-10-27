@@ -28,8 +28,12 @@ local ignore_items = {
 }
 
 local function ignore_list(sec)
-    local mcm_func = ignore_items[sec]
-    return mcm_func and soulslike_mcm[mcm_func]() or false
+    local id = ignore_items[sec]
+    if id and soulslike_mcm.is_ignored(id) then
+        return true
+    else
+        return false
+    end
 end
 
 local obj_to_spawn_classes = {

@@ -17,7 +17,7 @@ function on_mcm_load()
         sh = true,
         gr = {           
             {
-                id = "title",
+                id = "general_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_general_title",
@@ -25,13 +25,13 @@ function on_mcm_load()
                 spacing = 20
             }, 
             {
-                id = "desc_mcm",
+                id = "general_desc_intro",
                 type = "desc",
                 text = "ui_mcm_soulslike_general_description",
                 clr = {255, 255 ,255 ,255},
             },
             {
-                id = "desc_mcm",
+                id = "general_desc_disclaimer",
                 type = "desc",
                 text = "ui_mcm_soulslike_general_disclaimer",
                 clr = {255, 255 ,255 ,0},
@@ -47,7 +47,7 @@ function on_mcm_load()
         sh = true,
         gr = {          
             {
-                id = "title",
+                id = "character_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_character_title",
@@ -112,7 +112,7 @@ function on_mcm_load()
         sh = true,
         gr = {  
             {
-                id = "title",
+                id = "items_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_items_title",
@@ -126,7 +126,7 @@ function on_mcm_load()
                 def = false
             },
             {
-                id = "desc_mcm",
+                id = "items_desc_overview",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_allow_desc",
                 clr = {255, 255 ,255 ,255},
@@ -231,7 +231,7 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_allow_money_loss"
             },
             {
-                id = "desc_mcm",
+                id = "items_desc_scalar",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_scalar_description",
                 clr = {255, 255 ,255 ,255},
@@ -257,7 +257,7 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_item_condition_loss_scalar"
             },
             {
-                id = "desc_mcm",
+                id = "items_desc_loss_chance_per_type",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_loss_chance_per_type_desc",
                 clr = {255, 255 ,255 ,255},
@@ -323,7 +323,7 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_items_other_loss_chance"
             },
             {
-                id = "desc_mcm",
+                id = "items_desc_condition_loss_per_type",
                 type = "desc",
                 text = "ui_mcm_soulslike_items_condition_loss_per_type_desc",
                 clr = {255, 255 ,255 ,255},
@@ -372,14 +372,14 @@ function on_mcm_load()
                 id = "ignore_rank_when_computing_item_loss_chance",
                 type = "check",
                 val = 1,
-                def = true,
+                def = false,
                 text = "ui_mcm_soulslike_items_ignore_rank_when_computing_item_loss_chance"
             },
             {
                 id = "ignore_rank_when_computing_item_condition_loss",
                 type = "check",
                 val = 1,
-                def = true,
+                def = false,
                 text = "ui_mcm_soulslike_items_ignore_rank_when_computing_item_condition_loss"
             },
             {
@@ -414,7 +414,7 @@ function on_mcm_load()
         sh = true,
         gr = {
             {
-                id = "title",
+                id = "ignored_items_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_ignored_items_title",
@@ -422,7 +422,7 @@ function on_mcm_load()
                 spacing = 20
             },
             {
-                id = "desc_mcm",
+                id = "ignored_items_desc_intro",
                 type = "desc",
                 text = "ui_mcm_soulslike_ignored_items_desc",
                 clr = {255, 255 ,255 ,255},
@@ -608,7 +608,19 @@ function on_mcm_load()
                 val = 1,
                 def = true,
                 text = "ui_mcm_soulslike_ignored_items_medkit"
-            }
+            },
+            {
+                id = 'other',
+                type = "input",
+                val = '',
+                def = '',
+            },
+            {
+                id = "ignored_items_desc_other",
+                type = "desc",
+                text = "ui_mcm_soulslike_ignored_items_other_desc",
+                clr = {255, 255 ,255 ,255},
+            },
         },
     }
     
@@ -620,7 +632,7 @@ function on_mcm_load()
         sh = true,
         gr = {
             {
-                id = "title",
+                id = "scenarios_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_scenarios_title",
@@ -628,7 +640,7 @@ function on_mcm_load()
                 spacing = 20
             },
             {
-                id = "desc_mcm",
+                id = "scenarios_desc_intro",
                 type = "desc",
                 text = "ui_mcm_soulslike_scenarios_description",
                 clr = {255, 255 ,255 ,255},
@@ -668,7 +680,7 @@ function on_mcm_load()
         sh = true,
         gr = {
             {
-                id = "title",
+                id = "ambush_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_ambush_title",
@@ -676,7 +688,7 @@ function on_mcm_load()
                 spacing = 20
             },
             {
-                id = "desc_mcm",
+                id = "ambush_desc_intro",
                 type = "desc",
                 text = "ui_mcm_soulslike_ambush_description",
                 clr = {255, 255 ,255 ,255},
@@ -788,7 +800,7 @@ function on_mcm_load()
         sh = true,
         gr = {
             {
-                id = "title",
+                id = "hardcore_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_hardcore_title",
@@ -796,7 +808,7 @@ function on_mcm_load()
                 spacing = 20
             },
             {
-                id = "desc_mcm",
+                id = "hardcore_desc_save",
                 type = "desc",
                 text = "ui_mcm_soulslike_hardcore_save_description",
                 clr = {255, 255 ,255 ,0},
@@ -837,7 +849,7 @@ function on_mcm_load()
         sh = true,
         gr = {
             {
-                id = "title",
+                id = "debug_header_slide",
                 type = "slide",
                 link = "ui_options_slider_gameplay_diff",
                 text = "ui_mcm_soulslike_debug_title",
@@ -966,19 +978,19 @@ function get_item_condition_loss_percent()
 end
 
 function get_keep_artifact_chance()
-    return get_config("items/artifact_keep_chance", true)
+    return get_config("items/artifact_keep_chance", 0.25)
 end
 
 function get_keep_headgear_chance()
-    return get_config("items/headgear_keep_chance", true)
+    return get_config("items/headgear_keep_chance", 0.25)
 end
 
 function get_keep_outfit_chance()
-    return get_config("items/outfit_keep_chance", true)
+    return get_config("items/outfit_keep_chance", 0.25)
 end
 
 function get_keep_weapon_chance()
-    return get_config("items/weapon_keep_chance", true)
+    return get_config("items/weapon_keep_chance", 0.25)
 end
 
 function allow_toolkit_loss()
@@ -1015,11 +1027,11 @@ end
 
 -- Ambush
 function mutant_ambush_chance()
-    return get_config("ambush/mutant_ambush_chance", 0.5)
+    return get_config("ambush/mutant_ambush_chance", 0.25)
 end 
 
 function stalker_ambush_chance()
-    return get_config("ambush/stalker_ambush_chance", 0.5)
+    return get_config("ambush/stalker_ambush_chance", 0.25)
 end 
 
 function allow_boar_ambush()
@@ -1068,11 +1080,11 @@ function get_health_loss_percent()
 end
 
 function rank_loss_percent()
-    return get_config("character/rank_loss_percent", 0.05)
+    return get_config("character/rank_loss_percent", 0.02)
 end 
 
 function rep_loss_percent()
-    return get_config("character/rep_loss_percent", 0.02)
+    return get_config("character/rep_loss_percent", 0.05)
 end 
 
 function allow_nighttime_respawn()
@@ -1164,110 +1176,10 @@ function get_headgear_condition_loss_chance()
 end
 
 -- Getter functions for ignored items
-function ignore_bolt() 
-    return get_config("ignored_items/ignore_bolt", true)
+function is_ignored(id) 
+    return get_config("ignored_items/" .. id, true)
  end
  
-function ignore_itm_actor_backpack()
-     return get_config("ignored_items/ignore_itm_actor_backpack", true) 
-end
-
-function ignore_device_pda() 
-    return get_config("ignored_items/ignore_device_pda", true)
- end
-
-function ignore_device_pda_0() 
-    return get_config("ignored_items/ignore_device_pda_0", true)
- end
-
-function ignore_device_pda_1() 
-    return get_config("ignored_items/ignore_device_pda_1", true) 
-end
-
-function ignore_device_pda_2() 
-    return get_config("ignored_items/ignore_device_pda_2", true)
- end
- 
-function ignore_device_pda_3() 
-    return get_config("ignored_items/ignore_device_pda_3", true) 
-end
-
-function ignore_device_pda_4()
-    return get_config("ignored_items/ignore_device_pda_4", true)
-end
-
-function ignore_device_pda_getac()
-    return get_config("ignored_items/ignore_device_pda_getac", true)
-end
-
-function ignore_device_pda_milspec()
-    return get_config("ignored_items/ignore_device_pda_milspec", true)
-end
-
-function ignore_device_pda_kulon()
-    return get_config("ignored_items/ignore_device_pda_kulon", true)
-end
-
-function ignore_detector_radio() 
-    return get_config("ignored_items/ignore_detector_radio", true) 
-end
-
-function ignore_wpn_knife() 
-    return get_config("ignored_items/ignore_wpn_knife", true) 
-end
-
-function ignore_wpn_knife2() 
-    return get_config("ignored_items/ignore_wpn_knife2", true) 
-end
-
-function ignore_wpn_knife3() 
-    return get_config("ignored_items/ignore_wpn_knife3", true) 
-end
-
-function ignore_wpn_knife4() 
-    return get_config("ignored_items/ignore_wpn_knife4", true) 
-end
-
-function ignore_wpn_knife5() 
-    return get_config("ignored_items/ignore_wpn_knife5", true) 
-end
-
-function ignore_wpn_knife6() 
-    return get_config("ignored_items/ignore_wpn_knife6", true) 
-end
-
-function ignore_wpn_knife7() 
-    return get_config("ignored_items/ignore_wpn_knife7", true) 
-end
-
-function ignore_wpn_knife8() 
-    return get_config("ignored_items/ignore_wpn_knife8", true) 
-end
-
-function ignore_wpn_knife9()
-     return get_config("ignored_items/ignore_wpn_knife9", true) 
-end
-
-function ignore_wpn_axe()
-     return get_config("ignored_items/ignore_wpn_axe", true)     
-end
-
-function ignore_wpn_axe2() 
-    return get_config("ignored_items/ignore_wpn_axe2", true) 
-end
-
-function ignore_wpn_axe3() 
-    return get_config("ignored_items/ignore_wpn_axe3", true) 
-end
-
-function ignore_bandage() 
-    return get_config("ignored_items/ignore_bandage", true) 
-end
-
-function ignore_medkit() 
-    return get_config("ignored_items/ignore_medkit", true) 
-end
-
 function allow_money_loss()
     return get_config("items/allow_money_loss", true)
 end
