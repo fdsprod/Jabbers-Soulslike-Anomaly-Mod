@@ -29,11 +29,23 @@ local ignore_items = {
 
 local function ignore_list(sec)
     local id = ignore_items[sec]
-    if id and soulslike_mcm.is_ignored(id) then
-        return true
-    else
-        return false
+    if id then
+        return soulslike_mcm.is_ignored(id)
     end
+
+    local ignored_other = soulslike_mcm.get_ignored_other and soulslike_mcm.get_ignored_other()
+
+    if type(ignored_other) == "string" and ignored_other ~= "" then
+        for entry in string.gmatch(ignored_other, "([^,]+)") do
+            local trimmed = string.match(entry, "^%s*(.-)%s*$") or ""
+
+            if trimmed ~= "" and trimmed == sec then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 local obj_to_spawn_classes = {

@@ -1176,6 +1176,10 @@ function get_headgear_condition_loss_chance()
 end
 
 -- Getter functions for ignored items
+function get_ignored_other() 
+    return get_config("ignored_items/ignored_other", '')
+ end
+
 function is_ignored(id) 
     return get_config("ignored_items/" .. id, true)
  end
