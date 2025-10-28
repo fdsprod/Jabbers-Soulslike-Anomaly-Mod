@@ -179,10 +179,6 @@ local stalker_spawns = {
     { section = "army_sim_squad_advanced",      community = "army",         weight = 0.10,  type = stalker_spawn_type.Advanced },
     { section = "army_sim_squad_veteran",       community = "army",         weight = 0.10,  type = stalker_spawn_type.Veteran },
     { section = "army_sim_squad_sniper",        community = "army",         weight = 0.05,  type = stalker_spawn_type.Sniper },
-    --Clear Sky
-    { section = "csky_sim_squad_novice",        community = "csky",         weight = 1.00,  type = stalker_spawn_type.Novice },
-    { section = "csky_sim_squad_advanced",      community = "csky",         weight = 0.10,  type = stalker_spawn_type.Advanced },
-    { section = "csky_sim_squad_veteran",       community = "csky",         weight = 0.10,  type = stalker_spawn_type.Veteran },
     --Renegades
     { section = "renegade_sim_squad_novice",    community = "renegade",     weight = 0.50,  type = stalker_spawn_type.Novice },
     { section = "renegade_sim_squad_advanced",  community = "renegade",     weight = 0.20,  type = stalker_spawn_type.Advanced },
@@ -212,7 +208,7 @@ local stalker_spawns = {
 local function is_equipped(id) 
     local is_equipped = false
     for i=1,12 do
-        slot = db.actor:item_in_slot(i)
+        local slot = db.actor:item_in_slot(i)
         if (slot and slot:id() == id) then
             is_equipped = true
             break
@@ -245,7 +241,8 @@ function SoulslikeScenarioLogic:__init(state)
         
         local ranked_chance = 0
         if not ignore_rank_item_loss or not ignore_rank_item_condition_loss then
-            ranked_chance = math.clamp(math.sqrt(rank / 500) * math.log(rank * rank) / math.log(1000) * 1.5, 0, 50) / 66
+            local safe_rank = math.max(rank, 1)
+            ranked_chance = math.clamp(math.sqrt(safe_rank / 500) * math.log(safe_rank * safe_rank) / math.log(1000) * 1.5, 0, 50) / 66
         end
         
         soulslike.debug("Creating logic state.")
@@ -373,7 +370,7 @@ function SoulslikeScenarioLogic:HealActor()
     db.actor:set_health_ex(heath)
     db.actor.power = 1
     db.actor.radiation = 0
-    db.actor.bleeding = 1
+    db.actor.bleeding = 0
     db.actor.psy_health = 1
 
     save_var(db.actor,'grw_in_water',nil)
@@ -742,7 +739,10 @@ function SoulslikeScenarioLogic:SpawnAmbush()
             local lvid = self.logic_state.death_location.level_vertex_id
             local gvid = self.logic_state.death_location.game_vertex_id
             local group = obj_to_spawn_classes[class]
-            local is_squad = string.find(group, "Squad")
+            if not group then
+                soulslike.debug(strformat("Unknown spawn class [%s] for section [%s]", tostring(class), tostring(section)))
+            end
+            local is_squad = group and string.find(group, "Squad")
             local se_obj = section and alife_create(section, pos, lvid, gvid)
 
             if se_obj then

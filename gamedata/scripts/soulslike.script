@@ -288,7 +288,8 @@ end
 
 function find_closest_enemy()
     local enemy = nil
-    local enemy_dist = 150
+    local max_distance = 150
+    local enemy_dist_sq = max_distance * max_distance
 	local sim = alife()
 	local gg = game_graph()
     local level_name = level.name()
@@ -313,14 +314,17 @@ function find_closest_enemy()
 			end
 
             if is_valid then
-                local dist = se_obj.position:distance_to_sqr(db.actor:position())
-                if enemy_dist > dist then                    
+                local dist_sq = se_obj.position:distance_to_sqr(db.actor:position())
+                if enemy_dist_sq > dist_sq then                    
                     if IsStalker(nil,cls) then
                         local comm = se_obj:community()
+                        local dist = math.sqrt(dist_sq)
                         debug("Found enemy "..se_obj:name().." from the "..comm.." community "..tostring(dist).." meters away.")
                         enemy = se_obj
+                        enemy_dist_sq = dist_sq
                     elseif IsMonster(nil,cls) then
                         enemy = se_obj
+                        enemy_dist_sq = dist_sq
                     end
                 end
             end
@@ -332,7 +336,8 @@ end
 
 function find_closest_enemy_mutant()
     local enemy = nil
-    local enemy_dist = 75
+    local max_distance = 75
+    local enemy_dist_sq = max_distance * max_distance
 	local sim = alife()
 	local gg = game_graph()
     local level_name = level.name()
@@ -346,11 +351,10 @@ function find_closest_enemy_mutant()
             local cls = se_obj:clsid()
 
             if IsMonster(nil,cls) then
-                local dist = se_obj.position:distance_to_sqr(db.actor:position())
-                if enemy_dist > dist then                    
-                    if IsMonster(nil,cls) then
-                        enemy = se_obj
-                    end
+                local dist_sq = se_obj.position:distance_to_sqr(db.actor:position())
+                if enemy_dist_sq > dist_sq then                    
+                    enemy = se_obj
+                    enemy_dist_sq = dist_sq
                 end
             end
 		end
@@ -361,21 +365,22 @@ end
 
 function find_closest_enemy_stalker()  
     local enemy = nil
-    local enemy_dist = 100000
+    local enemy_dist_sq = math.huge
 
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
 		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
 
         if npc then
-            local dist = npc:position():distance_to_sqr(db.actor:position())
+            local dist_sq = npc:position():distance_to_sqr(db.actor:position())
             local is_enemy = npc:general_goodwill(db.actor) <= RELATIONS.ENEMIES
             
-            if npc:alive() and is_enemy and enemy_dist > dist and (not get_object_story_id(id)) then
+            if npc:alive() and is_enemy and enemy_dist_sq > dist_sq and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
+                local dist = math.sqrt(dist_sq)
                 debug("Found enemy "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
                 enemy = npc
-                enemy_dist = dist
+                enemy_dist_sq = dist_sq
             end
         end
     end
@@ -385,21 +390,22 @@ end
 
 function find_closest_friendly_stalker()  
     local friendly = nil
-    local friendly_dist = 100000
+    local friendly_dist_sq = math.huge
 
 	for i=1, #db.OnlineStalkers do
 		local id = db.OnlineStalkers[i]
 		local npc = db.storage[id] and db.storage[id].object or level.object_by_id(id)
 
         if npc then
-            local dist = npc:position():distance_to_sqr(db.actor:position())
+            local dist_sq = npc:position():distance_to_sqr(db.actor:position())
             local is_friend = npc:general_goodwill(db.actor) >= RELATIONS.ENEMIES
             
-            if npc:alive() and is_friend and friendly_dist > dist and (not get_object_story_id(id)) then
+            if npc:alive() and is_friend and friendly_dist_sq > dist_sq and (not get_object_story_id(id)) then
                 local comm = npc:character_community()
+                local dist = math.sqrt(dist_sq)
                 debug("Found friend "..npc:name().." from the "..comm.." community "..tostring(dist).." meters away.")
                 friendly = npc
-                friendly_dist = dist
+                friendly_dist_sq = dist_sq
             end
         end
     end
@@ -613,10 +619,12 @@ local function actor_on_stash_remove(data)
     end
 
     local state = get_soulslike_state()
+    local stash_id = data.stash_id
 
-    if state.created_stashes[data.stash_id] then
+    if stash_id and state.created_stashes[stash_id] then
         data.cancel = true    
-        try_send_inventory_examined_message(state.stash_id)
+        try_send_inventory_examined_message(stash_id)
+        state.created_stashes[stash_id] = nil
     end
 end
 

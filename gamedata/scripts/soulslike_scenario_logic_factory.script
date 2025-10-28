@@ -1,9 +1,15 @@
+local clamp = math.clamp or function(x, min_val, max_val)
+    if x < min_val then return min_val end
+    if x > max_val then return max_val end
+    return x
+end
 
 
 local function compute_fatal_hit_info(hits)
     local fatal_hit = nil
     local agg_hit = {}
-    local max_time = -1
+    local max_time = -math.huge
+    local min_time = math.huge
 
     soulslike.debug("Calculating fatal hit:")
     soulslike.debug(hits)
@@ -18,14 +24,26 @@ local function compute_fatal_hit_info(hits)
 
     for _, value in ipairs(hits) do
         max_time = math.max(max_time, value.time)
+        min_time = math.min(min_time, value.time)
     end
 
-    local min_time = soulslike.MAX_HIT_TIME
+    if max_time == -math.huge then
+        max_time = time_global()
+    end
+
+    if min_time == math.huge then
+        min_time = max_time
+    end
+
+    local raw_span = max_time - min_time
+    local time_span = raw_span <= 0 and 1 or raw_span
+    local single_hit = raw_span <= 0
 
     -- Convert to an aggregation of damage if there is a well defined draftsman_type
     for _, hit_data in ipairs(hits) do
         hit_data.draftsman = hit_data.draftsman_id and level.object_by_id(hit_data.draftsman_id) or nil
-        local power_weight = (hit_data.time - min_time) / soulslike.MAX_HIT_TIME
+        local power_weight = single_hit and 1 or (hit_data.time - min_time) / time_span
+        power_weight = clamp(power_weight, 0, 1)
         local draftsman_type = soulslike.entity_type.Other
         if hit_data.draftsman then
             if hit_data.draftsman:id() == AC_ID then
@@ -140,7 +158,8 @@ function create_new(hits)
     local available_scenarios = {}    
     local game_state = soulslike.get_soulslike_state()
     local spawn_position = vector():set(game_state.spawn_location.position.x, game_state.spawn_location.position.y, game_state.spawn_location.position.z)   
-    local distance_from_spawn = spawn_position:distance_to_sqr(db.actor:position())
+    local distance_sqr = spawn_position:distance_to_sqr(db.actor:position())
+    local distance_from_spawn = math.sqrt(distance_sqr)
     
     if soulslike_mcm.debug_the_noloss_scenario() then
         soulslike.debug("Debugging noloss scenario.")
@@ -172,18 +191,18 @@ function create_new(hits)
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = 1.0})
     elseif distance_from_spawn <= 50 then
-        soulslike.debug("Player was killed "..tostring(distance_from_spawn).." meters their spawn point.")
+        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters their spawn point.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
         scenario_loot_scalar = 0
       
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})  
     elseif distance_from_spawn <= 200 then
-        soulslike.debug("Player was killed "..tostring(distance_from_spawn).." meters their spawn point.")
+        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters their spawn point.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
         looter = soulslike.find_closest_enemy()
-        scenario_loot_scalar = (distance_from_spawn - 50) / 150
+        scenario_loot_scalar = clamp((distance_from_spawn - 50) / 150, 0, 1)
       
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.Default, min = 0, max = 0, weight = scenario_loot_scalar})  
