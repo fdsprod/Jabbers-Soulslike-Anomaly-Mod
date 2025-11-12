@@ -423,7 +423,8 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, conditio
     local is_weapon = (IsWeapon(item) and not is_grenade)
     local is_outfit = IsOutfit(item) 
     local is_headgear = IsHeadgear(item)
-    local to_id = container:id()
+    local to_id = container and container:id() or nil
+    local stash_data = to_id and self.game_state.created_stashes[to_id] or nil
     
     local use_condition = utils_item.is_degradable(item, sec)
     local has_cond = use_condition or is_weapon or is_outfit or is_headgear
@@ -463,7 +464,9 @@ function SoulslikeScenarioLogic:ApplyItemConditionLoss(item, container, conditio
             if condition == 0 then
                 soulslike.debug("Item ".. sec.. " was degraded into oblivion")
                 self.logic_state.story.items_were_lost = true
-                table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+                if stash_data and stash_data.lost_items then
+                    table.insert(stash_data.lost_items, sec)
+                end
             end
         end
     end
@@ -497,9 +500,11 @@ end
 
 function SoulslikeScenarioLogic:TransferAndRespawn(to_id)
     soulslike.debug("BASE TransferAndRespawn")
-    self:TransferItems(to_id)       
-    self:ApplyMoneyLoss()  
-    self:ApplyTransferItemsPostConditions()
+    self:TransferItems(to_id)
+    self:ApplyMoneyLoss()
+    if to_id then
+        self:ApplyTransferItemsPostConditions()
+    end
     self:RespawnActor()
 end
 
@@ -517,6 +522,12 @@ function SoulslikeScenarioLogic:HandleItemsAndRespawn()
         level_vertex_id = actor:level_vertex_id(),
         game_vertex_id = actor:game_vertex_id()
     }
+
+    if soulslike_mcm.lose_all_items_on_death() then
+        soulslike.debug("Lose all items on death enabled, skipping stash creation.")
+        self:TransferAndRespawn(nil)
+        return
+    end
 
     local se_stash = self:CreateStash()
              
@@ -976,11 +987,14 @@ end
 
 function SoulslikeScenarioLogic:TryStalkerLooter(item, container, looter)
     local sec = item:section()
-    local to_id = container:id()
+    local to_id = container and container:id() or nil
+    local stash_data = to_id and self.game_state.created_stashes[to_id] or nil
 
     if(self.logic_state.allow_npc_looting and looter) then   
         soulslike.debug("Transfering item to enemy: "..sec)   
-        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)                
+        if stash_data and stash_data.lost_items then
+            table.insert(stash_data.lost_items, sec)
+        end
         db.actor:transfer_item(item, looter)
         self.logic_state.looter = true
         return true
@@ -990,7 +1004,8 @@ end
 
 function SoulslikeScenarioLogic:TryMonsterLooter(item, container, looter)
     local sec = item:section()
-    local to_id = container:id()
+    local to_id = container and container:id() or nil
+    local stash_data = to_id and self.game_state.created_stashes[to_id] or nil
     local is_mutant_meat = SYS_GetParam(0, sec, "kind") == "i_mutant_raw"
     local is_food = SYS_GetParam(0, sec, "kind") == "i_food"
     local is_mutant_belt = SYS_GetParam(0, sec, "kind") == "i_mutant_belt"
@@ -1000,7 +1015,9 @@ function SoulslikeScenarioLogic:TryMonsterLooter(item, container, looter)
     
     if(self.logic_state.allow_npc_looting and looter and (is_mutant_meat or is_food or is_mutant_belt)) then   
         soulslike.debug("Monster ate item: "..sec)   
-        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)            
+        if stash_data and stash_data.lost_items then
+            table.insert(stash_data.lost_items, sec)
+        end
         alife_release(item)
         return true
     end
@@ -1013,6 +1030,10 @@ function SoulslikeScenarioLogic:TryTarkovLooter(item, container, looter)
     local sec = item:section()
     local is_grenade = IsGrenade(item)
     local is_weapon = (IsWeapon(item) and not is_grenade)
+
+    if not container then
+        return false
+    end
 
     if soulslike_mcm.debug_the_tarkov_looter() then
         loss_chance_dice_roll = 1
@@ -1061,7 +1082,8 @@ end
 
 function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     local sec = item:section()
-    local to_id = container:id()
+    local to_id = container and container:id() or nil
+    local stash_data = to_id and self.game_state.created_stashes[to_id] or nil
 
     if ini_sys:r_bool_ex(sec,"quest_item",false) then
         soulslike.debug("Item quest item: "..sec)
@@ -1071,7 +1093,9 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
     -- HARDCORE: Lose all items on death overrides all other logic
     if soulslike_mcm.lose_all_items_on_death() then
         soulslike.debug("Lose all items on death is enabled, removing item: "..sec)
-        table.insert(self.game_state.created_stashes[to_id].lost_items, sec)
+        if stash_data and stash_data.lost_items then
+            table.insert(stash_data.lost_items, sec)
+        end
         alife_release(item)
         self.logic_state.story.items_were_lost = true
         return false
@@ -1178,7 +1202,9 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
 
             if is_ammo or is_food or is_medical then
                 soulslike.debug("Item lost "..sec)  
-                table.insert(self.game_state.created_stashes[to_id].lost_items, sec)          
+                if stash_data and stash_data.lost_items then
+                    table.insert(stash_data.lost_items, sec)
+                end
                 alife_release(item)
                 self.logic_state.story.items_were_lost = true 
                 return false 
@@ -1186,9 +1212,14 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
         end
     end
 
-    soulslike.debug("Transfering item "..sec)
-    db.actor:transfer_item(item, container)
-    return true
+    if container then
+        soulslike.debug("Transfering item "..sec)
+        db.actor:transfer_item(item, container)
+        return true
+    end
+
+    soulslike.debug("No transfer container available for item "..sec)
+    return false
 end
 
 function SoulslikeScenarioLogic:ApplyMoneyLoss()
@@ -1208,7 +1239,12 @@ function SoulslikeScenarioLogic:ApplyMoneyLoss()
 end
 
 function SoulslikeScenarioLogic:TransferItems(to_id)
-    local container = level.object_by_id(to_id)
+    local container = to_id and level.object_by_id(to_id) or nil
+
+    if to_id and not container then
+        soulslike.debug("TransferItems called while stash is still offline: "..tostring(to_id))
+        return
+    end
     local enemy_looter = self.logic_state.looter_id and level.object_by_id(self.logic_state.looter_id) or nil
 
     if enemy_looter and self.logic_state.looter_type == soulslike.entity_type.Stalker then
