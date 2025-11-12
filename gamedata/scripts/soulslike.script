@@ -604,6 +604,8 @@ local function actor_on_item_take_from_box(box,obj)
             
             local se_obj = alife_object(id)
 
+            level.map_remove_object_spot(id, "secondary_task_location")
+
             if se_obj then
                 alife_release(se_obj)
                 try_send_inventory_examined_message(id)
@@ -623,6 +625,7 @@ local function actor_on_stash_remove(data)
 
     if stash_id and state.created_stashes[stash_id] then
         data.cancel = true    
+        level.map_remove_object_spot(stash_id, "secondary_task_location")
         try_send_inventory_examined_message(stash_id)
         state.created_stashes[stash_id] = nil
     end
