@@ -4,7 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.46-beta"
+local version = "0.47-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -830,19 +830,17 @@ local function on_game_load()
                     se_box:switch_online()
                 end
                 
-                for i=1,65534 do 
+                for i=1,65534 do
                     local se_obj = sim:object(i)
-                    if (se_obj and se_obj.parent_id == id) then 
-                        debug("Moving "..se_obj.section.." id:"..tostring(value.stash_id))
-                        sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
-                        if se_obj then 
-                            if not se_obj.online then
-                                debug("Setting "..se_obj.section.." online")
-                                se_obj:switch_online()
-                            end
+                    if (se_obj and se_obj.parent_id == value.stash_id) then
+                        debug("Moving "..se_obj.section.." id:"..tostring(i))
+                        sim:teleport_object(i, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
+                        if not se_obj.online then
+                            debug("Setting "..se_obj.section.." online")
+                            se_obj:switch_online()
                         end
                     end
-                end                            
+                end
 
             end 
         end 

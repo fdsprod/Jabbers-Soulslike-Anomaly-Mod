@@ -227,9 +227,10 @@ function create_new(hits)
 
         -- table.insert(available_scenarios, {id = soulslike.SCENARIOS.RFDetectorStash, min = 0, max = 0, weight = soulslike_mcm.rf_detector_scenario_weight()})
         -- table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = soulslike_mcm.hidden_stash_scenario_weight()})
-    elseif hit and 
-           hit.draftsman_type == soulslike.entity_type.Stalker and 
+    elseif hit and
+           hit.draftsman_type == soulslike.entity_type.Stalker and
            hit.fatal_hit and
+           hit.fatal_hit.draftsman and
            hit.fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.RELATIONS.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
@@ -342,17 +343,17 @@ function create_new(hits)
         weight_sum = weight_sum + value.weight
     end
 
-    local min = 0
+    local cumulative = 0
     for _, value in pairs(available_scenarios) do
-        value.min = min + 1
-        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
-        min = value.max
+        value.min = cumulative
+        cumulative = cumulative + value.weight
+        value.max = cumulative
     end
-    
-    local roll = math.random(1, 100)    
+
+    local roll = math.random() * weight_sum
     local scenario_id = nil
-    for id, value in pairs(available_scenarios) do
-        if(roll >= value.min and roll <= value.max) then
+    for _, value in pairs(available_scenarios) do
+        if roll >= value.min and roll < value.max then
             scenario_id = value.id
             break
         end

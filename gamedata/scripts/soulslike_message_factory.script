@@ -176,7 +176,7 @@ function create(rescuer, params)
             msg = msg.." " ..game.translate_string("st_soulslike_rescuer_pda_generic")
         end
         if params.radio_freq then
-            msg = msg.." "..game.translate_string(strformat("st_soulslike_rescuer_radio_generic", params.radio_freq))
+            msg = msg.." "..strformat(game.translate_string("st_soulslike_rescuer_radio_generic"), params.radio_freq)
         end
         return msg
     end  

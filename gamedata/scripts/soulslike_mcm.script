@@ -887,6 +887,12 @@ function on_mcm_load()
                 def = false
             },
             {
+                id = "debug_remove_default_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
                 id = "debug_the_tarkov_looter",
                 type = "check",
                 val = 1,
@@ -1176,8 +1182,8 @@ function get_headgear_condition_loss_chance()
 end
 
 -- Getter functions for ignored items
-function get_ignored_other() 
-    return get_config("ignored_items/ignored_other", '')
+function get_ignored_other()
+    return get_config("ignored_items/other", '')
  end
 
 function is_ignored(id) 
