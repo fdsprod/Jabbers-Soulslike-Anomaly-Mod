@@ -157,9 +157,23 @@ function create_new(hits)
     local scenario_loot_scalar = 1.0
     local available_scenarios = {}    
     local game_state = soulslike.get_soulslike_state()
-    local spawn_position = vector():set(game_state.spawn_location.position.x, game_state.spawn_location.position.y, game_state.spawn_location.position.z)   
-    local distance_sqr = spawn_position:distance_to_sqr(db.actor:position())
-    local distance_from_spawn = math.sqrt(distance_sqr)
+    local spawn_loc = game_state.spawn_location
+    local se_actor  = alife():actor()
+    local distance_from_spawn
+
+    if spawn_loc.level and se_actor and spawn_loc.game_vertex_id
+       and spawn_loc.level == level.name() then
+        -- Same level: local coords are valid and the most precise.
+        local spawn_position = vector():set(spawn_loc.position.x, spawn_loc.position.y, spawn_loc.position.z)
+        distance_from_spawn = spawn_position:distance_to(db.actor:position())
+    elseif spawn_loc.game_vertex_id and se_actor then
+        -- Different level (or unknown): use the global game-graph frame for a true cross-level distance.
+        distance_from_spawn = utils_obj.graph_distance(spawn_loc.game_vertex_id, se_actor.m_game_vertex_id)
+    else
+        -- Spawn never recorded a game vertex; fall back to local so behavior degrades gracefully.
+        local spawn_position = vector():set(spawn_loc.position.x, spawn_loc.position.y, spawn_loc.position.z)
+        distance_from_spawn = spawn_position:distance_to(db.actor:position())
+    end
     
     if soulslike_mcm.debug_the_noloss_scenario() then
         soulslike.debug("Debugging noloss scenario.")
@@ -191,14 +205,14 @@ function create_new(hits)
 
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.HiddenStash, min = 0, max = 0, weight = 1.0})
     elseif distance_from_spawn <= 50 then
-        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters their spawn point.")
+        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters from their spawn point.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
         scenario_loot_scalar = 0
       
         table.insert(available_scenarios, {id = soulslike.SCENARIOS.NoLoss, min = 0, max = 0, weight = 1.0})  
     elseif distance_from_spawn <= 200 then
-        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters their spawn point.")
+        soulslike.debug("Player was killed "..string.format("%.2f", distance_from_spawn).." meters from their spawn point.")
 
         rescuer = soulslike.find_closest_friendly_stalker()
         looter = soulslike.find_closest_enemy()

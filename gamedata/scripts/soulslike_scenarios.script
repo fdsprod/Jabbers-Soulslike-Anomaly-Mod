@@ -1194,19 +1194,16 @@ function SoulslikeScenarioLogic:TransferItem(item, container, looter)
                 return false
             end
 
-            local is_ammo = IsAmmo(item)
-            local is_medical = SYS_GetParam(0, sec, "kind") == "i_medical"
-            local is_food = SYS_GetParam(0, sec, "kind") == "i_food"
-
-            if is_ammo or is_food or is_medical then
-                soulslike.debug("Item lost "..sec)  
-                if stash_data and stash_data.lost_items then
-                    table.insert(stash_data.lost_items, sec)
-                end
-                alife_release(item)
-                self.logic_state.story.items_were_lost = true 
-                return false 
-            end 
+            -- The loss roll succeeded and the item already cleared every
+            -- protection check (quest/ignore-list/equipped/allow-loss/keep-roll)
+            -- and any looter handling above. Destroy it regardless of type.
+            soulslike.debug("Item lost "..sec)
+            if stash_data and stash_data.lost_items then
+                table.insert(stash_data.lost_items, sec)
+            end
+            alife_release(item)
+            self.logic_state.story.items_were_lost = true
+            return false
         end
     end
 

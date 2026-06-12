@@ -4,7 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.47-beta"
+local version = "0.48-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
