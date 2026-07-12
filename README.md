@@ -4,9 +4,9 @@
 
 
 **Jabbers' Soulslike Anomaly Mod**  
-**Discord**: https://discord.gg/HRyCGesuXq  
-**Twitch**: https://www.twitch.tv/jabbers_  
-**Github**: https://github.com/fdsprod/Jabbers-Soulslike-Anomaly-Mod
+**Discord**: [Discord](https://discord.gg/HRyCGesuXq)
+**Twitch**: [Twitch](https://www.twitch.tv/jabbers_)
+**Github**: [Github](https://github.com/fdsprod/Jabbers-Soulslike-Anomaly-Mod)
 
 **WARNING: THIS IS INTENTED TO BE USED ON NEW GAMES, I CANNOT PREDICT WHAT THE CONCIQUENCES WILL BE IF YOU USE THIS ON AN EXISTING GAME**
 
