@@ -246,7 +246,80 @@ not a default.
 H.fakes.set_random_const(1)          -- always 1
 H.fakes.set_random_sequence{1, 5, 3} -- in order; errors past the end
 H.fakes.set_time(5000)               -- backs time_global()
+H.fakes.random_count()               -- rolls spent, for exact-budget asserts
 ```
+
+Budgets are worth asserting. `IsItemLossAllowed` spends 0 or 1 roll depending on
+the item category, and a stray roll desynchronises every later one in a death.
+
+Some functions spend rolls of **different call forms** that want opposite
+values — `TransferItem` wants a high `math.random()` (fail the keep roll) and a
+low `math.random(0, 100)` (pass the loss roll). A constant cannot express that;
+use a predicate on the call form:
+
+```lua
+H.fakes.set_random(function(a, b)
+  if a == nil then return 0.999 end   -- 0-arg: fail every keep roll
+  return a                            -- ranged: pass every loss roll
+end)
+```
+
+### Scenario fixtures
+
+```lua
+H.set_spawn{ level = "zaton" }              -- required before create_new/RespawnActor
+B.stub_finders{ friendly_stalker = npc }    -- the four find_closest_* helpers
+B.make_scenario{ class = "NoLossSoulslikeScenarioLogic", state = {...} }
+B.make_logic_state{ allow_weapon_loss = false }
+B.finder_count("enemy_mutant")              -- which finder an arm consulted
+```
+
+`finder_count` is load-bearing, not a convenience: several selection arms differ
+only by *which* finder supplies the looter, so asserting the returned object
+cannot tell them apart.
+
+`make_logic_state` is a hand-written literal mirroring the mod's `__init`. A
+drift guard in `self/builders.spec.lua` asserts its key set still matches a
+freshly constructed scenario, so a field added to the mod fails there rather
+than silently rotting every fixture.
+
+### Crossing a level change
+
+```lua
+H.reboot{ load = MOD_SCRIPTS, soulslike_mode = true }
+```
+
+Re-executes every script and discards every module table while preserving the
+save. That is exactly what `ChangeLevel` does, and it is the only way to test
+the save/load round trip — a plain `H.boot` wipes the save, so the "reload"
+would have nothing to restore from.
+
+### Observing a retrying time event
+
+`H.tick()` runs to completion and raises if anything is still waiting. To watch
+an event mid-wait, bound it:
+
+```lua
+H.world.hide(stash_id)
+H.tick{ passes = 1 }                        -- one frame; leaves the retry queued
+expect(H.timeevents.pending()).toBeGreaterThan(0)
+H.world.reveal(stash_id)
+H.tick()                                    -- now it completes
+```
+
+### Save files
+
+The hardcore save-pruning walk reads each sibling save with a real `io.open`
+before decoding it, so it needs a shim:
+
+```lua
+H.fakes.install_save_fs()
+H.fakes.set_save("older", { soulslike = { uuid = "run-1" } })
+H.fakes.set_save("corrupt", nil)            -- models an unreadable file
+```
+
+Non-save paths fall through to the real `io.open`, which the module loader still
+needs. Uninstalled automatically on the next `H.boot`.
 
 ### Testing a file-local function
 
@@ -304,7 +377,7 @@ tools\luajit.exe probe.lua
 
 Calls every non-UI mod function once and reports reachable / unreachable. It
 asserts nothing about correctness — it answers "can the harness get here at
-all". Currently **71 reachable, 0 unreachable**. Run it after touching the
+all". Currently **72 reachable, 0 unreachable**. Run it after touching the
 fakes; a new FAIL means a fake regressed or the mod grew a dependency.
 
 ## Standing caveat
@@ -314,31 +387,58 @@ wrong constant in `fakes.lua` becomes a permanently green spec. Values taken
 from engine source are cited in comments; anything else should be pinned against
 a real game before it is trusted.
 
-## Not covered yet
+Engine behaviour cited here was read from `xray-monolith`. The load-bearing
+facts, and where they bite:
 
-The harness reaches every non-UI function, but **specs have only been written
-for a fraction of them**. Still unwritten: the scenario-selection matrix,
-save/load round-trip, `SpawnAmbush`, `IsItemLossAllowed`, `TransferItem` and
-the item-routing trio, the economy methods, and the full death→respawn flow.
-All are reachable — see `probe.lua` for a working call of each.
+| Fact | Citation |
+|---|---|
+| Inventory slots run **1..18** — `LAST_SLOT = CUSTOM_SLOT_5`, since `MORE_INVENTORY_SLOTS` is defined. Slot 0 is `NO_ACTIVE_SLOT` and is rejected | `inventory_space.h:6-45`, `build_config_defines.h:15` |
+| `iterate_inventory` is a live walk and stops on **any truthy** return, not just `true` | `script_game_object_inventory_owner.cpp:256-271` |
+| `CreateTimeEvent` re-queues on anything **not literally `true`** — the opposite convention | `_g.script:366-390` |
+| `transfer_item` is **deferred** through `GE_TRADE_SELL` / `GE_TRADE_BUY` | `script_game_object_inventory_owner.cpp:584-610` |
+| Server objects expose `id`/`position` as **fields**; client objects use methods | `xrServer_Objects_script.cpp:110-124` |
+| `alife():register` **frees its argument** and returns a new pointer | `alife_simulator_script.cpp:396-413` |
+| `set_character_rank`/`_reputation` are int, **unclamped**, and truncate **toward zero** | `character_info_defs.h:8-24`, `policy.hpp:377` |
+| `give_money(-N)` does **not** clamp — it underflows u32 | `InventoryOwner.cpp:630-645` |
+| Grenades are **not** weapons at either layer, so `IsWeapon(x) and not is_grenade` is redundant | `Grenade.h:6`, `_g.script:3081-3149` |
+| `clsid()` values are **runtime ordinals** — never hardcode one | `object_factory_script.cpp:85-97` |
+| `vector():set(nil,…)` is **UB in a release build**, not a catchable error: `NDEBUG` compiles out luabind's no-overload guard | `class_rep.cpp:605-688`, `config.hpp:81-91` |
+
+That last one is why `H.builders.strict_vectors` raises rather than coercing nil
+to 0. Both call sites that could reach it are now guarded
+(`soulslike_scenario_logic_factory.script:164`,
+`soulslike_scenarios.script:902`), and specs assert they no longer raise. Set
+`strict_vectors = false` only in a spec that deliberately needs to step past it.
+
+## Pinned behaviour
+
+Specs assert **correct** behaviour, so the suite runs green; a defect found
+along the way was fixed rather than pinned. Three markers flag the exceptions:
+
+| Marker | Meaning |
+|---|---|
+| `FIXES: Dn` | The spec exists because it caught a defect. It failed first, then the fix landed. |
+| `CHARACTERIZATION:` | Behaviour deliberately left alone, pinned so a change is deliberate rather than accidental. |
+| `DEAD CODE:` | An unreachable branch, with the gate that disables it cited. |
+
+Currently pinned as characterization: `save_state`/`load_state` shadow their
+`data` parameter, so the dispatched payload is ignored · `logic_state` is stored
+by reference with no serialization step · weapon condition loss never destroys
+the weapon or sets `items_were_lost`, because parts clamp at 1 · toolkits have
+an allow flag but no keep roll, unlike the other four categories · squad
+ambushers are tracked without vertex ids · the indoor selection arm leaves the
+loot scalar at 1.0 where every other no-loss arm sets 0 · the ignore list
+matches bare `medkit`/`bandage` while Anomaly ships variants (a balance
+decision, not a code bug).
+
+Currently marked dead: the RF-detector and hidden-stash selection arms, whose
+MCM getters hard-return `false`/`0.0` · `debug/debug_hidden_stashes`, whose tree
+entry is commented out · `scenarios/nearby_dead_stalker_scenario_weight`, a
+getter nothing calls.
+
+## Not covered
 
 Out of scope by decision: the two UI modules (`soulslike_sleep_dialog`,
 `souslike_gamemode_injector_mcm`). They monkey-patch Anomaly UI classes at file
 scope and need those classes to exist before they will load; they are thin
 decorators, so testing them mostly tests the stub.
-
-### Known sharp edge
-
-`create_new` reads `spawn_location.position.x` and passes it to
-`vector():set()`. Before any spawn has been recorded those are nil, and the
-engine binds `set(float,float,float)` only — luabind raises `lua_cast_failed`,
-which becomes `Debug.fatal`, i.e. a CTD. `RespawnActor` has the same shape at
-soulslike_scenarios.script:845.
-
-The harness reproduces this rather than coercing nil to 0, so it stays visible.
-Measured: `create_new` raises on a fresh state, and stops raising after a single
-`save_state` (which calls `set_spawn`). So the exposure is a death occurring
-before the first save or level change. Whether Anomaly's new-game autosave
-always closes that window has not been confirmed in-game.
-
-Set `H.builders.strict_vectors = false` in a spec that needs to step past it.

@@ -281,11 +281,17 @@ probe("OnDeath",    function() scenario():OnDeath(); H.tick() end)
 probe("OnComplete", function() scenario():OnComplete() end)
 probe("OnRespawn",  function() scenario():OnRespawn() end)
 probe("destroy",    function() scenario():destroy() end)
+-- TransferItem is the only caller of both file-local guards, so it is the
+-- anchor that actually carries them as upvalues. (This previously reached for
+-- NoLoss:IsItemLossAllowed, which is a bare `return false` and closes over
+-- nothing -- the probe resolved nil and called it.)
 probe("ignore_list (file-local)", function()
-    local f = H.loader.upvalue(soulslike_scenarios.SoulslikeScenarioLogic
-                               and nil or _G.NoLossSoulslikeScenarioLogic.IsItemLossAllowed,
-                               "ignore_list")
-    return f and f("bolt")
+    local f = H.loader.upvalue(_G.SoulslikeScenarioLogic.TransferItem, "ignore_list")
+    return assert(f, "ignore_list is no longer an upvalue of TransferItem")("bolt")
+end)
+probe("is_equipped (file-local)", function()
+    local f = H.loader.upvalue(_G.SoulslikeScenarioLogic.TransferItem, "is_equipped")
+    return assert(f, "is_equipped is no longer an upvalue of TransferItem")(1)
 end)
 probe("NoLoss overrides", function()
     local s = NoLossSoulslikeScenarioLogic()
