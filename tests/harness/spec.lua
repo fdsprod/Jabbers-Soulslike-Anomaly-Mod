@@ -23,6 +23,8 @@ local M = {}
 local stack    = {}     -- describe frames, during registration
 local tests    = {}     -- flat, in declaration order
 local passed, failed, failures = 0, 0, {}
+local filtered = 0      -- skipped by M.filter, reported but not run
+local name_filter = nil
 
 -- ------------------------------------------------------------------ structure
 
@@ -294,10 +296,37 @@ end
 
 local INDENT = "  "
 
+--- Run only tests whose full path ("outer > inner > it name") contains substr.
+--- Plain substring, not a pattern, so "create_new()" needs no escaping.
+--- Call with nil to clear.
+function M.filter(substr)
+    name_filter = (substr ~= "" and substr) or nil
+end
+
+--- The tests M.run() would actually execute, after the name filter. Selection
+--- happens up front so filtered-out tests never print an empty describe header.
+local function selected()
+    local out = {}
+    for _, test in ipairs(tests) do
+        if not name_filter then
+            out[#out + 1] = test
+        else
+            local path = path_of(test)
+            local full = table.concat(path, " > ") .. " > " .. test.name
+            if full:find(name_filter, 1, true) then
+                out[#out + 1] = test
+            else
+                filtered = filtered + 1
+            end
+        end
+    end
+    return out
+end
+
 function M.run()
     local shown = {}          -- last printed path, for tree headers
 
-    for _, test in ipairs(tests) do
+    for _, test in ipairs(selected()) do
         local path = path_of(test)
 
         -- Print any describe headers that changed since the previous test.
@@ -364,16 +393,27 @@ function M.run()
         end
     end
 
+    local skipped = (filtered > 0)
+        and (C.gray .. string.format(", %d filtered", filtered) .. C.reset)
+        or ""
+
     print("")
     print(C.gray .. string.rep("-", 66) .. C.reset)
-    if failed == 0 then
+    -- A filter that matched nothing is almost always a typo. Report it as a
+    -- failure rather than "0 passing", which reads as green.
+    if failed == 0 and passed == 0 and filtered > 0 then
+        print(C.red .. C.bold .. " EMPTY " .. C.reset ..
+              C.red .. string.format("  filter %q matched none of %d tests",
+                                     name_filter, filtered) .. C.reset)
+        return 1
+    elseif failed == 0 then
         print(C.green .. C.bold .. " PASS " .. C.reset ..
-              C.green .. string.format("  %d passing", passed) .. C.reset)
+              C.green .. string.format("  %d passing", passed) .. C.reset .. skipped)
     else
         print(C.red .. C.bold .. " FAIL " .. C.reset ..
               C.green .. string.format("  %d passing", passed) .. C.reset ..
               C.gray .. ", " .. C.reset ..
-              C.red .. string.format("%d failing", failed) .. C.reset)
+              C.red .. string.format("%d failing", failed) .. C.reset .. skipped)
         print("")
         for i, f in ipairs(failures) do
             print(C.red .. string.format("  %d) ", i) .. C.reset ..
@@ -386,9 +426,12 @@ function M.run()
     return failed
 end
 
+-- Clears registered tests and counters. The name filter survives, because a
+-- full run resets between suites and the filter is a property of the invocation.
 function M.reset()
     stack, tests = {}, {}
     passed, failed, failures = 0, 0, {}
+    filtered = 0
 end
 
 -- Ambient globals, as describe/it/expect are in a TS suite.

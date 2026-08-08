@@ -7,14 +7,25 @@ Specs are BDD — nested `describe` / `it` with a Jest-style `expect`, the same
 shape as a TS suite.
 
 ```
-run.bat          all specs (self-tests gate the unit specs)
-run.bat self     harness self-tests only
-run.bat unit     unit specs only
+run.bat                  all specs (self-tests gate unit and e2e)
+run.bat self             harness self-tests only
+run.bat unit             unit specs only
+run.bat e2e              end-to-end journeys only
+
+run.bat --file ambush    only spec files whose path contains "ambush"
+run.bat -t "keep roll"   only tests whose full name contains "keep roll"
 
 tools\luajit.exe probe.lua    reachability check -- see "Reachability probe"
 ```
 
-Exit code is 0 on success, 1 on failure, 2 if no Lua runtime was found.
+Exit code is 0 on success, 1 on failure, 2 if no Lua runtime was found or no
+spec file matched.
+
+Both filters take a plain substring, not a pattern, and both **skip the
+self-test gate** — they are the "run just this one thing" switches, so dragging
+the whole self-suite along would defeat the point. A filter matching nothing
+reports `EMPTY` and exits non-zero rather than reading as a green run of zero
+tests.
 
 Nothing here ships to players: `deploy.bat` packages only `gamedata/`.
 
@@ -75,6 +86,7 @@ copy  luajit.exe  <mod>\tests\tools\
 | `harness/mods.lua` | Base-Anomaly and third-party script registry |
 | `self/*.spec.lua` | Harness self-tests — these gate everything else |
 | `unit/*.spec.lua` | Unit specs against the real mod scripts |
+| `e2e/*.spec.lua` | End-to-end journeys through the callback chain |
 | `probe.lua` | Reachability check, not a test suite |
 
 ## Writing a spec
@@ -101,7 +113,12 @@ end)
 return true
 ```
 
-Then add the file to `SELF` or `UNIT` in `run.lua`.
+Drop the file in `self/`, `unit/` or `e2e/` and it is picked up automatically —
+spec files are discovered from those directories, so `run.lua` needs no edit.
+
+The `MANIFEST` table in `run.lua` is only a fallback for hosts where the
+directory listing is unavailable (`io.popen` disabled, or a shell that is not
+`cmd`). Discovery sorts alphabetically, so specs must not depend on load order.
 
 ### Naming
 

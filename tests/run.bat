@@ -1,10 +1,16 @@
 @echo off
 REM Soulslike spec suite.
-REM   run.bat                  all specs (self-tests gate the unit specs)
+REM   run.bat                  all specs (self-tests gate unit and e2e)
 REM   run.bat self             harness self-tests only
 REM   run.bat unit             unit specs only
+REM   run.bat e2e              end-to-end journeys only
+REM   run.bat --file ambush    only spec files whose path contains "ambush"
+REM   run.bat -t "keep roll"   only tests whose full name contains "keep roll"
 REM   run.bat --no-color       plain output
 REM   run.bat --ascii          ok/XX instead of the tick and cross
+REM
+REM Spec files are discovered from self\, unit\ and e2e\ -- a new *.spec.lua
+REM needs no registration. Either filter skips the self-test gate.
 
 setlocal
 cd /d "%~dp0"
