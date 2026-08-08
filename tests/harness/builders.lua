@@ -406,9 +406,18 @@ function M.make_scenario(opts)
     s:SetIsInWater(opts.in_water or false)
 
     for k, v in pairs(opts.state or {}) do
-        if k == "story" or k == "death_location" then
+        if (k == "story" or k == "death_location") and type(v) == "table" then
             s.logic_state[k] = s.logic_state[k] or {}
             for sk, sv in pairs(v) do s.logic_state[k][sk] = sv end
+        elseif k == "death_location" and v == false then
+            -- "no location was ever recorded", the shape __init actually builds
+            -- (soulslike_scenarios.script:282-290). Not the same as omitting
+            -- the key, which leaves the constructor's own nils in place.
+            s.logic_state.death_location = {
+                position = { x = nil, y = nil, z = nil },
+                level_vertex_id = nil,
+                game_vertex_id = nil,
+            }
         else
             s.logic_state[k] = v
         end

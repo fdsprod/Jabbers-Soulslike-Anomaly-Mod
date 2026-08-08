@@ -124,11 +124,15 @@ local mutant_spawn_type = {
     Controller = 9
 }
 
+-- Distinct values, one per rank. These were previously Advanced = Veteran =
+-- Sniper = 2, and the eligibility filter tests `== Advanced` first, so
+-- enabling any one of the three admitted all three -- the veteran and sniper
+-- MCM toggles could never gate anything on their own.
 local stalker_spawn_type = {
     Novice = 1,
     Advanced = 2,
-    Veteran = 2,
-    Sniper = 2,
+    Veteran = 3,
+    Sniper = 4,
 }
 
 local mutant_spawns = {
@@ -666,12 +670,16 @@ end
 
 function SoulslikeScenarioLogic:SpawnAmbush()
     soulslike.debug("Checking ambush chance.")
-    local loss_chance_dice_roll = math.random(0, 100)
+    -- Float roll in [0,1) compared directly against the configured chance, as
+    -- every other chance roll in this file does. It was math.random(0, 100) --
+    -- 101 discrete outcomes -- compared against chance*100, so a configured
+    -- 0.25 actually meant 25/101.
+    local loss_chance_dice_roll = math.random()
     local spawns = {}
     local sim = alife()
 
     if not sim then return end
-    
+
     local debug_spawn = soulslike_mcm.debug_always_spawn_ambush()
 
     if debug_spawn then
@@ -689,7 +697,7 @@ function SoulslikeScenarioLogic:SpawnAmbush()
 
     if self.logic_state.killer_type == soulslike.entity_type.Monster and 
        self.logic_state.has_mutant_bait and
-       loss_chance_dice_roll < self.logic_state.mutant_ambush_chance * 100 then 
+       loss_chance_dice_roll < self.logic_state.mutant_ambush_chance then
         soulslike.debug("Setting up mutant spawn table.")
         for _, spawn in pairs(mutant_spawns) do
             if (spawn.type == mutant_spawn_type.Boar and self.logic_state.allow_boar_ambush) or
@@ -705,7 +713,7 @@ function SoulslikeScenarioLogic:SpawnAmbush()
             end
         end
     elseif self.logic_state.killer_type == soulslike.entity_type.Stalker and
-           loss_chance_dice_roll < self.logic_state.stalker_ambush_chance * 100 then 
+           loss_chance_dice_roll < self.logic_state.stalker_ambush_chance then
         local killer = self.logic_state.killer_id and sim:object(self.logic_state.killer_id) or nil
         
         if killer then
@@ -743,17 +751,39 @@ function SoulslikeScenarioLogic:SpawnAmbush()
         weight_sum = weight_sum + value.weight
     end
 
-    local min = 0
+    -- Float, half-open cumulative buckets over [0, weight_sum), matching the
+    -- weighted scenario pick in soulslike_scenario_logic_factory.script:355-374.
+    --
+    -- This previously accumulated a FLOORED integer max out of 100 slots, which
+    -- had two consequences. Truncation compounded, so the final bucket ended
+    -- below 100 -- at the shipped defaults it ended at 96, and rolls 97-100
+    -- matched no bucket at all, silently producing no ambush. And any entry
+    -- whose share fell below one whole slot got min > max, making it
+    -- unreachable: at the defaults that was every rare mutant, so their
+    -- configured weights never did anything.
+    --
+    -- Bounds are computed inline rather than written onto `value`, because the
+    -- entries in `spawns` are references into the module-scope mutant_spawns /
+    -- stalker_spawns tables. Assigning to them mutated shared state that is
+    -- meant to be constant.
+    local roll = math.random() * weight_sum
+    local section = nil
+    local cumulative = 0
+
     for _, value in pairs(spawns) do
-        value.min = min + 1
-        value.max = math.floor(min + (100 * (value.weight / weight_sum)))
-        min = value.max
+        local lower = cumulative
+        cumulative = cumulative + value.weight
+        if roll >= lower and roll < cumulative then
+            section = value.section
+            break
+        end
     end
 
-    local roll = math.random(1, 100)    
-    local section = nil
-    for _, value in pairs(spawns) do
-        if(roll >= value.min and roll <= value.max) then
+    -- math.random() is [0,1) so roll < weight_sum always holds and the loop
+    -- above matches. This only catches a degenerate table of zero-weight
+    -- entries, which would otherwise spawn nothing at all.
+    if not section then
+        for _, value in pairs(spawns) do
             section = value.section
             break
         end

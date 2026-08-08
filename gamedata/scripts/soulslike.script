@@ -226,13 +226,18 @@ function get_soulslike_state()
                     game_vertex_id = nil,
                 },
             note_message_data = {},
-            hidden_stashes = {}
+            hidden_stashes = {},
+            tracked_ambushers = {}
         }
     end
 
     -- Backward save compatibility
     if not game_state.soulslike.note_message_data then
         game_state.soulslike.note_message_data = {}
+    end
+
+    if not game_state.soulslike.tracked_ambushers then
+        game_state.soulslike.tracked_ambushers = {}
     end
 
     if not game_state.soulslike.hidden_stashes then
@@ -921,24 +926,44 @@ local function npc_on_net_spawn(npc, se_obj)
     end
 
     local state = get_soulslike_state()
-    if npc and IsStalker(npc) and state.tracked_ambushers and state.tracked_ambushers[npc:id()] then
-        debug("Setting up ambushers "..tostring(npc:id()))
-        local ambusher_state = state.tracked_ambushers[npc:id()]
-        local position = vector():set(ambusher_state.position.x, ambusher_state.position.y, ambusher_state.position.z)
-           
+
+    if not (npc and state.tracked_ambushers) then
+        return
+    end
+
+    local id = npc:id()
+    local ambusher_state = state.tracked_ambushers[id]
+
+    if not ambusher_state then
+        return
+    end
+
+    -- The stance setters below are stalker-only, but SpawnAmbush tracks
+    -- whatever it spawned, mutants included. Consume the entry either way:
+    -- leaving mutant entries behind is what made tracked_ambushers grow
+    -- without bound in every save.
+    if IsStalker(npc) then
+        debug("Setting up ambusher "..tostring(id))
+
         npc:set_mental_state(ambusher_state.mental_state)
         npc:set_body_state(ambusher_state.body_state)
         npc:set_movement_type(ambusher_state.movement_type)
         npc:set_sight(ambusher_state.sight_type, nil, 0)
-        npc:set_desired_position(position)
-        npc:set_desired_direction()
 
-        if soulslike_mcm.debug_squad_spawns() then
-            level.map_add_object_spot_ser(npc:id(), "secondary_task_location", "DEBUG: Ambush NPC") 
+        -- Squad members are tracked without a position of their own; the
+        -- simulation board places them, so only pose the ones we located.
+        local pos = ambusher_state.position
+        if pos and pos.x and pos.y and pos.z then
+            npc:set_desired_position(vector():set(pos.x, pos.y, pos.z))
+            npc:set_desired_direction()
         end
 
-        state.tracked_ambushers[npc:id()] = nil
+        if soulslike_mcm.debug_squad_spawns() then
+            level.map_add_object_spot_ser(id, "secondary_task_location", "DEBUG: Ambush NPC")
+        end
     end
+
+    state.tracked_ambushers[id] = nil
 end
 
 local function actor_on_first_update()
@@ -961,5 +986,5 @@ function on_game_start()
 	RegisterScriptCallback("on_console_execute", on_console_execute)
     RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
-    --RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
+    RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
 end
