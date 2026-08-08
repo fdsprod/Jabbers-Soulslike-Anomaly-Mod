@@ -610,9 +610,15 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_ignored_items_medkit"
             },
             {
+                -- val is MCM's stored-value TYPE CODE, not an initial value:
+                -- 0 = string, 1 = boolean, 2 = float. This was val = '', which
+                -- is not a recognised code, so the box could not round-trip
+                -- through axr_options.ltx and get_ignored_other() always saw
+                -- its '' default -- the free-text ignore list never protected
+                -- anything the player typed into it.
                 id = 'other',
                 type = "input",
-                val = '',
+                val = 0,
                 def = '',
             },
             {
@@ -823,13 +829,12 @@ function on_mcm_load()
                 id = "lose_all_items_on_death",
                 type = "check",
                 val = 1,
-                def = false,
-                text = "Lose all items on death",
+                def = false
             },
             {
                 id = "lose_all_items_on_death_desc",
                 type = "desc",
-                text = "If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.",
+                text = "ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc",
                 clr = {255, 255 ,255 ,0},
             },
             {
@@ -882,6 +887,12 @@ function on_mcm_load()
             },
             {
                 id = "debug_item_loss",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_remove_default_scenario",
                 type = "check",
                 val = 1,
                 def = false
@@ -1176,8 +1187,8 @@ function get_headgear_condition_loss_chance()
 end
 
 -- Getter functions for ignored items
-function get_ignored_other() 
-    return get_config("ignored_items/ignored_other", '')
+function get_ignored_other()
+    return get_config("ignored_items/other", '')
  end
 
 function is_ignored(id) 
