@@ -43,7 +43,12 @@ function M.boot(opts)
     opts = opts or {}
 
     M.fakes.reset()
+    -- fakes.game_state is the WHOLE save table; the mod keeps its own state
+    -- under the "soulslike" key (soulslike.script:210). opts.state seeds that
+    -- sub-table, which is what a spec means by "the saved state".
+    if opts.state then M.fakes.game_state.soulslike = opts.state end
     M.class.install(_G)
+    M.builders.reset()
     M.builders.install(_G)
     M.dispatch.reset()
     M.dispatch.install(_G)
@@ -105,6 +110,40 @@ function M.set_actor(opts)
     M.fakes.register_object(actor)
     M.world.attach_actor(actor, "actor")
     return actor
+end
+
+--- Record a spawn point into the save, as set_spawn does
+--- (soulslike.script:207-265). Any spec reaching create_new or RespawnActor
+--- needs one: without it both build a vector out of nil coordinates, which
+--- strict_vectors raises on and the engine would hard-crash on.
+function M.set_spawn(opts)
+    local save = M.fakes.game_state
+    save.soulslike = save.soulslike or {}
+    save.soulslike.spawn_location = M.builders.make_spawn_location(opts)
+    return save.soulslike.spawn_location
+end
+
+--- Re-boot with the same options while preserving the save table, modelling a
+--- level change: every script re-executes and every module table is discarded,
+--- but alife_storage_manager's state survives.
+---
+--- This is what makes the save/load round-trip testable -- a plain M.boot()
+--- wipes game_state, so the "reload" would have nothing to restore from.
+--- Persisted-var and info-portion stores are carried across for the same
+--- reason; they live in the save too.
+function M.reboot(opts)
+    local saved = {
+        state = M.fakes.game_state,
+        vars  = M.fakes.vars,
+        infos = M.fakes.infos,
+    }
+
+    M.boot(opts)
+
+    M.fakes.game_state = saved.state
+    M.fakes.vars       = saved.vars
+    M.fakes.infos      = saved.infos
+    return M
 end
 
 --- Advance one frame: drain deferred time events, then apply the queued

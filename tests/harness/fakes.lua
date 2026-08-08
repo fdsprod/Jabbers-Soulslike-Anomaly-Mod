@@ -74,12 +74,42 @@ function M.set_random_min()
     end
 end
 
+-- Count of math.random calls since the last reset. Lets a spec assert an exact
+-- RNG budget without consuming a queued value, which matters because several
+-- mod functions short-circuit before rolling (IsItemLossAllowed spends 0 or 1
+-- roll depending on the item category).
+local random_calls = 0
+function M.random_count() return random_calls end
+
 local function fake_random(a, b)
     if not random_impl then
         error("math.random called before fakes.set_random*() -- tests must be deterministic", 2)
     end
+    random_calls = random_calls + 1
     return random_impl(a, b)
 end
+
+-- ------------------------------------------------------------------ clsids
+--
+-- The real Is* predicates take (obj, cls) and resolve `cls or obj:clsid()`
+-- against a class table (_g.script:3081 for IsWeapon). Callers do pass obj=nil
+-- with an explicit clsid -- soulslike.find_closest_enemy:307 scans server
+-- objects that way -- so we keep a clsid -> kind registry.
+--
+-- Values are opaque strings, never numbers. Engine clsids are the runtime
+-- ordinal of the class in the sorted registry
+-- (xray-monolith/src/xrServerEntities/object_factory_script.cpp:85), so a spec
+-- that hardcoded a number would be asserting a fiction.
+
+M.clsid_kind = {}
+for _, k in ipairs{ "stalker", "monster", "anomaly", "weapon", "outfit",
+                    "headgear", "artefact", "grenade", "invbox", "toolkit" } do
+    M.clsid_kind["cls_" .. k] = k
+end
+
+--- The opaque clsid standing in for `kind`. Fixtures return this from
+--- :clsid() so the Is* predicates classify them correctly.
+function M.clsid_for(kind) return "cls_" .. tostring(kind) end
 
 -- --------------------------------------------------------------- installer
 
@@ -164,11 +194,20 @@ function M.install(env)
 
     ---- predicates -----------------------------------------------------------
     --
-    -- Objects built by builders.lua carry a `_kind` tag; these read it. Real
-    -- engine predicates dispatch on clsid, which we do not model.
-
+    -- Objects built by builders.lua carry a `_kind` tag; these read it.
+    --
+    -- The real predicates take (obj, cls) and resolve `cls or obj:clsid()`
+    -- against a class table (_g.script:3081 for IsWeapon). The clsid argument
+    -- wins when both are given, and callers do pass obj=nil with an explicit
+    -- clsid -- soulslike.find_closest_enemy:307 scans server objects that way.
+    -- So we keep a clsid -> kind registry and dispatch on it first; a nil obj
+    -- with no clsid is false.
+    --
+    -- The registry itself lives at module scope (see M.clsid_for) so fixtures
+    -- can reach it before install() has run.
     local function kind_is(k)
         return function(obj, cls)
+            if cls ~= nil then return M.clsid_kind[cls] == k end
             if obj == nil then return false end
             return obj._kind == k
         end
@@ -177,6 +216,12 @@ function M.install(env)
     env.IsStalker  = kind_is("stalker")
     env.IsMonster  = kind_is("monster")
     env.IsAnomaly  = kind_is("anomaly")
+    -- Grenades are NOT weapons at either layer: CGrenade derives from CMissile,
+    -- not CWeapon (xray-monolith/src/xrGame/Grenade.h:6), and Anomaly's Lua
+    -- weapon_classes table contains no grenade clsids (_g.script:3081-3149).
+    -- The mod's `IsWeapon(item) and not is_grenade` idiom is therefore
+    -- redundant, not load-bearing -- do not "fix" this by making the two
+    -- predicates overlap.
     env.IsWeapon   = kind_is("weapon")
     env.IsOutfit   = kind_is("outfit")
     env.IsHeadgear = kind_is("headgear")
@@ -315,6 +360,9 @@ function M.install(env)
     -- (soulslike.script:652-695). M.saves maps a bare file name to its decoded
     -- save table, so a spec can stage siblings with matching/mismatching uuids.
 
+    -- The walk does a real io.open on each .scoc before decoding it, so without
+    -- a shim the loop body never executes and the whole path is untestable.
+    -- install_save_fs() below supplies one.
     M.saves = {}
     env.FS = { FS_ListFiles = 1, FS_RootOnly = 2 }
     env.getFS = function()
@@ -453,6 +501,81 @@ function M.set_config(section, key, value)
     M.config[section][key] = value
 end
 
+--- The level name level.name() reports. Drives create_new's indoor branch,
+--- which keys off level_weathers.valid_levels.
+function M.set_level(name) M.level_name = name end
+
+-- ------------------------------------------------------------- save files
+--
+-- on_console_execute's pruning walk (soulslike.script:658-695) reads each
+-- sibling save off disk with io.open before handing the bytes to
+-- alife_storage_manager.decode. Both have to work or the loop body is dead.
+--
+-- The "bytes" are an opaque token rather than a real serialization: the mod
+-- only ever round-trips them straight back through decode, so modelling the
+-- save format would be effort spent asserting our own encoder.
+
+local real_io_open = io.open
+local save_fs_installed = false
+
+local function save_name_from_path(path)
+    return tostring(path):match("^saves/([^/]+)%.scoc$")
+end
+
+--- Stage a sibling save. `decoded` is the table decode() will return, e.g.
+--- { soulslike = { uuid = "..." } }. Pass nil to model an unreadable file.
+function M.set_save(name, decoded)
+    M.saves[name] = decoded or false
+end
+
+--- Route saves/<name>.scoc through M.saves; everything else falls through to
+--- the real io.open, which the module loader still needs (loader.lua:83).
+function M.install_save_fs()
+    if save_fs_installed then return end
+    save_fs_installed = true
+
+    io.open = function(path, mode, ...)
+        local name = save_name_from_path(path)
+        if name == nil then return real_io_open(path, mode, ...) end
+
+        local decoded = M.saves[name]
+        if decoded == nil or decoded == false then return nil end
+
+        local closed = false
+        return {
+            read  = function() return "SAVEBLOB:" .. name end,
+            close = function() closed = true end,
+            _closed = function() return closed end,
+        }
+    end
+
+    _G.alife_storage_manager.decode = function(blob)
+        local name = tostring(blob):match("^SAVEBLOB:(.+)$")
+        local decoded = name and M.saves[name]
+        if decoded == false then return nil end
+        return decoded
+    end
+end
+
+local function uninstall_save_fs()
+    if not save_fs_installed then return end
+    io.open = real_io_open
+    save_fs_installed = false
+end
+
+--- Populate db.OnlineStalkers (and db.storage, which is consulted first).
+--- These are the only inputs to find_closest_enemy_stalker /
+--- find_closest_friendly_stalker (soulslike.script:370, :395).
+function M.set_online_stalkers(list)
+    _G.db.OnlineStalkers = {}
+    for _, npc in ipairs(list or {}) do
+        local id = type(npc.id) == "function" and npc:id() or npc.id
+        _G.db.OnlineStalkers[#_G.db.OnlineStalkers + 1] = id
+        _G.db.storage[id] = { object = npc }
+        M.register_object(npc)
+    end
+end
+
 -- Enable soulslike mode the way the mod actually detects it
 -- (soulslike.script:192): either the character-creation config flag or the
 -- persisted save flag. Nearly every handler early-returns without this.
@@ -461,6 +584,7 @@ function M.enable_soulslike_mode()
 end
 
 function M.reset()
+    uninstall_save_fs()
     M.calls = {}
     M.objects = {}
     M.ltx = {}
@@ -480,6 +604,7 @@ function M.reset()
     M.graph_distance = 500
     now_ms = 0
     random_impl = nil
+    random_calls = 0
     M.install(_G)
 end
 

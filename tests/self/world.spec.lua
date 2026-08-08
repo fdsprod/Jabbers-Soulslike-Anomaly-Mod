@@ -215,6 +215,137 @@ describe("harness/world", function()
                 alife_create_item("bread", actor)
                 expect(world.contents("actor")).toContain("bread")
             end)
+
+            -- Must be the SERVER object. RFDetectorSoulslikeScenarioLogic keys
+            -- note_message_data by se_note.id (soulslike_scenarios.script:1400);
+            -- handing back a client object makes `.id` a function and silently
+            -- produces a function-keyed table that nothing can ever look up.
+            it("returns a server object whose id is a field", function()
+                local se = alife_create_item("bread", actor)
+                expect(se.id).toBeType("number")
+            end)
+
+            it("shares its id with the client object", function()
+                local se = alife_create_item("bread", actor)
+                expect(level.object_by_id(se.id):section()).toBe("bread")
+            end)
+        end)
+    end)
+
+    describe("alife():register()", function()
+        -- register() frees the object handed to it and returns a NEW pointer
+        -- (alife_simulator_script.cpp:396-413). Modelled by swapping in a fresh
+        -- table, so a spec reusing the old reference sees it go stale.
+        describe("given an unregistered object", function()
+            it("returns a different object", function()
+                local se = alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                expect(alife():register(se)).never.toBe(se)
+            end)
+
+            it("marks it registered", function()
+                local se = alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                expect(alife():register(se).registered).toBe(true)
+            end)
+
+            it("keeps the same id", function()
+                local se = alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                expect(alife():register(se).id).toBe(se.id)
+            end)
+
+            it("replaces what alife():object() returns", function()
+                local se = alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                local fresh = alife():register(se)
+                expect(alife():object(se.id)).toBe(fresh)
+            end)
+
+            it("records the call", function()
+                local se = alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                alife():register(se)
+                expect(world.registered).toEqual({ se.id })
+            end)
+        end)
+    end)
+
+    describe("alife_create() with a register flag", function()
+        describe("given register = false", function()
+            it("records the object as unregistered", function()
+                alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                expect(world.created[1].registered).toBe(false)
+            end)
+
+            it("records the parent id", function()
+                alife_create("wpn_ak74", actor:position(), 1, 1, actor:id(), false)
+                expect(world.created[1].parent_id).toBe(actor:id())
+            end)
+        end)
+
+        describe("given the flag is omitted", function()
+            it("registers by default", function()
+                alife_create("inv_backpack", actor:position(), 1, 1)
+                expect(world.created[1].registered).toBe(true)
+            end)
+        end)
+    end)
+
+    describe("squads", function()
+        -- SpawnAmbush creates the squad object itself and then iterates
+        -- squad_members() (soulslike_scenarios.script:763), so members cannot be
+        -- supplied the way world.container's can.
+        describe("given a section registered in world.squads", function()
+            beforeEach(function()
+                world.squads["simulation_boar"] = {
+                    { kind = "monster", section = "boar_weak" },
+                    { kind = "monster", section = "boar_normal" },
+                }
+            end)
+
+            it("gives the created object iterable members", function()
+                local se = alife_create("simulation_boar", actor:position(), 1, 1)
+                local seen = {}
+                for m in se:squad_members() do seen[#seen + 1] = m:section_name() end
+                expect(seen).toEqual({ "boar_weak", "boar_normal" })
+            end)
+
+            it("exposes create_npc as a recorder", function()
+                local se = alife_create("simulation_boar", actor:position(), 1, 1)
+                se:create_npc(se.id)
+                expect(H.fakes.call_count("se.create_npc")).toBe(1)
+            end)
+
+            it("makes each member reachable through alife():object()", function()
+                local se = alife_create("simulation_boar", actor:position(), 1, 1)
+                for m in se:squad_members() do
+                    expect(alife():object(m.id)).toBe(m)
+                end
+            end)
+        end)
+
+        describe("given an unregistered section", function()
+            it("yields no members", function()
+                local se = alife_create("simulation_flesh", actor:position(), 1, 1)
+                local n = 0
+                for _ in se:squad_members() do n = n + 1 end
+                expect(n).toBe(0)
+            end)
+        end)
+    end)
+
+    describe("spawn_se_npc()", function()
+        -- find_closest_enemy / _enemy_mutant scan sim:object(i) for i in
+        -- 1..65534 (soulslike.script:300). Ids start at 10000, inside that range.
+        it("is reachable through alife():object()", function()
+            local se = world.spawn_se_npc{ kind = "monster" }
+            expect(alife():object(se.id)).toBe(se)
+        end)
+
+        it("is found by a scan over the alife id range", function()
+            local se = world.spawn_se_npc{ kind = "monster" }
+            local found = nil
+            for i = 1, 65534 do
+                local o = alife():object(i)
+                if o and o.id == se.id then found = o break end
+            end
+            expect(found).toBe(se)
         end)
     end)
 end)

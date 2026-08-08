@@ -140,9 +140,13 @@ function M.container(name, opts)
     function box:section() return self._section end
     function box:name() return name end
     function box:is_inv_box_empty() return #container_of(name) == 0 end
+    -- Stops on ANY truthy return, not just `true`: the engine tests the
+    -- functor result with lua_toboolean
+    -- (script_game_object_inventory_owner.cpp:269, converter at
+    -- luabind/detail/policy.hpp:374), so 0 and "" stop it too.
     function box:iterate_inventory_box(fn)
         for _, iid in ipairs(container_of(name)) do
-            if fn(self, items[iid]) == true then return end
+            if fn(self, items[iid]) then return end
         end
     end
     function box:transfer_item(item, to) M.queue_transfer(item, to) end
@@ -275,11 +279,18 @@ function M.attach_actor(actor, container)
     -- Live walk, matching IterateInventory. Iterating a copy of the index list
     -- is not a snapshot of *contents*: deferred ops have not been applied, so
     -- released items are still present -- which is the engine's behavior.
+    --
+    -- Stops on ANY truthy return. The engine takes a luabind::functor<bool>
+    -- and the bool converter is lua_toboolean(L,i)==1
+    -- (script_game_object_inventory_owner.cpp:269, luabind/detail/policy.hpp:374),
+    -- so returning 0 or "" also stops the walk -- only nil and false continue.
+    -- Note this is the OPPOSITE of CreateTimeEvent, which re-queues on anything
+    -- that is not literally `true` (_g.script:375).
     function actor:iterate_inventory(fn)
         local ids = container_of(container)
         for i = 1, #ids do
             local it = items[ids[i]]
-            if it and fn(self, it) == true then return end
+            if it and fn(self, it) then return end
         end
     end
 
@@ -296,21 +307,67 @@ function M.install(env)
 
     -- Returns the SERVER object (`.id` field) -- that is what the engine hands
     -- back and what the mod reads (soulslike_scenarios.script:1308).
-    env.alife_create = function(section, pos, lvid, gvid)
+    --
+    -- The 5th and 6th args are parent_id and a `register` flag; the mod passes
+    -- both when spawning a weapon part for the Tarkov looter
+    -- (soulslike_scenarios.script:1058). register=false yields an unregistered
+    -- object the caller is expected to hand to alife():register afterwards.
+    env.alife_create = function(section, pos, lvid, gvid, parent_id, register)
         next_id = next_id + 1
         local id = next_id
         local name = "spawned_" .. id
         M.container(name, {
             id = id, section = section, position = pos,
             level_vertex_id = lvid, game_vertex_id = gvid, online = false,
+            parent_id = parent_id,
         })
-        M.created[#M.created + 1] = { id = id, section = section, container = name }
-        return servers[id]
+        local se = servers[id]
+        se.registered = register ~= false
+        M.created[#M.created + 1] = {
+            id = id, section = section, container = name,
+            parent_id = parent_id, registered = se.registered,
+        }
+
+        -- Squad sections spawn their members with the squad object, which is
+        -- what SpawnAmbush then iterates (soulslike_scenarios.script:763).
+        local members = M.squads[section]
+        if members then
+            local B = require("harness.builders")
+            local built = {}
+            for i, m in ipairs(members) do
+                local npc = B.make_se_npc(m)
+                servers[npc.id] = npc
+                built[i] = npc
+            end
+            se.create_npc = require("harness.fakes").recorder("se.create_npc")
+            se.squad_members = function()
+                local i = 0
+                return function() i = i + 1 return built[i] end
+            end
+        end
+
+        return se
     end
 
+    -- Returns a SERVER object too. The mod keys note_message_data by se_note.id
+    -- (soulslike_scenarios.script:1400), which silently produces a
+    -- function-keyed table if this hands back a client object.
     env.alife_create_item = function(section, owner, opts)
         local name = (owner and name_of(owner)) or "actor"
-        return M.give(name, section, opts)
+        local item = M.give(name, section, opts)
+        local id = item:id()
+        servers[id] = servers[id] or {
+            id = id,
+            section = section,
+            position = (opts and opts.position) or nil,
+            online = false,
+            parent_id = owner and
+                (type(owner) == "table" and type(owner.id) == "function"
+                 and owner:id() or (type(owner) == "table" and owner.id))
+                or nil,
+            _container = name,
+        }
+        return servers[id]
     end
 
     env.alife_object = function(id) return servers[id] end
@@ -346,10 +403,36 @@ function M.install(env)
         set_switch_online = function() end,
         set_switch_offline= function() end,
         release           = function(_, o) M.queue_release(o) end,
+
+        -- register() FREES its argument and returns a NEW pointer
+        -- (alife_simulator_script.cpp:396-413) -- the object passed in is
+        -- dangling afterwards. Modelled by swapping in a fresh table under the
+        -- same id, so a spec that keeps using the old reference sees it go
+        -- stale rather than silently working.
+        register = function(_, se)
+            if se == nil then return nil end
+            local id = se.id
+            local fresh = {}
+            for k, v in pairs(se) do fresh[k] = v end
+            fresh.registered = true
+            servers[id] = fresh
+            se.released = true
+            M.registered[#M.registered + 1] = id
+            return fresh
+        end,
     }
     M.level_name_for_gvid = "zaton"
 
     return env
+end
+
+--- Register a server-shaped NPC so the 1..65534 alife scan in
+--- soulslike.find_closest_enemy / _enemy_mutant can find it. Ids start at
+--- 10000, comfortably inside the scanned range.
+function M.spawn_se_npc(opts)
+    local npc = require("harness.builders").make_se_npc(opts)
+    servers[npc.id] = npc
+    return npc
 end
 
 --- Make an object invisible to level.object_by_id, to exercise the
@@ -362,7 +445,11 @@ function M.reset()
     items, containers, holder, pending = {}, {}, {}, {}
     clients, servers = {}, {}
     M.created = {}
+    M.registered = {}
     M.hidden = {}
+    -- section -> list of make_se_npc opts. SpawnAmbush creates its squad
+    -- itself, so members cannot be passed in the way M.container's can.
+    M.squads = {}
     M.sim = nil
     M.level_name_for_gvid = "zaton"
 end

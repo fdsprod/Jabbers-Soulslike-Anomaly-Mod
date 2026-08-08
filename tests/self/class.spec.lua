@@ -231,6 +231,42 @@ describe("harness/class", function()
             expect(H.class.is_instance(P3(), Unrelated)).toBeFalsy()
         end)
     end)
+
+    describe("registration lifetime", function()
+        -- `class "X"` writes a true global and nothing in Lua removes it. Left
+        -- alone, a spec that never loaded soulslike_scenarios would still find
+        -- the class a PREVIOUS spec left on _G, and pass for the wrong reason.
+        -- A fresh game has no classes until the declaring script runs.
+        describe("given a class was declared before a re-boot", function()
+            it("is gone from _G afterwards", function()
+                class "LeakCanary" ; function LeakCanary:__init() end
+                expect(_G.LeakCanary).toBeDefined()
+                H.boot()
+                expect(_G.LeakCanary).toBeNil()
+            end)
+
+            it("drops it from the registered list", function()
+                class "LeakCanary2" ; function LeakCanary2:__init() end
+                H.boot()
+                expect(H.class.registered_names()).toEqual({})
+            end)
+        end)
+
+        describe("given classes declared in this boot", function()
+            it("reports them", function()
+                class "Alpha" ; class "Beta"
+                expect(H.class.registered_names()).toEqual({ "Alpha", "Beta" })
+            end)
+        end)
+
+        it("does not disturb unrelated globals", function()
+            _G.__not_a_class = 7
+            class "Gamma"
+            H.boot()
+            expect(_G.__not_a_class).toBe(7)
+            _G.__not_a_class = nil
+        end)
+    end)
 end)
 
 return true

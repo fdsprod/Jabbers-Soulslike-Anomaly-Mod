@@ -25,6 +25,13 @@ local M = {}
 -- against the class whose __init is running, not against the instance's class.
 local init_stack = {}
 
+-- Every class name registered since the last install(). `class "X"` writes a
+-- true global, and nothing in Lua removes it, so without tracking them a spec
+-- that never loaded soulslike_scenarios would still find the class a PREVIOUS
+-- spec left on _G -- and pass for the wrong reason. A fresh game has no classes
+-- until the scripts declaring them run, so install() clears them.
+local registered = {}
+
 local function construct(cls, ...)
     local obj = setmetatable({}, { __index = cls, __class = cls })
     M.call_init(cls, obj, ...)
@@ -75,6 +82,7 @@ local function class(name)
     setmetatable(cls, { __call = construct })
 
     _G[name] = cls
+    registered[name] = true
 
     -- Enables the `class "X" (Base)` second call. Returning the class itself
     -- would break that, so return a deriver closure.
@@ -106,8 +114,23 @@ function M.is_instance(obj, cls)
     return false
 end
 
+--- Names registered by `class` since the last install(). Test aid.
+function M.registered_names()
+    local out = {}
+    for name in pairs(registered) do out[#out + 1] = name end
+    table.sort(out)
+    return out
+end
+
 function M.install(env)
     env = env or _G
+    -- Drop classes declared during a previous boot before re-arming, so each
+    -- spec starts from a world where no script has run yet.
+    for name in pairs(registered) do
+        if rawget(env, name) ~= nil then env[name] = nil end
+    end
+    registered = {}
+
     env.class = class
     return env
 end
