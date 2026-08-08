@@ -4,6 +4,7 @@
 tools/
 
 # The root .gitignore excludes *.bat repo-wide (it exists to keep deploy.bat
-# out). run.bat is the documented entry point for this suite, so re-include it
-# -- without this the harness arrives unrunnable for anyone who clones.
+# out). These are the documented entry points for this suite, so re-include
+# them -- without this the harness arrives unrunnable for anyone who clones.
 !run.bat
+!locals.bat

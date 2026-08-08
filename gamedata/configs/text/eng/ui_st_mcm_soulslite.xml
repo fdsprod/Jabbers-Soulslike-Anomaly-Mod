@@ -267,6 +267,21 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
         <text>Debug Hidden Stash Scenario</text>
     </string>
+    <string id="ui_mcm_soulslike_debug_debug_squad_spawns">
+        <text>Debug Squad Spawns</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_squad_spawns_desc">
+        <text>Marks spawned ambush squads and their members on the map.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_always_spawn_ambush">
+        <text>Always Spawn Ambush</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_always_spawn_ambush_desc">
+        <text>Skips the ambush chance roll so an ambush is spawned on every death.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_remove_default_scenario">
+        <text>Remove Default Scenario</text>
+    </string>
     <string id="ui_mcm_soulslike_items_outfit_loss_chance">
         <text>Outfit Loss Chance</text>
     </string>
@@ -421,6 +436,9 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>
     <string id="ui_mcm_soulslike_ignored_items_medkit">
         <text>Medkit</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_other">
+        <text>Other Items</text>
     </string>
     <string id="ui_mcm_soulslike_ignored_items_other_desc">
         <text>This is a comma separated list of item IDs that will be ignored.</text>

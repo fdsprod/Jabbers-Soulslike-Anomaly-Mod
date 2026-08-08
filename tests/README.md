@@ -436,31 +436,38 @@ MCM getters hard-return `false`/`0.0` · `debug/debug_hidden_stashes`, whose tre
 entry is commented out · `scenarios/nearby_dead_stalker_scenario_weight`, a
 getter nothing calls.
 
-## Known-broken baselines
+## Localisation
 
-`unit/mcm_localization.spec.lua` checks MCM option labels against the string
-tables **in both directions**, and the things it currently finds are recorded
-as baseline tables inside that spec rather than fixed. The suite stays green, so
-a *new* break fails immediately — which is the point, since MCM resolves a
-missing label to the raw string id on screen and nothing else signals it.
+```
+locals.bat              report, plus the spec that asserts it
+locals.bat --report     report only
+locals.bat --strict     also fail on untranslated strings
+```
 
-Shrinking a baseline table is the fix. Growing one should be deliberate.
+A node with no `text` derives its label as `"ui_mcm_" .. <path with "/" → "_">`,
+so `allow_weapon_loss` in group `items` under root `soulslike` needs
+`ui_mcm_soulslike_items_allow_weapon_loss`. A miss renders the raw string id on
+screen and nothing else reports it.
 
-| Baseline | What it holds | Now |
+Checked **in both directions**, which is what makes a rename obvious: the new
+id has no translation *and* the old translation is orphaned, so one mistake
+fails two assertions pointing at each other.
+
+Three outcomes, deliberately not treated alike:
+
+| | Fails? | Why |
 |---|---|---|
-| `MISSING_ENG` | Node exists, translation does not — renders as the raw id | 4 |
-| `LITERAL_TEXT` | Node hardcodes an English sentence instead of a string id | 2 |
-| `ORPHAN_ENG` | Translation exists, node does not | 8 |
-| `MISSING_RUS` | English present, Russian absent | 14 |
+| **Regression** — node with no English string | **yes, always** | The player sees the raw string id in the menu. There is no case for accepting one; add four lines to `configs/text/eng`. `MISSING_ENG` is empty and should stay empty. |
+| **Baselined** — hardcoded English, or an orphaned string | no | Renders correctly (or is invisible). Recorded in `harness/mcm_labels.lua` with a reason. |
+| **Debt** — English present, Russian absent | only with `--strict` | Work outstanding, not a defect. Reported on every run so the count cannot quietly grow. |
 
-Each table also has a guard asserting its own entries are still accurate, so a
-stale baseline fails rather than quietly masking a real regression.
+Baselines carry a guard asserting their own entries still describe reality. A
+stale entry is worse than a plain break — it masks the next one in that slot —
+so it should be deleted, never updated to match.
 
-The derivation the spec relies on: a node with no `text` gets
-`"ui_mcm_" .. <path with "/" → "_">`, so `allow_weapon_loss` in group `items`
-under root `soulslike` needs `ui_mcm_soulslike_items_allow_weapon_loss`.
-Renaming an option id moves its label key — which shows up here as a missing
-key *and* an orphan at the same time.
+> The Russian tables ship as **windows-1251**, not UTF-8. Everything here
+> compares string *ids*, which are ASCII, so it never matters; anything that
+> starts reading the `<text>` bodies has to decode first.
 
 ## Not covered
 
