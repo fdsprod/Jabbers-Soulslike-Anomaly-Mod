@@ -75,7 +75,7 @@ Based on having played about 10 hours in total into a new game with this mod I c
 **A**: Yup, there is a big fat warning up near the top that says don't do that.  
 
 **Q**: I have an idea for progression that isnt included in this mod, how do I contact you.  
-**A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. I can also be found live most days on Twitch (https://www.twitch.tv/jabbers_) so feel free to stop by and say Hi! Additionally you can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
+**A**: Well, the easiest way would be discord.  You can join my personal discord (https://discord.gg/HRyCGesuXq) and message me direct at Jabbers#6969. You can leave me a message on moddb... although this isnt my preferred communication platform so my response may be slower.
 
 **TODOs**
 - Random chance for some of the players gear to be left on the player at respawn, built into the story "I was able bring back some of your gear".  Maybe with priority on weapons/outfit/headgear, but not limitted to.
