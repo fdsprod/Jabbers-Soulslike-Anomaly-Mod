@@ -141,13 +141,13 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
         <text>Hidden Stash Scenario Weight.</text>
      </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
         <text>As an extra layer of difficulty and to just mix things up a bit, when this scenario is used it your rescuer will move all your items to a hidden stash and mark it on your PDA.</text>
      </string>
     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Mark looting NPCs on the PDA</text>
     </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+    <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked_desc">
         <text>When your gear is looted by an NPC, this option will allow you to track them on your PDA.</text>
      </string>
 

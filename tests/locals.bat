@@ -1,13 +1,20 @@
 @echo off
 REM Soulslike localisation report.
-REM   locals.bat                 report, plus the spec that asserts it
+REM   locals.bat                 the spec that asserts it, then the report
 REM   locals.bat --report        report only, skip the spec
+REM   locals.bat --lax           do not fail on untranslated strings
 REM   locals.bat --no-color      plain output
 REM
 REM Compares every MCM option label against gamedata\configs\text, in both
 REM directions: a node with no translation renders as the raw string id, and a
 REM translation with no node is usually a rename that left the old string
-REM behind. Exit 1 on anything not already recorded in harness\mcm_labels.lua.
+REM behind. Exit 1 on anything not already recorded in harness\mcm_labels.lua,
+REM and on any untranslated string unless --lax is passed.
+REM
+REM The report runs LAST, on purpose. It is the part you came here to read, and
+REM when it ran first its summary scrolled off behind the spec output -- the
+REM last line on screen said PASS while 20 strings were untranslated, which is
+REM the same never-noticed failure this whole tool exists to prevent.
 
 setlocal
 cd /d "%~dp0"
@@ -48,14 +55,23 @@ for /f "tokens=2 delims=:" %%a in ('chcp') do set "_OLDCP=%%a"
 set "_OLDCP=%_OLDCP: =%"
 chcp 65001 >nul 2>&1
 
-"%LUA%" locals.lua %_ARGS%
-set "_RC=%ERRORLEVEL%"
+REM Spec first, report last -- see the note at the top.
+REM
+REM `if errorlevel 1`, never `if not "%ERRORLEVEL%"=="0"`: inside a
+REM parenthesised block cmd substitutes %ERRORLEVEL% when it PARSES the block,
+REM so the comparison reads the value from before the command ran. That is why
+REM a failing spec here used to leave the exit code alone unless the report
+REM happened to fail too.
+set "_RC=0"
 
 if not defined _REPORT_ONLY (
-    echo.
     "%LUA%" run.lua --file mcm_localization %_ARGS%
-    if not "%ERRORLEVEL%"=="0" set "_RC=1"
+    if errorlevel 1 set "_RC=1"
+    echo.
 )
+
+"%LUA%" locals.lua %_ARGS%
+if errorlevel 1 set "_RC=1"
 
 if defined _OLDCP chcp %_OLDCP% >nul 2>&1
 exit /b %_RC%

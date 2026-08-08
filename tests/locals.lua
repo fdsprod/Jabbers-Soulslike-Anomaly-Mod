@@ -12,6 +12,10 @@
 -- already recorded in the baselines in harness/mcm_labels.lua -- or on a stale
 -- baseline entry, which is worse than a plain break because it masks the next
 -- one in that slot.
+--
+-- Also exit 1 while any string is untranslated. Pass --lax for the report
+-- without that; see the `strict` local below for why it is the default here
+-- and not in run.bat.
 
 package.path = "./?.lua;" .. package.path
 
@@ -20,9 +24,22 @@ local labels = require("harness.mcm_labels")
 
 -- Colour, matching the spec runner's conventions.
 local color = not os.getenv("NO_COLOR") and not os.getenv("SPEC_NO_COLOR")
-local strict = false
+
+-- Strict by default: untranslated strings fail this run.
+--
+-- Still NOT a defect, and run.bat still passes with them outstanding -- the
+-- split is deliberate. run.bat gates the build on things that are broken;
+-- locals.bat is the translation tool, and a tool you run to look at
+-- translation debt should not exit 0 while there is debt to look at. Reporting
+-- alone was too quiet: the count sat in the middle of the output and the last
+-- line on screen said PASS.
+--
+-- --lax restores the old behaviour for anyone who wants the report without the
+-- exit code. --strict is still accepted, and is now a no-op.
+local strict = true
 for _, a in ipairs(arg or {}) do
     if a == "--no-color" then color = false end
+    if a == "--lax" then strict = false end
     if a == "--strict" then strict = true end
 end
 
@@ -66,12 +83,6 @@ H.fakes.set_random_min()
 
 local result, tree = labels.inspect()
 
--- Set of keys whose Russian gap is NEW, for tinting the parity list.
-result.missing_rus_new = {}
-for _, entry in ipairs(result.missing_rus.new) do
-    result.missing_rus_new[entry:match("([%w_]+)$")] = true
-end
-
 local n_labels = #labels.labels(tree)
 
 print(RULE)
@@ -93,36 +104,39 @@ report("renders, but can never be translated", result.literal, C.red)
 heading("Translation has no node")
 report("usually a rename that left the old string behind", result.orphan, C.yellow)
 
+-- Whole-table, not just MCM labels: the label scan never sees messages, item
+-- names or menu strings, and a gap there is just as visible in game.
 heading("Untranslated")
 do
     local only_eng = result.parity.only_eng
     local only_rus = result.parity.only_rus
 
-    if #only_eng == 0 and #only_rus == 0 then
+    if #only_eng.new == 0 and #only_eng.known == 0 and #only_rus == 0 then
         print("  " .. C.green .. "eng and rus tables are in step" .. C.reset)
     end
 
-    -- Whole-table, not just MCM labels: the label scan never sees messages,
-    -- item names or menu strings, and a gap there is just as visible in game.
-    if #only_eng > 0 then
-        print(string.format("  %s%d string(s) in eng with no rus%s   %s",
-            C.bold, #only_eng, C.reset,
-            C.gray .. "a Russian player sees the raw id" .. C.reset))
-        for _, id in ipairs(only_eng) do
-            local tint = result.missing_rus_new[id] and (C.yellow .. "NEW  ")
-                          or (C.gray .. "     ")
-            print("      " .. tint .. id .. C.reset)
-        end
-    end
+    report(string.format("%d string(s) in eng with no rus",
+                         #only_eng.new + #only_eng.known),
+           only_eng, C.yellow, "a Russian player sees the raw id")
 
     if #only_rus > 0 then
         print("")
         print(string.format("  %s%d string(s) in rus with no eng%s   %s",
             C.bold, #only_rus, C.reset,
-            C.gray .. "usually a stale entry left after a rename" .. C.reset))
+            C.gray .. "a rename applied to one table only" .. C.reset))
         for _, id in ipairs(only_rus) do
-            print("      " .. C.yellow .. id .. C.reset)
+            print("      " .. C.red .. id .. C.reset)
         end
+    end
+end
+
+if #result.duplicates > 0 then
+    heading("String id declared more than once")
+    print("    " .. C.gray ..
+          "the engine keeps one <text> and drops the rest, so the id resolves " ..
+          "and every other check here stays green" .. C.reset)
+    for _, entry in ipairs(result.duplicates) do
+        print("      " .. C.red .. entry .. C.reset)
     end
 end
 
@@ -154,9 +168,14 @@ end
 -- not fail a build by default -- but it is reported on every run rather than
 -- being absorbed into "known", because a count that only ever goes up is the
 -- one thing nobody notices.
+--
+-- A duplicate id and an orphaned rus string are defects, not debt: neither is
+-- work waiting on a translator. One drops a string the file was written to
+-- carry, the other is half a rename.
 local broken = #result.missing_eng.new + #result.literal.new
              + #result.orphan.new + #result.groups + #result.stale
-local debt = #result.parity.only_eng + #result.parity.only_rus
+             + #result.duplicates + #result.parity.only_rus
+local debt = #result.parity.only_eng.new + #result.parity.only_eng.known
 local known = #result.missing_eng.known + #result.literal.known
             + #result.orphan.known
 
@@ -182,7 +201,7 @@ end
 if debt > 0 and strict then
     print(C.red .. C.bold .. " DEBT " .. C.reset ..
           C.red .. string.format("  %d untranslated string(s)", debt) .. C.reset ..
-          C.gray .. "  (--strict)" .. C.reset)
+          C.gray .. "  (nothing is broken; pass --lax to report only)" .. C.reset)
     os.exit(1)
 end
 
@@ -195,8 +214,7 @@ print(C.green .. C.bold .. " OK " .. C.reset ..
 if debt > 0 then
     print("")
     print("  " .. C.gray ..
-          "Untranslated strings do not fail this run. Pass --strict to change that."
-          .. C.reset)
+          "Untranslated strings are reported without failing (--lax)." .. C.reset)
 end
 
 os.exit(0)

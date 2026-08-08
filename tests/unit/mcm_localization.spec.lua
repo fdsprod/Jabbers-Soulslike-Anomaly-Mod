@@ -92,6 +92,33 @@ describe("MCM localisation", function()
         it("has no newly untranslated labels", function()
             expect(result.missing_rus.new).toEqual({})
         end)
+
+        -- The check above only sees ids the MCM tree asks for -- 112 of 218
+        -- strings. Every message, item name and main-menu string was outside
+        -- its reach, so a translation gap in soulslike_messages.xml was
+        -- invisible to the whole suite while `locals.bat` printed it and no
+        -- assertion read it. Compare the tables outright instead.
+        it("has no newly untranslated strings anywhere", function()
+            expect(result.parity.only_eng.new).toEqual({})
+        end)
+
+        -- Not baselined, unlike the direction above: this is not outstanding
+        -- translation work but a rename applied to one table only, so the rus
+        -- entry is dead and its replacement is untranslated under a new id.
+        it("has no Russian string without an English one", function()
+            expect(result.parity.only_rus).toEqual({})
+        end)
+    end)
+
+    describe("the string tables themselves", function()
+        -- The engine keeps one <text> per id and drops the rest, so a
+        -- copy-pasted block that was never renamed quietly replaces the string
+        -- it was meant to become. Every other check here reads a set, where
+        -- the repeat has already collapsed and the id still resolves -- so
+        -- this is the only thing that can see it.
+        it("declares each string id once", function()
+            expect(result.duplicates).toEqual({})
+        end)
     end)
 
     describe("the baselines", function()

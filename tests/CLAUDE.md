@@ -17,7 +17,8 @@ tests\run.bat                     all specs        (self gates unit + e2e)
 tests\run.bat self|unit|e2e       one suite
 tests\run.bat --file ambush       spec files matching a substring
 tests\run.bat -t "keep roll"      tests matching a substring
-tests\locals.bat                  MCM localisation report + its spec
+tests\locals.bat                  localisation spec, then the report (strict)
+tests\locals.bat --lax            same, without failing on untranslated strings
 tests\tools\luajit.exe probe.lua  reachability check
 ```
 
@@ -108,6 +109,7 @@ harness/world.lua       item/container model + the alife simulator
 harness/timeevents.lua  CreateTimeEvent queue and pump
 harness/mods.lua        base-Anomaly and third-party script registry
 harness/mcm_labels.lua  MCM label derivation, analysis, and its baselines
+harness/encoding.lua    byte-level inspection of the localisation XML
 harness/init.lua        H.boot / H.tick / H.reboot — start here
 ```
 
@@ -178,9 +180,12 @@ Before baselining anything, ask: *would a player notice this?* If yes, it is a
 defect, and the fix belongs in the same change as the spec that caught it.
 
 **Separate defects from debt.** Untranslated strings are outstanding work, not
-bugs. They are reported on every run so the count cannot quietly grow, but they
-do not fail a build unless `--strict` is passed. Conflating the two either
-blocks work on translation or hides real breakage in a pile of it.
+bugs. Conflating the two either blocks work on translation or hides real
+breakage in a pile of it. So the two entry points answer different questions:
+`run.bat` gates the build and **passes** with translation outstanding;
+`locals.bat` is the translation tool and **fails** while any string is
+untranslated (`--lax` opts out). Reporting alone proved too quiet — the count
+sat mid-output and the closing line said `PASS`.
 
 **Determinism.** `math.random` raises unless pinned. Budgets matter — assert
 them with `H.fakes.random_count()`. Some functions spend rolls of different
@@ -229,6 +234,43 @@ are optional.
 `locals.bat` reports this in both directions. Checking both is what makes a
 rename obvious: the new id has no translation **and** the old translation is
 orphaned, so one mistake fails two assertions pointing at each other.
+
+**Parity is whole-table, not label-derived.** The label scan only sees ids the
+option tree asks for — 112 of 220 strings. Every message, item name and
+main-menu string was outside its reach, so a gap in `soulslike_messages.xml`
+was invisible to the entire suite: `locals.bat` printed it and no assertion
+ever read the result. `M.parity` compares the two tables outright, and both
+directions are asserted. eng-with-no-rus is debt, baselined in `M.MISSING_RUS`.
+rus-with-no-eng is **not** baselined — it cannot be translation work, because
+there is nothing left to translate; it is a rename applied to one table only.
+
+**A repeated `<string id>` is invisible to everything else.** The engine keeps
+one `<text>` and drops the rest, and every check here reads a *set*, where the
+repeat has already collapsed and the id still resolves. So a copy-pasted block
+that was never renamed silently takes the place of the string it was meant to
+become, and nothing goes red. `loader.load_string_table` returns the repeat
+counts alongside the set for exactly this reason. This is not hypothetical
+either: three consecutive `<string>` blocks shared
+`ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc` in **both**
+languages, so the live `looter_npcs_marked` option had no tooltip in game at
+all. Treat a duplicate as a defect, never as debt.
+
+**Encoding.** `gamedata/configs/text/rus/*.xml` is stored as **windows-1251**,
+one byte per Cyrillic letter, and must stay that way. The engine's XML reader
+takes the bytes as they are and hands them to cp1251 font tables, so a file
+re-saved as UTF-8 still parses, every `<string id>` still resolves, and the
+label specs stay green while every Russian string renders as mojibake. The
+declaration keeps saying `windows-1251` throughout, so the diff looks innocent
+— it can only be caught at the byte level.
+
+This is not hypothetical: the rus tables were committed as UTF-8 across ten
+revisions before `e5494dc` put them back. The cause is an editor, not a person — VS Code
+guesses an encoding on open, guesses wrong on cp1251, and rewrites the file on
+save. `unit/text_encoding.spec.lua` is the guard, on two independent signals
+(the file must not decode as valid UTF-8; every high byte must exist in
+cp1251), plus a BOM check and a declaration check. Line endings are
+deliberately *not* asserted — stock files use LF, ours CRLF, `core.autocrlf`
+rewrites them on checkout, and the engine reads both.
 
 Because the whole MCM module funnels through one accessor, faking `ui_mcm.get`
 alone makes the **real** 1200-line module run. Unset keys exercise each

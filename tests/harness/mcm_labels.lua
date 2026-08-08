@@ -61,6 +61,9 @@ M.ORPHAN_ENG = {
     ["ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario"] = true,
     ["ui_mcm_soulslike_debug_debug_the_rf_scenario"] = true,
     ["ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight"] = true,
+    -- Joins its label above only once the duplicate-id fix gave it its own id:
+    -- it had been sharing rf_detector's, so the engine dropped it entirely.
+    ["ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc"] = true,
     ["ui_mcm_soulslike_scenarios_rf_detector_scenario_weight"] = true,
     ["ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc"] = true,
     ["ui_mcm_soulslike_hardcore_lose_all_items_on_death"] = true,
@@ -73,6 +76,10 @@ M.ORPHAN_ENG = {
 --- failing (pass --strict to change that). The list is still asserted, so a
 --- newly untranslated string forces a decision: translate it, or record it
 --- here deliberately.
+---
+--- Whole-table, NOT just MCM option labels: this baseline covers every
+--- <string id> in gamedata/configs/text, so a message or item name added to
+--- eng and not rus lands here too.
 M.MISSING_RUS = {
     -- Added with the English strings that fixed the raw-id labels. Left
     -- untranslated rather than machine-guessed: a wrong Russian label is worse
@@ -165,7 +172,9 @@ end
 --- Each result list is split into `new` (not in the baseline -- a regression)
 --- and `known` (in the baseline -- already accounted for). Only `new` should
 --- ever be non-empty on a clean tree.
-function M.analyse(tree, eng, rus)
+--- `dups` is optional and comes from loader.load_string_table's second return:
+--- { eng = <list>, rus = <list> }.
+function M.analyse(tree, eng, rus, dups)
     local r = {
         missing_eng = { new = {}, known = {} },
         literal     = { new = {}, known = {} },
@@ -173,6 +182,9 @@ function M.analyse(tree, eng, rus)
         missing_rus = { new = {}, known = {} },
         stale       = {},   -- baseline entries that no longer describe reality
         groups      = {},   -- group headings with no translation
+        duplicates  = {},   -- one id declared twice; the engine keeps one
+        -- Whole-table parity, independent of the MCM tree.
+        parity      = { only_eng = { new = {}, known = {} }, only_rus = {} },
     }
 
     for _, group in ipairs(tree.gr or {}) do
@@ -210,6 +222,30 @@ function M.analyse(tree, eng, rus)
         end
     end
 
+    -- Whole-table parity. The label scan above only sees ids the option tree
+    -- asks for, which is 112 of 218 strings -- every message, item name and
+    -- main-menu string is invisible to it, and a gap there is just as visible
+    -- in game. Compare the tables outright so nothing is out of scope.
+    local par = M.parity(eng, rus)   -- only_a = eng-only, only_b = rus-only
+
+    for _, id in ipairs(par.only_a) do
+        local bucket = M.MISSING_RUS[id] and "known" or "new"
+        table.insert(r.parity.only_eng[bucket], id)
+    end
+
+    -- No baseline: an id in rus with no eng cannot be tracked translation
+    -- work, because there is nothing left to translate. It is a rename that
+    -- updated one table and not the other, so the rus entry is dead weight and
+    -- whatever replaced it is untranslated under its new id.
+    r.parity.only_rus = par.only_b
+
+    for lang, list in pairs(dups or {}) do
+        for _, dup in ipairs(list) do
+            table.insert(r.duplicates, string.format("%s/%s  %s  (x%d)",
+                lang, dup.file, dup.id, dup.count))
+        end
+    end
+
     local used = M.used_keys(tree)
     for id in pairs(eng) do
         if id:match("^ui_mcm_" .. M.ROOT .. "_") and not used[id] then
@@ -239,18 +275,26 @@ function M.analyse(tree, eng, rus)
             table.insert(r.stale, "ORPHAN_ENG   " .. id .. "  (no longer in the tables)")
         end
     end
+    -- Checked against BOTH tables now that this baseline is whole-table. An
+    -- entry whose English string was deleted describes nothing: the gap it
+    -- named is gone, and leaving it behind would silently absorb the next
+    -- string that happens to reuse the id.
     for key in pairs(M.MISSING_RUS) do
         if rus[key] then
             table.insert(r.stale, "MISSING_RUS  " .. key .. "  (now translated)")
+        elseif not eng[key] then
+            table.insert(r.stale, "MISSING_RUS  " .. key .. "  (no longer in eng)")
         end
     end
 
-    for _, group in pairs{ r.missing_eng, r.literal, r.orphan, r.missing_rus } do
+    for _, group in pairs{ r.missing_eng, r.literal, r.orphan, r.missing_rus,
+                           r.parity.only_eng } do
         sorted(group.new)
         sorted(group.known)
     end
     sorted(r.stale)
     sorted(r.groups)
+    sorted(r.duplicates)
 
     return r
 end
@@ -280,13 +324,11 @@ function M.inspect(tree)
     local loader = require("harness.loader")
     tree = tree or _G.soulslike_mcm.on_mcm_load()
 
-    local eng = loader.load_string_table("eng")
-    local rus = loader.load_string_table("rus")
+    local eng, eng_dups = loader.load_string_table("eng")
+    local rus, rus_dups = loader.load_string_table("rus")
 
-    local result = M.analyse(tree, eng, rus)
+    local result = M.analyse(tree, eng, rus, { eng = eng_dups, rus = rus_dups })
 
-    local parity = M.parity(eng, rus)
-    result.parity = { only_eng = parity.only_a, only_rus = parity.only_b }
     result.counts = { eng = 0, rus = 0 }
     for _ in pairs(eng) do result.counts.eng = result.counts.eng + 1 end
     for _ in pairs(rus) do result.counts.rus = result.counts.rus + 1 end

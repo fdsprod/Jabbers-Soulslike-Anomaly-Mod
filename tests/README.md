@@ -84,6 +84,8 @@ copy  luajit.exe  <mod>\tests\tools\
 | `harness/world.lua` | Item/container model + the alife simulator |
 | `harness/timeevents.lua` | `CreateTimeEvent` queue and pump |
 | `harness/mods.lua` | Base-Anomaly and third-party script registry |
+| `harness/mcm_labels.lua` | MCM label derivation, analysis and its baselines |
+| `harness/encoding.lua` | Byte-level inspection of the localisation XML |
 | `self/*.spec.lua` | Harness self-tests — these gate everything else |
 | `unit/*.spec.lua` | Unit specs against the real mod scripts |
 | `e2e/*.spec.lua` | End-to-end journeys through the callback chain |
@@ -439,10 +441,14 @@ getter nothing calls.
 ## Localisation
 
 ```
-locals.bat              report, plus the spec that asserts it
-locals.bat --report     report only
-locals.bat --strict     also fail on untranslated strings
+locals.bat              the spec that asserts it, then the report
+locals.bat --report     report only, skip the spec
+locals.bat --lax        do not fail on untranslated strings
 ```
+
+The report runs **last**. It is the part you came here to read, and when it ran
+first its summary scrolled off behind the spec output — the closing line said
+`PASS` while 20 strings were untranslated.
 
 A node with no `text` derives its label as `"ui_mcm_" .. <path with "/" → "_">`,
 so `allow_weapon_loss` in group `items` under root `soulslike` needs
@@ -453,13 +459,19 @@ Checked **in both directions**, which is what makes a rename obvious: the new
 id has no translation *and* the old translation is orphaned, so one mistake
 fails two assertions pointing at each other.
 
-Three outcomes, deliberately not treated alike:
+Parity is compared **whole-table**, not just across MCM labels: the label scan
+only sees the 112 ids the option tree asks for, so a gap in
+`soulslike_messages.xml` was outside its reach entirely.
+
+Outcomes, deliberately not treated alike:
 
 | | Fails? | Why |
 |---|---|---|
 | **Regression** — node with no English string | **yes, always** | The player sees the raw string id in the menu. There is no case for accepting one; add four lines to `configs/text/eng`. `MISSING_ENG` is empty and should stay empty. |
+| **Duplicate** — one id declared twice | **yes, always** | The engine keeps one `<text>` and drops the rest. Every other check reads a *set*, where the repeat has collapsed and the id still resolves, so this is the only thing that can see it. |
+| **Half a rename** — Russian string with no English one | **yes, always** | Not translation work: there is nothing left to translate. Not baselined. |
 | **Baselined** — hardcoded English, or an orphaned string | no | Renders correctly (or is invisible). Recorded in `harness/mcm_labels.lua` with a reason. |
-| **Debt** — English present, Russian absent | only with `--strict` | Work outstanding, not a defect. Reported on every run so the count cannot quietly grow. |
+| **Debt** — English present, Russian absent | in `locals.bat`, not in `run.bat` | Work outstanding, not a defect. `run.bat` gates the build on what is *broken*; `locals.bat` is the translation tool and should not exit 0 while there is debt to look at. `--lax` opts out. |
 
 Baselines carry a guard asserting their own entries still describe reality. A
 stale entry is worse than a plain break — it masks the next one in that slot —

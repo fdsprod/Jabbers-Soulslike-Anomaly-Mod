@@ -132,13 +132,13 @@
     <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
         <text>Шанс сценария с тайником</text>
      </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
         <text>В качестве дополнительного затруднения и для разнообразия, при выборе этого сценария ваш спаситель оставит ваши вещи в тайнике и пометит его на карте вашего КПК.</text>
      </string>
      <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Помечать мародёров на КПК</text>
     </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+    <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked_desc">
         <text>Если ваши вещи заберёт мародёр, эта опция позволит вам его отслеживать по метке в КПК.</text>
     </string>
 

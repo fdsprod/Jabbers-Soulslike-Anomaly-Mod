@@ -112,23 +112,44 @@ end
 
 --- Every <string id> in one language's tables, as a set. Missing files are
 --- skipped: a mod need not ship every language.
+---
+--- Returns `ids, duplicates`. A set discards repeats, and a repeated id is not
+--- harmless: the engine keeps one <text> and drops the rest, so a block that
+--- was copy-pasted and never renamed silently takes the place of the string it
+--- was supposed to become. Nothing else in the suite can see that -- the id
+--- resolves, so every label check stays green -- which is why the count comes
+--- back alongside the set rather than being thrown away here.
+---
+--- Each duplicate entry: { id, file, count }.
 function M.load_string_table(lang, files)
-    local ids = {}
+    local ids, seen, dups = {}, {}, {}
     local dir = M.text_dir() .. "/" .. (lang or "eng")
 
     for _, name in ipairs(files or M.string_table_files(lang)) do
         local src = read_file(dir .. "/" .. name)
         if src then
-            for id in src:gmatch('<string%s+id%s*=%s*"([^"]+)"') do
-                ids[id] = true
+            local function collect(pattern)
+                for id in src:gmatch(pattern) do
+                    ids[id] = true
+                    local at = seen[id]
+                    if at then
+                        at.count = at.count + 1
+                    else
+                        seen[id] = { id = id, file = name, count = 1 }
+                    end
+                end
             end
-            for id in src:gmatch("<string%s+id%s*=%s*'([^']+)'") do
-                ids[id] = true
-            end
+            collect('<string%s+id%s*=%s*"([^"]+)"')
+            collect("<string%s+id%s*=%s*'([^']+)'")
         end
     end
 
-    return ids
+    for _, at in pairs(seen) do
+        if at.count > 1 then dups[#dups + 1] = at end
+    end
+    table.sort(dups, function(a, b) return a.id < b.id end)
+
+    return ids, dups
 end
 
 --- The .xml files present for a language. Discovered the same way spec files
