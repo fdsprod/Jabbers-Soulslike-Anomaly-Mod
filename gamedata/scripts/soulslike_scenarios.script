@@ -205,9 +205,16 @@ local stalker_spawns = {
     { section = "ecolog_sim_squad_veteran",     community = "ecolog",       weight = 0.10,  type = stalker_spawn_type.Veteran },
 }
 
-local function is_equipped(id) 
+-- Slot 0 is NO_ACTIVE_SLOT and the engine rejects it, so the scan starts at 1.
+-- LAST_SLOT is CUSTOM_SLOT_5 = 18 in this build: MORE_INVENTORY_SLOTS is
+-- defined, which adds BACKPACK(13) and CUSTOM_1..5(14-18) past HELMET(12).
+-- Stopping at 12 left items in those slots looking unequipped, so they were
+-- eligible for loss even with keep_equipped_items_on_death enabled.
+local LAST_INVENTORY_SLOT = 18
+
+local function is_equipped(id)
     local is_equipped = false
-    for i=1,12 do
+    for i=1,LAST_INVENTORY_SLOT do
         local slot = db.actor:item_in_slot(i)
         if (slot and slot:id() == id) then
             is_equipped = true
@@ -388,11 +395,18 @@ function SoulslikeScenarioLogic:ApplyRankLoss()
 
     local rank = db.actor:character_rank()
     local loss_percent = self.logic_state.rank_loss_percent
-    local rank_loss = math.abs(rank * loss_percent)
 
-    soulslike.debug("Player has lost "..tostring(rank_loss).." rank.")
+    -- No math.abs: it made the deduction positive regardless of sign, so a
+    -- negative rank was driven further negative without bound instead of
+    -- losing a percentage. Floor and clamp here rather than leaving it to the
+    -- engine, which stores an int via a static_cast that truncates toward zero
+    -- (asymmetric across the sign) and applies no clamp of its own.
+    local rank_loss = math.floor(rank * loss_percent)
+    local new_rank = math.max(rank - rank_loss, 0)
 
-    db.actor:set_character_rank(db.actor:character_rank() + (-rank_loss or 0))
+    soulslike.debug("Player has lost "..tostring(rank - new_rank).." rank.")
+
+    db.actor:set_character_rank(new_rank)
     game_statistics.check_for_rank_change()
 end
 
@@ -404,11 +418,24 @@ function SoulslikeScenarioLogic:ApplyReputationLoss()
 
     local rep = db.actor:character_reputation()
     local loss_percent = self.logic_state.rep_loss_percent
-    local rep_loss = math.abs(rep * loss_percent)
 
-    soulslike.debug("Player has lost "..tostring(rep_loss).." repuation.")
+    -- Reputation legitimately runs negative for a hated actor, so this decays
+    -- TOWARD zero rather than clamping there: dying costs you standing in
+    -- whichever direction you earned it, and never overshoots past neutral.
+    -- The old math.abs form always subtracted, which drove a negative
+    -- reputation further negative every death, without bound.
+    local rep_loss = math.floor(math.abs(rep) * loss_percent)
+    local new_rep = rep
 
-    db.actor:set_character_reputation(db.actor:character_reputation() + (-rep_loss or 0))
+    if rep > 0 then
+        new_rep = math.max(rep - rep_loss, 0)
+    elseif rep < 0 then
+        new_rep = math.min(rep + rep_loss, 0)
+    end
+
+    soulslike.debug("Player has lost "..tostring(math.abs(rep - new_rep)).." reputation.")
+
+    db.actor:set_character_reputation(new_rep)
     game_statistics.check_for_reputation_change()
 end
 
