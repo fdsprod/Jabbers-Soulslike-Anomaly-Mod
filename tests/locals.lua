@@ -8,10 +8,9 @@
 -- This exists because when you are ADDING an option, "18 passing" tells you
 -- nothing; you want the list.
 --
--- Exit 0 when nothing new is broken. Exit 1 on a regression, i.e. anything not
--- already recorded in the baselines in harness/mcm_labels.lua -- or on a stale
--- baseline entry, which is worse than a plain break because it masks the next
--- one in that slot.
+-- Exit 0 when nothing is broken, 1 otherwise. There is no list of accepted
+-- breakages to check against and nothing to add an id to; the only way to
+-- reach exit 0 is to fix the localisation.
 --
 -- Also exit 1 while any string is untranslated. Pass --lax for the report
 -- without that; see the `strict` local below for why it is the default here
@@ -55,11 +54,9 @@ local function heading(text)
     print(C.bold .. C.cyan .. text .. C.reset)
 end
 
---- One category. `tint` colours the new (regression) entries.
-local function report(title, group, tint, note)
-    local n_new, n_known = #group.new, #group.known
-
-    if n_new == 0 and n_known == 0 then
+--- One category. `tint` colours the entries.
+local function report(title, list, tint, note)
+    if #list == 0 then
         print(string.format("  %s%s%s  %s-%s",
             C.gray, title, C.reset, C.gray, C.reset))
         return
@@ -68,11 +65,8 @@ local function report(title, group, tint, note)
     print(string.format("  %s%s%s", C.bold, title, C.reset))
     if note then print("    " .. C.gray .. note .. C.reset) end
 
-    for _, entry in ipairs(group.new) do
-        print("      " .. tint .. "NEW  " .. entry .. C.reset)
-    end
-    for _, entry in ipairs(group.known) do
-        print("      " .. C.gray .. "     " .. entry .. C.reset)
+    for _, entry in ipairs(list) do
+        print("      " .. tint .. entry .. C.reset)
     end
 end
 
@@ -111,12 +105,11 @@ do
     local only_eng = result.parity.only_eng
     local only_rus = result.parity.only_rus
 
-    if #only_eng.new == 0 and #only_eng.known == 0 and #only_rus == 0 then
+    if #only_eng == 0 and #only_rus == 0 then
         print("  " .. C.green .. "eng and rus tables are in step" .. C.reset)
     end
 
-    report(string.format("%d string(s) in eng with no rus",
-                         #only_eng.new + #only_eng.known),
+    report(string.format("%d string(s) in eng with no rus", #only_eng),
            only_eng, C.yellow, "a Russian player sees the raw id")
 
     if #only_rus > 0 then
@@ -147,37 +140,24 @@ if #result.groups > 0 then
     end
 end
 
-if #result.stale > 0 then
-    heading("Stale baseline entries")
-    print("    " .. C.gray ..
-          "these no longer describe reality, and mask the next break in that slot" ..
-          C.reset)
-    for _, entry in ipairs(result.stale) do
-        print("      " .. C.red .. entry .. C.reset)
-    end
-end
-
 -- ---------------------------------------------------------------- summary
 
 -- Two different things, deliberately not added together.
 --
--- BROKEN is a regression: a label that renders as a raw string id, or a
--- baseline that no longer describes reality. It fails.
+-- BROKEN is a defect: a label that renders as a raw string id in the shipped
+-- menu, or a string with nothing pointing at it.
 --
--- DEBT is untranslated text. It is work outstanding, not a defect, and it must
--- not fail a build by default -- but it is reported on every run rather than
--- being absorbed into "known", because a count that only ever goes up is the
--- one thing nobody notices.
+-- DEBT is untranslated text. It is work outstanding, not a defect, so it must
+-- not fail run.bat -- but it is reported on every run, because a count that
+-- only ever goes up is the one thing nobody notices.
 --
 -- A duplicate id and an orphaned rus string are defects, not debt: neither is
 -- work waiting on a translator. One drops a string the file was written to
 -- carry, the other is half a rename.
-local broken = #result.missing_eng.new + #result.literal.new
-             + #result.orphan.new + #result.groups + #result.stale
+local broken = #result.missing_eng + #result.literal
+             + #result.orphan + #result.groups
              + #result.duplicates + #result.parity.only_rus
-local debt = #result.parity.only_eng.new + #result.parity.only_eng.known
-local known = #result.missing_eng.known + #result.literal.known
-            + #result.orphan.known
+local debt = #result.parity.only_eng
 
 print("")
 print(C.gray .. RULE .. C.reset)
@@ -189,12 +169,10 @@ end
 
 if broken > 0 then
     print(C.red .. C.bold .. " BROKEN " .. C.reset ..
-          C.red .. string.format("%d regression(s)", broken) .. C.reset ..
-          debt_note ..
-          C.gray .. string.format("  (%d known)", known) .. C.reset)
+          C.red .. string.format("%d defect(s)", broken) .. C.reset ..
+          debt_note)
     print("")
-    print("  Fix it, or record it in harness/mcm_labels.lua if deliberate.")
-    print("  A stale baseline should be deleted, not updated to match.")
+    print("  Fix the localisation. There is no list to record these in.")
     os.exit(1)
 end
 
@@ -206,10 +184,8 @@ if debt > 0 and strict then
 end
 
 print(C.green .. C.bold .. " OK " .. C.reset ..
-      C.green .. "    no regressions" .. C.reset ..
-      debt_note ..
-      C.gray .. string.format("  (%d known, see harness/mcm_labels.lua)", known)
-      .. C.reset)
+      C.green .. "    nothing broken" .. C.reset ..
+      debt_note)
 
 if debt > 0 then
     print("")

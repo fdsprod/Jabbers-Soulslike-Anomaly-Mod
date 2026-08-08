@@ -132,18 +132,6 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_scenarios_description">
         <text>Soulslike scenarios are dynamic by nature.  Respawn events occur based on who killed you, how you were killed, where, how close to your spawn you are when you died, whether you are inside or outside, just to name a few.  These settings exist to allow you to customize the ways you want to try and recover your gear.  The default scenario's that always exist are that you may end up having all of your items on you on respawn (again, based on events), or you may find that your items are in a backpack on the ground where your body was found.  The options below are in addition to those and weight can be changed to make them more or less frequent.</text>
      </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight">
-        <text>RF Detector Scenario Weight.</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
-        <text>As an extra layer of difficulty and to just mix things up a bit, when this scenario is used it your rescuer will move all your items to a hidden stash on the same map where you were found.  They will tell you the RF freqency to listen to to track down your gear, and also leave you a note in your inventory as a reminder.</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
-        <text>Hidden Stash Scenario Weight.</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
-        <text>As an extra layer of difficulty and to just mix things up a bit, when this scenario is used it your rescuer will move all your items to a hidden stash and mark it on your PDA.</text>
-     </string>
     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Mark looting NPCs on the PDA</text>
     </string>
@@ -246,9 +234,6 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_debug_enable_tips">
         <text>Show PDA Messages</text>
     </string>    
-    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes">
-        <text>Debug Hidden Stashes</text>
-    </string>
     <string id="ui_mcm_soulslike_debug_debug_item_loss">
         <text>Debug Item Loss</text>
     </string>
@@ -260,12 +245,6 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>
     <string id="ui_mcm_soulslike_debug_debug_the_default_scenario">
         <text>Debug Default Loss Scenario</text>
-    </string>
-    <string id="ui_mcm_soulslike_debug_debug_the_rf_scenario">
-        <text>Debug RF Detector Scenario</text>
-    </string>
-    <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
-        <text>Debug Hidden Stash Scenario</text>
     </string>
     <string id="ui_mcm_soulslike_debug_debug_squad_spawns">
         <text>Debug Squad Spawns</text>

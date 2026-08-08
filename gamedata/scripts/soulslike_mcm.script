@@ -829,13 +829,12 @@ function on_mcm_load()
                 id = "lose_all_items_on_death",
                 type = "check",
                 val = 1,
-                def = false,
-                text = "Lose all items on death",
+                def = false
             },
             {
                 id = "lose_all_items_on_death_desc",
                 type = "desc",
-                text = "If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.",
+                text = "ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc",
                 clr = {255, 255 ,255 ,0},
             },
             {

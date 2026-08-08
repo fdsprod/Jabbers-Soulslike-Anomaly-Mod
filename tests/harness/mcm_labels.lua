@@ -2,8 +2,18 @@
 -- lines up with the shipped localisation tables.
 --
 -- Shared by unit/mcm_localization.spec.lua (which asserts) and locals.lua
--- (which reports), so the baselines below exist in exactly one place. Two
--- copies of these lists would drift the first time one is updated.
+-- (which reports), so the analysis exists in exactly one place. Two copies
+-- would drift the first time one is updated.
+--
+-- THERE IS NO EXEMPTION LIST HERE, AND THERE SHOULD NEVER BE ONE. This module
+-- used to carry four tables of string ids that were "known broken"; adding an
+-- id to one of them turned a failure into a pass. That inverts what a test is
+-- for. The only way to make these checks pass is to fix the localisation.
+--
+-- If something genuinely must be tolerated, say so in the spec, in prose, next
+-- to the assertion that tolerates it -- so a reader sees the reason at the
+-- same moment they see the exception. Do not reintroduce a data table that
+-- silences findings from a distance.
 --
 -- THE DERIVATION (ui_mcm.script)
 --
@@ -23,89 +33,6 @@ M.ROOT = "soulslike"
 
 -- Renders nothing, so carries no label.
 local NO_LABEL = { line = true, image = true }
-
--- ---------------------------------------------------------------- baselines
---
--- What is broken TODAY. Recorded rather than fixed so the suite stays green and
--- a NEW break fails loudly. Shrinking a table is the fix; growing one should be
--- a deliberate decision.
-
---- Node exists, English translation does not.
----
---- DELIBERATELY EMPTY, and it should stay that way. This is the one category
---- a player sees directly: the option renders as the literal string id in the
---- settings menu. Baselining these was a mistake -- it made `run.bat` report
---- PASS while the shipped menu showed
---- `ui_mcm_soulslike_debug_debug_squad_spawns` to anyone who opened it, which
---- is exactly the permanently-green-while-broken failure this suite exists to
---- prevent.
----
---- Add the string to gamedata/configs/text/eng instead. It is four lines and
---- carries no risk; there is no case for accepting one of these.
-M.MISSING_ENG = {}
-
---- Node hardcodes an English sentence instead of a string id. It renders,
---- because translate_string passes unknown input through, but can never be
---- localised. Both of these already HAVE translations sitting unused -- which
---- is why they also appear in M.ORPHAN_ENG -- so deleting the literal would
---- wire them up without writing anything new.
-M.LITERAL_TEXT = {
-    ["soulslike/hardcore/lose_all_items_on_death"] = true,
-    ["soulslike/hardcore/lose_all_items_on_death_desc"] = true,
-}
-
---- Translation exists, node does not. Usually a rename that left the old
---- string behind; here, mostly options that are commented out.
-M.ORPHAN_ENG = {
-    ["ui_mcm_soulslike_debug_debug_hidden_stashes"] = true,
-    ["ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario"] = true,
-    ["ui_mcm_soulslike_debug_debug_the_rf_scenario"] = true,
-    ["ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight"] = true,
-    -- Joins its label above only once the duplicate-id fix gave it its own id:
-    -- it had been sharing rf_detector's, so the engine dropped it entirely.
-    ["ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc"] = true,
-    ["ui_mcm_soulslike_scenarios_rf_detector_scenario_weight"] = true,
-    ["ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc"] = true,
-    ["ui_mcm_soulslike_hardcore_lose_all_items_on_death"] = true,
-    ["ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc"] = true,
-}
-
---- English present, Russian absent. A Russian player sees the raw id.
----
---- Tracked work rather than a defect, so `locals.bat` reports it without
---- failing (pass --strict to change that). The list is still asserted, so a
---- newly untranslated string forces a decision: translate it, or record it
---- here deliberately.
----
---- Whole-table, NOT just MCM option labels: this baseline covers every
---- <string id> in gamedata/configs/text, so a message or item name added to
---- eng and not rus lands here too.
-M.MISSING_RUS = {
-    -- Added with the English strings that fixed the raw-id labels. Left
-    -- untranslated rather than machine-guessed: a wrong Russian label is worse
-    -- than a tracked gap.
-    ["ui_mcm_soulslike_debug_debug_squad_spawns"] = true,
-    ["ui_mcm_soulslike_debug_debug_squad_spawns_desc"] = true,
-    ["ui_mcm_soulslike_debug_debug_always_spawn_ambush"] = true,
-    ["ui_mcm_soulslike_debug_debug_always_spawn_ambush_desc"] = true,
-    ["ui_mcm_soulslike_debug_debug_remove_default_scenario"] = true,
-    ["ui_mcm_soulslike_ignored_items_other"] = true,
-
-    ["ui_mcm_soulslike_ignored_items_device_pda_0"] = true,
-    ["ui_mcm_soulslike_ignored_items_device_pda_4"] = true,
-    ["ui_mcm_soulslike_ignored_items_device_pda_getac"] = true,
-    ["ui_mcm_soulslike_ignored_items_device_pda_kulon"] = true,
-    ["ui_mcm_soulslike_ignored_items_device_pda_milspec"] = true,
-    ["ui_mcm_soulslike_ignored_items_other_desc"] = true,
-    ["ui_mcm_soulslike_items_artifact_keep_chance"] = true,
-    ["ui_mcm_soulslike_items_artifact_keep_chance_desc"] = true,
-    ["ui_mcm_soulslike_items_headgear_keep_chance"] = true,
-    ["ui_mcm_soulslike_items_headgear_keep_chance_desc"] = true,
-    ["ui_mcm_soulslike_items_outfit_keep_chance"] = true,
-    ["ui_mcm_soulslike_items_outfit_keep_chance_desc"] = true,
-    ["ui_mcm_soulslike_items_weapon_keep_chance"] = true,
-    ["ui_mcm_soulslike_items_weapon_keep_chance_desc"] = true,
-}
 
 -- ----------------------------------------------------------------- analysis
 
@@ -169,22 +96,21 @@ end
 
 --- Full comparison of the tree against the string tables.
 ---
---- Each result list is split into `new` (not in the baseline -- a regression)
---- and `known` (in the baseline -- already accounted for). Only `new` should
---- ever be non-empty on a clean tree.
+--- Every list is a plain list of findings. A finding is a finding: there is no
+--- second bucket it can be moved into to stop it counting.
+---
 --- `dups` is optional and comes from loader.load_string_table's second return:
 --- { eng = <list>, rus = <list> }.
 function M.analyse(tree, eng, rus, dups)
     local r = {
-        missing_eng = { new = {}, known = {} },
-        literal     = { new = {}, known = {} },
-        orphan      = { new = {}, known = {} },
-        missing_rus = { new = {}, known = {} },
-        stale       = {},   -- baseline entries that no longer describe reality
+        missing_eng = {},   -- node exists, English string does not
+        literal     = {},   -- node hardcodes English instead of a string id
+        orphan      = {},   -- string exists, node does not
+        missing_rus = {},   -- label present in eng, absent in rus
         groups      = {},   -- group headings with no translation
         duplicates  = {},   -- one id declared twice; the engine keeps one
         -- Whole-table parity, independent of the MCM tree.
-        parity      = { only_eng = { new = {}, known = {} }, only_rus = {} },
+        parity      = { only_eng = {}, only_rus = {} },
     }
 
     for _, group in ipairs(tree.gr or {}) do
@@ -194,21 +120,12 @@ function M.analyse(tree, eng, rus, dups)
         end
     end
 
-    local live_keys, live_literals = {}, {}
-
     for _, label in ipairs(M.labels(tree)) do
-        local literal = label.explicit and M.is_literal(label.key)
-
-        if literal then
-            live_literals[label.path] = true
-            local bucket = M.LITERAL_TEXT[label.path] and "known" or "new"
-            table.insert(r.literal[bucket], label.path)
+        if label.explicit and M.is_literal(label.key) then
+            table.insert(r.literal, label.path)
         else
-            live_keys[label.key] = true
-
             if not eng[label.key] then
-                local bucket = M.MISSING_ENG[label.key] and "known" or "new"
-                table.insert(r.missing_eng[bucket], label.path .. "  ->  " .. label.key)
+                table.insert(r.missing_eng, label.path .. "  ->  " .. label.key)
             end
 
             -- Checked independently of English, not as an elseif: a label
@@ -216,8 +133,7 @@ function M.analyse(tree, eng, rus, dups)
             -- chaining these would report only the English gap and quietly
             -- understate the translation debt.
             if not rus[label.key] then
-                local bucket = M.MISSING_RUS[label.key] and "known" or "new"
-                table.insert(r.missing_rus[bucket], label.path .. "  ->  " .. label.key)
+                table.insert(r.missing_rus, label.path .. "  ->  " .. label.key)
             end
         end
     end
@@ -228,15 +144,7 @@ function M.analyse(tree, eng, rus, dups)
     -- in game. Compare the tables outright so nothing is out of scope.
     local par = M.parity(eng, rus)   -- only_a = eng-only, only_b = rus-only
 
-    for _, id in ipairs(par.only_a) do
-        local bucket = M.MISSING_RUS[id] and "known" or "new"
-        table.insert(r.parity.only_eng[bucket], id)
-    end
-
-    -- No baseline: an id in rus with no eng cannot be tracked translation
-    -- work, because there is nothing left to translate. It is a rename that
-    -- updated one table and not the other, so the rus entry is dead weight and
-    -- whatever replaced it is untranslated under its new id.
+    r.parity.only_eng = par.only_a
     r.parity.only_rus = par.only_b
 
     for lang, list in pairs(dups or {}) do
@@ -249,50 +157,14 @@ function M.analyse(tree, eng, rus, dups)
     local used = M.used_keys(tree)
     for id in pairs(eng) do
         if id:match("^ui_mcm_" .. M.ROOT .. "_") and not used[id] then
-            local bucket = M.ORPHAN_ENG[id] and "known" or "new"
-            table.insert(r.orphan[bucket], id)
+            table.insert(r.orphan, id)
         end
     end
 
-    -- A baseline entry that no longer describes reality is worse than useless:
-    -- it masks the next regression in that slot.
-    for key in pairs(M.MISSING_ENG) do
-        if eng[key] then
-            table.insert(r.stale, "MISSING_ENG  " .. key .. "  (now translated)")
-        elseif not live_keys[key] then
-            table.insert(r.stale, "MISSING_ENG  " .. key .. "  (no such node)")
-        end
-    end
-    for path in pairs(M.LITERAL_TEXT) do
-        if not live_literals[path] then
-            table.insert(r.stale, "LITERAL_TEXT " .. path .. "  (no longer a literal)")
-        end
-    end
-    for id in pairs(M.ORPHAN_ENG) do
-        if used[id] then
-            table.insert(r.stale, "ORPHAN_ENG   " .. id .. "  (now attached to a node)")
-        elseif not eng[id] then
-            table.insert(r.stale, "ORPHAN_ENG   " .. id .. "  (no longer in the tables)")
-        end
-    end
-    -- Checked against BOTH tables now that this baseline is whole-table. An
-    -- entry whose English string was deleted describes nothing: the gap it
-    -- named is gone, and leaving it behind would silently absorb the next
-    -- string that happens to reuse the id.
-    for key in pairs(M.MISSING_RUS) do
-        if rus[key] then
-            table.insert(r.stale, "MISSING_RUS  " .. key .. "  (now translated)")
-        elseif not eng[key] then
-            table.insert(r.stale, "MISSING_RUS  " .. key .. "  (no longer in eng)")
-        end
-    end
-
-    for _, group in pairs{ r.missing_eng, r.literal, r.orphan, r.missing_rus,
-                           r.parity.only_eng } do
-        sorted(group.new)
-        sorted(group.known)
-    end
-    sorted(r.stale)
+    sorted(r.missing_eng)
+    sorted(r.literal)
+    sorted(r.orphan)
+    sorted(r.missing_rus)
     sorted(r.groups)
     sorted(r.duplicates)
 

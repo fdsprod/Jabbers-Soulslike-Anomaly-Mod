@@ -108,7 +108,7 @@ harness/builders.lua    fixtures: actors, npcs, items, logic_state, scenarios
 harness/world.lua       item/container model + the alife simulator
 harness/timeevents.lua  CreateTimeEvent queue and pump
 harness/mods.lua        base-Anomaly and third-party script registry
-harness/mcm_labels.lua  MCM label derivation, analysis, and its baselines
+harness/mcm_labels.lua  MCM label derivation and analysis
 harness/encoding.lua    byte-level inspection of the localisation XML
 harness/init.lua        H.boot / H.tick / H.reboot — start here
 ```
@@ -164,20 +164,25 @@ something. Three markers flag exceptions:
 | `DEAD CODE:` | Unreachable branch, with the gate that disables it cited. |
 
 **Never leave a spec red to represent a known bug.** A permanently failing
-suite destroys the signal for every future change. Where current breakage must
-be tolerated, record it in an explicit **baseline table** with a guard
-asserting the baseline itself is still accurate — see `harness/mcm_labels.lua`.
-A stale baseline is worse than a plain break: it masks the next one in that slot.
+suite destroys the signal for every future change. Fix the defect in the same
+change as the spec that caught it.
 
-**But do not baseline something a player can see.** This is the failure mode
-that actually happened here: four MCM labels had no translation and rendered as
-literal `ui_mcm_soulslike_debug_debug_squad_spawns` text in the shipped
-settings menu. They were baselined, so `run.bat` reported PASS — green while
-visibly broken, which is precisely what this suite exists to prevent. The
-`MISSING_ENG` table is empty now and should stay empty.
+**Never write a data table that turns a failure into a pass.** This one was
+learned the hard way here. `harness/mcm_labels.lua` used to carry four tables
+of "known broken" string ids, and every localisation assertion filtered its
+findings through them. Adding an id made the suite green. The tables needed
+their own staleness guard, so the mechanism grew a mechanism. And the failure
+it was built to prevent happened anyway: four MCM labels rendered as literal
+`ui_mcm_soulslike_debug_debug_squad_spawns` in the shipped settings menu while
+`run.bat` reported PASS, because they had been baselined.
 
-Before baselining anything, ask: *would a player notice this?* If yes, it is a
-defect, and the fix belongs in the same change as the spec that caught it.
+All four tables are gone. Every localisation assertion now expects an empty
+list, and the only way to reach green is to fix the localisation.
+
+If some finding genuinely has to be tolerated, write the reason **in the spec,
+in prose, next to the assertion that tolerates it** — so a reader meets the
+exception and the reason for it at the same moment. Never move the exception
+into data that silences findings from a distance.
 
 **Separate defects from debt.** Untranslated strings are outstanding work, not
 bugs. Conflating the two either blocks work on translation or hides real
@@ -236,13 +241,14 @@ rename obvious: the new id has no translation **and** the old translation is
 orphaned, so one mistake fails two assertions pointing at each other.
 
 **Parity is whole-table, not label-derived.** The label scan only sees ids the
-option tree asks for — 112 of 220 strings. Every message, item name and
+option tree asks for — 112 of 213 strings. Every message, item name and
 main-menu string was outside its reach, so a gap in `soulslike_messages.xml`
 was invisible to the entire suite: `locals.bat` printed it and no assertion
 ever read the result. `M.parity` compares the two tables outright, and both
-directions are asserted. eng-with-no-rus is debt, baselined in `M.MISSING_RUS`.
-rus-with-no-eng is **not** baselined — it cannot be translation work, because
-there is nothing left to translate; it is a rename applied to one table only.
+directions are asserted. eng-with-no-rus is debt: `run.bat` passes with it
+outstanding, `locals.bat` fails. rus-with-no-eng is a defect either way — it
+cannot be translation work, because there is nothing left to translate; it is a
+rename applied to one table only.
 
 **A repeated `<string id>` is invisible to everything else.** The engine keeps
 one `<text>` and drops the rest, and every check here reads a *set*, where the

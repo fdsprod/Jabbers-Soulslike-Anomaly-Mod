@@ -84,7 +84,7 @@ copy  luajit.exe  <mod>\tests\tools\
 | `harness/world.lua` | Item/container model + the alife simulator |
 | `harness/timeevents.lua` | `CreateTimeEvent` queue and pump |
 | `harness/mods.lua` | Base-Anomaly and third-party script registry |
-| `harness/mcm_labels.lua` | MCM label derivation, analysis and its baselines |
+| `harness/mcm_labels.lua` | MCM label derivation and analysis |
 | `harness/encoding.lua` | Byte-level inspection of the localisation XML |
 | `self/*.spec.lua` | Harness self-tests — these gate everything else |
 | `unit/*.spec.lua` | Unit specs against the real mod scripts |
@@ -467,15 +467,18 @@ Outcomes, deliberately not treated alike:
 
 | | Fails? | Why |
 |---|---|---|
-| **Regression** — node with no English string | **yes, always** | The player sees the raw string id in the menu. There is no case for accepting one; add four lines to `configs/text/eng`. `MISSING_ENG` is empty and should stay empty. |
+| **Missing** — node with no English string | **yes, always** | The player sees the raw string id in the menu. Add four lines to `configs/text/eng`. |
+| **Hardcoded** — node carries an English sentence, not a string id | **yes, always** | Renders, because `translate_string` passes unknown input through, but can never be translated. Delete the literal and let the node derive its key. |
+| **Orphan** — string with no node | **yes, always** | Half a rename, or a string for an option that no longer exists. Delete it; git holds the text if the option returns. |
 | **Duplicate** — one id declared twice | **yes, always** | The engine keeps one `<text>` and drops the rest. Every other check reads a *set*, where the repeat has collapsed and the id still resolves, so this is the only thing that can see it. |
-| **Half a rename** — Russian string with no English one | **yes, always** | Not translation work: there is nothing left to translate. Not baselined. |
-| **Baselined** — hardcoded English, or an orphaned string | no | Renders correctly (or is invisible). Recorded in `harness/mcm_labels.lua` with a reason. |
+| **Half a rename** — Russian string with no English one | **yes, always** | Not translation work: there is nothing left to translate. |
 | **Debt** — English present, Russian absent | in `locals.bat`, not in `run.bat` | Work outstanding, not a defect. `run.bat` gates the build on what is *broken*; `locals.bat` is the translation tool and should not exit 0 while there is debt to look at. `--lax` opts out. |
 
-Baselines carry a guard asserting their own entries still describe reality. A
-stale entry is worse than a plain break — it masks the next one in that slot —
-so it should be deleted, never updated to match.
+There is no list of accepted breakages and nothing to add an id to. Every
+assertion expects an empty list, so the only way to reach green is to fix the
+localisation. Four "known broken" tables used to live in
+`harness/mcm_labels.lua`; they let four visibly broken labels ship while
+`run.bat` said PASS, and they are gone. Do not add them back.
 
 > The Russian tables ship as **windows-1251**, not UTF-8. Everything here
 > compares string *ids*, which are ASCII, so it never matters; anything that

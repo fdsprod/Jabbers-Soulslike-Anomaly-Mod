@@ -123,18 +123,6 @@
     <string id="ui_mcm_soulslike_scenarios_description">
         <text>Сценарии мода по своей натуре динамичны. Обстоятельства вашего возрождения зависят от того, кто вас убил, как вас убили, где и насколько далеко от вашего спавна вы погибли, были ли вы в тот момент во внутренней локации, и многих других факторов. Эти опции позволят вам настроить как вам придётся доставать ваши вещи. Сценарий по умолчанию оставляет все предметы с вами (в зависимости от обстоятельств), но может быть вам придётся идти к месту смерти, где будет рюкзак с вашим снаряжением. Опции ниже будут добавлены к этим двум, и их вероятность настраиваема.</text>
      </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight">
-        <text>Шанс сценария с RF-ресивером</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
-        <text>В качестве дополнительного затруднения и для разнообразия, при выборе этого сценария ваш спаситель оставит ваши вещи в непомеченном тайнике на той же локации, где вы чуть не погибли. Он сообщит вам частоту для RF-ресивера, по которой можно будет найти этот тайник, а также оставит в вашем инвентаре записку с этой частотой в качестве напоминания.</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
-        <text>Шанс сценария с тайником</text>
-     </string>
-    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
-        <text>В качестве дополнительного затруднения и для разнообразия, при выборе этого сценария ваш спаситель оставит ваши вещи в тайнике и пометит его на карте вашего КПК.</text>
-     </string>
      <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Помечать мародёров на КПК</text>
     </string>
@@ -236,9 +224,6 @@
     <string id="ui_mcm_soulslike_debug_enable_tips">
         <text>Показывать сообщения КПК</text>
     </string>    
-    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes">
-        <text>Отладка скрытых тайников</text>
-    </string>
     <string id="ui_mcm_soulslike_debug_debug_item_loss">
         <text>Отладка потери предметов</text>
     </string>
@@ -250,12 +235,6 @@
     </string>
     <string id="ui_mcm_soulslike_debug_debug_the_default_scenario">
         <text>Отладка сценария по умолчанию</text>
-    </string>
-    <string id="ui_mcm_soulslike_debug_debug_the_rf_scenario">
-        <text>Отладка сценария с RF-ресивером</text>
-    </string>
-    <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
-        <text>Отладка сценария со скрытым тайником</text>
     </string>
     <string id="ui_mcm_soulslike_items_outfit_loss_chance">
         <text>Шанс потери брони</text>
@@ -414,5 +393,65 @@
     </string>
     <string id="ui_mcm_soulslike_items_money_loss_chance_desc">
         <text>Шанс потерять деньги при смерти. 1.0 = потеря гарантирована, 0.5 = шанс 50%, и так далее.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_squad_spawns">
+        <text>Отладка спавна групп</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_squad_spawns_desc">
+        <text>Отмечает на карте созданные группы засады и их бойцов.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_always_spawn_ambush">
+        <text>Всегда создавать засаду</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_always_spawn_ambush_desc">
+        <text>Пропускает проверку шанса засады, поэтому засада создаётся при каждой смерти.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_remove_default_scenario">
+        <text>Убрать сценарий по умолчанию</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_0">
+        <text>КПК 0</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_4">
+        <text>КПК 4</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_getac">
+        <text>КПК GETAC</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_milspec">
+        <text>Армейский КПК</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_device_pda_kulon">
+        <text>КПК Кулон</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_other">
+        <text>Другие предметы</text>
+    </string>
+    <string id="ui_mcm_soulslike_ignored_items_other_desc">
+        <text>Список ID предметов через запятую, которые будут проигнорированы.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_outfit_keep_chance">
+        <text>Шанс сохранить броню при смерти</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_outfit_keep_chance_desc">
+        <text>Если включена опция «Разрешить потерю брони», этот ползунок задаёт шанс, что броня останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_keep_chance">
+        <text>Шанс сохранить шлем при смерти</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_headgear_keep_chance_desc">
+        <text>Если включена опция «Разрешить потерю шлема», этот ползунок задаёт шанс, что шлем останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_keep_chance">
+        <text>Шанс сохранить оружие при смерти</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_weapon_keep_chance_desc">
+        <text>Если включена опция «Разрешить потерю оружия», этот ползунок задаёт шанс, что оружие останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artifact_keep_chance">
+        <text>Шанс сохранить артефакт при смерти</text>
+    </string>
+    <string id="ui_mcm_soulslike_items_artifact_keep_chance_desc">
+        <text>Если включена опция «Разрешить потерю артефактов», этот ползунок задаёт шанс, что артефакт останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
     </string>
 </string_table>

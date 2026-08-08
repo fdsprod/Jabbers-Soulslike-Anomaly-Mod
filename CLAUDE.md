@@ -125,8 +125,10 @@ the guard. Do not edit the Russian files unless asked to.
   is marked `GUESS`. A wrong fake makes a spec permanently green while it asserts
   something the game would never do.
 - Self-tests gate unit and e2e. A self failure aborts the run.
-- Never leave a spec red to mark a known bug. Use the baseline tables in
-  `harness/mcm_labels.lua` instead, and never baseline anything a player can see.
+- Never leave a spec red to mark a known bug, and never write a data table that
+  turns a failure into a pass. `harness/mcm_labels.lua` used to hold four such
+  tables and they are gone; do not add them back. An exception that must be
+  tolerated is written in the spec, in prose, beside the assertion.
 - A fix needs a spec that went red first.
 - `H.tick()` before asserting item placement. Item moves are deferred by one frame
   on purpose, because the real `transfer_item` emits a network event.
