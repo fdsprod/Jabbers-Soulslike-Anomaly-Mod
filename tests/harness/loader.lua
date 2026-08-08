@@ -93,6 +93,62 @@ function M.script_path(name)
     return M.script_dir .. "/" .. name .. ".script"
 end
 
+-- ------------------------------------------------------------ string tables
+--
+-- Anomaly's localisation lives in gamedata/configs/text/<lang>/*.xml as
+-- <string id="..."><text>...</text></string>. MCM resolves an option's label
+-- through game.translate_string, and a miss shows the raw string id on screen
+-- with no other signal -- which is the failure this exists to catch.
+--
+-- Deliberately a dumb pattern match rather than an XML parse: these files are
+-- machine-uniform, and a real parser would be more code to get wrong than the
+-- thing it checks.
+
+--- gamedata/configs/text, derived from script_dir so the two stay in step.
+function M.text_dir()
+    assert(M.script_dir, "loader.init{script_dir=...} was never called")
+    return (M.script_dir:gsub("/scripts$", "")) .. "/configs/text"
+end
+
+--- Every <string id> in one language's tables, as a set. Missing files are
+--- skipped: a mod need not ship every language.
+function M.load_string_table(lang, files)
+    local ids = {}
+    local dir = M.text_dir() .. "/" .. (lang or "eng")
+
+    for _, name in ipairs(files or M.string_table_files(lang)) do
+        local src = read_file(dir .. "/" .. name)
+        if src then
+            for id in src:gmatch('<string%s+id%s*=%s*"([^"]+)"') do
+                ids[id] = true
+            end
+            for id in src:gmatch("<string%s+id%s*=%s*'([^']+)'") do
+                ids[id] = true
+            end
+        end
+    end
+
+    return ids
+end
+
+--- The .xml files present for a language. Discovered the same way spec files
+--- are, so a new translation file is picked up without editing the harness.
+function M.string_table_files(lang)
+    local dir = M.text_dir() .. "/" .. (lang or "eng")
+    local ok, pipe = pcall(io.popen,
+        'dir /b /a-d "' .. dir:gsub("/", "\\") .. '\\*.xml" 2>nul')
+    if not ok or not pipe then return {} end
+
+    local found = {}
+    for line in pipe:lines() do
+        local name = line:gsub("%s+$", "")
+        if name ~= "" then found[#found + 1] = name end
+    end
+    pipe:close()
+    table.sort(found)
+    return found
+end
+
 function M.exists(name)
     local f = io.open(M.script_path(name), "rb")
     if f then f:close() return true end

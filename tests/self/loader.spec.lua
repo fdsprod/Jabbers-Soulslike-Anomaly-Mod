@@ -200,6 +200,48 @@ describe("harness/loader", function()
             end)
         end)
     end)
+
+    describe("load_string_table()", function()
+        -- Backs the MCM localisation spec, which is the only thing standing
+        -- between a renamed option id and a raw string id showing in the menu.
+
+        beforeEach(function() H.boot() end)
+
+        it("derives the text directory from script_dir", function()
+            expect(loader.text_dir()).toContain("configs/text")
+        end)
+
+        it("finds the shipped English tables", function()
+            expect(#loader.string_table_files("eng")).toBeGreaterThan(0)
+        end)
+
+        it("reads string ids out of them", function()
+            expect(loader.load_string_table("eng")["ui_mcm_menu_soulslike"]).toBe(true)
+        end)
+
+        it("reads the Russian tables too", function()
+            expect(loader.load_string_table("rus")["ui_mcm_menu_soulslike"]).toBe(true)
+        end)
+
+        it("returns an id the mod actually declares", function()
+            local ids = loader.load_string_table("eng")
+            expect(ids["ui_mcm_soulslike_items_allow_weapon_loss"]).toBe(true)
+        end)
+
+        it("does not invent ids", function()
+            expect(loader.load_string_table("eng")["ui_mcm_soulslike_not_a_real_key"]).toBeNil()
+        end)
+
+        -- A mod need not ship every language, so an absent directory is empty
+        -- rather than an error.
+        it("returns an empty set for a language that is not shipped", function()
+            expect(loader.load_string_table("zzz")).toEqual({})
+        end)
+
+        it("ignores a file that does not exist", function()
+            expect(loader.load_string_table("eng", { "no_such_file.xml" })).toEqual({})
+        end)
+    end)
 end)
 
 return true

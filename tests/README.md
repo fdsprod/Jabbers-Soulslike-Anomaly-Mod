@@ -436,6 +436,32 @@ MCM getters hard-return `false`/`0.0` · `debug/debug_hidden_stashes`, whose tre
 entry is commented out · `scenarios/nearby_dead_stalker_scenario_weight`, a
 getter nothing calls.
 
+## Known-broken baselines
+
+`unit/mcm_localization.spec.lua` checks MCM option labels against the string
+tables **in both directions**, and the things it currently finds are recorded
+as baseline tables inside that spec rather than fixed. The suite stays green, so
+a *new* break fails immediately — which is the point, since MCM resolves a
+missing label to the raw string id on screen and nothing else signals it.
+
+Shrinking a baseline table is the fix. Growing one should be deliberate.
+
+| Baseline | What it holds | Now |
+|---|---|---|
+| `MISSING_ENG` | Node exists, translation does not — renders as the raw id | 4 |
+| `LITERAL_TEXT` | Node hardcodes an English sentence instead of a string id | 2 |
+| `ORPHAN_ENG` | Translation exists, node does not | 8 |
+| `MISSING_RUS` | English present, Russian absent | 14 |
+
+Each table also has a guard asserting its own entries are still accurate, so a
+stale baseline fails rather than quietly masking a real regression.
+
+The derivation the spec relies on: a node with no `text` gets
+`"ui_mcm_" .. <path with "/" → "_">`, so `allow_weapon_loss` in group `items`
+under root `soulslike` needs `ui_mcm_soulslike_items_allow_weapon_loss`.
+Renaming an option id moves its label key — which shows up here as a missing
+key *and* an orphan at the same time.
+
 ## Not covered
 
 Out of scope by decision: the two UI modules (`soulslike_sleep_dialog`,
