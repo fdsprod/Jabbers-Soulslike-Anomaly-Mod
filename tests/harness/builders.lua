@@ -201,7 +201,16 @@ function M.make_actor(opts)
         return self._slots[n]
     end
     function o:transfer_item(_, _) end
-    function o:give_game_news(...) end
+
+    -- Recorded, not a no-op: this is how the mod delivers the
+    -- inventory-examined message listing what did not survive
+    -- (soulslike.script:591), which is the player's only account of it.
+    function o:give_game_news(...)
+        local F = require("harness.fakes")
+        F.calls["give_game_news"] = F.calls["give_game_news"] or {}
+        local t = F.calls["give_game_news"]
+        t[#t + 1] = { n = select("#", ...), ... }
+    end
 
     return o
 end

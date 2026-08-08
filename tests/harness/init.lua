@@ -149,8 +149,12 @@ end
 --- Advance one frame: drain deferred time events, then apply the queued
 --- inventory mutations they produced. Assertions about item placement belong
 --- AFTER this call -- see the deferred-mutation note in world.lua.
-function M.tick()
-    local events = M.timeevents.pump()
+---
+--- By default this runs to completion and raises if anything is still waiting.
+--- Pass `{ passes = 1 }` to run a bounded number of frames and leave the rest
+--- queued, which is how a spec observes a retrying event mid-wait.
+function M.tick(opts)
+    local events = M.timeevents.pump(opts)
     local ops = M.world.pump()
     return events, ops
 end

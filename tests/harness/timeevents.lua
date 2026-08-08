@@ -51,10 +51,18 @@ end
 --- Drain the queue. Events returning false are retried on the next pass, so a
 --- chain (event A queues event B) settles in one pump() call.
 --- Returns the number of callbacks invoked.
-function M.pump()
+---
+--- opts.passes bounds the number of passes and, because a bounded pump is an
+--- explicit "run N frames" rather than "run to completion", leaves anything
+--- still queued in place instead of raising. That is how a spec observes the
+--- retry contract: pump one frame with the stash offline, assert nothing moved
+--- and the event is still pending, bring the stash online, pump again.
+function M.pump(opts)
+    opts = opts or {}
+    local limit = opts.passes or M.max_passes
     local invoked = 0
 
-    for pass = 1, M.max_passes do
+    for _ = 1, limit do
         if #queue == 0 then return invoked end
 
         local batch = queue
@@ -69,6 +77,8 @@ function M.pump()
         end
 
     end
+
+    if opts.passes then return invoked end
 
     -- A retrying event is legitimate -- wait_for_stash_creation returns false
     -- until the stash exists. There is no way to tell "will succeed later" from

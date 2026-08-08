@@ -317,12 +317,20 @@ function SoulslikeScenarioLogic:__init(state)
     self.game_state = soulslike.get_soulslike_state()
 end
 
+-- Both flags live in two places on purpose. IsItemLossAllowed reads the
+-- top-level copy (:945), while SendWakeupMessage hands `story` to the message
+-- factory as its params (:935), and the factory keys the indoor rescue text off
+-- params.player_died_indoor (soulslike_message_factory.script:135). Writing
+-- only the top-level field left `story` declaring both keys and never getting
+-- either, so the indoor message set could never be selected.
 function SoulslikeScenarioLogic:SetIsInDoor(player_is_indoor)
     self.logic_state.player_died_indoor = player_is_indoor
+    self.logic_state.story.player_died_indoor = player_is_indoor
 end
 
 function SoulslikeScenarioLogic:SetIsInWater(is_in_water)
     self.logic_state.player_died_in_water = is_in_water
+    self.logic_state.story.player_died_in_water = is_in_water
 end
 
 function SoulslikeScenarioLogic:SetLevelName(name)
@@ -899,10 +907,24 @@ function SoulslikeScenarioLogic:RespawnActor()
         end
     end
     
-    local position = vector():set(self.game_state.spawn_location.position.x, self.game_state.spawn_location.position.y, self.game_state.spawn_location.position.z)   
-    local level_vertex_id = self.game_state.spawn_location.level_vertex_id
-    local game_vertex_id = self.game_state.spawn_location.game_vertex_id  
-    
+    local spawn = self.game_state.spawn_location
+    local spawn_position = spawn and spawn.position
+
+    -- Same guard SpawnAmbush already applies before its own vector():set
+    -- (:770). Without it, a save that never recorded a spawn point turns the
+    -- respawn into an access violation: nil arguments match no overload of
+    -- vector:set, and a release build compiles out luabind's guard for that
+    -- (config.hpp:81-91), so the call runs off the end of the overload table.
+    if not (spawn_position and spawn_position.x and spawn_position.y and spawn_position.z) then
+        soulslike.error("No spawn location recorded; cannot respawn the actor.")
+        self:StopSurgeAndStorm()
+        return
+    end
+
+    local position = vector():set(spawn_position.x, spawn_position.y, spawn_position.z)
+    local level_vertex_id = spawn.level_vertex_id
+    local game_vertex_id = spawn.game_vertex_id
+
     level.add_pp_effector("black_infinite.ppe", 5606, true)
     
 

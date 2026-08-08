@@ -73,9 +73,14 @@ local DEFAULTS = {
     end,
 
     item_radio = function()
+        -- Recorded, not no-ops: registering the stash with the radio is the
+        -- entire point of the RF Detector scenario
+        -- (soulslike_scenarios.script:1471), and clear_stash is how the entry
+        -- is retired once the player recovers it.
+        local recorder = require("harness.fakes").recorder
         return {
-            add_stash   = function() end,
-            clear_stash = function() end,
+            add_stash   = recorder("item_radio.add_stash"),
+            clear_stash = recorder("item_radio.clear_stash"),
         }
     end,
 
