@@ -610,9 +610,15 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_ignored_items_medkit"
             },
             {
+                -- val is MCM's stored-value TYPE CODE, not an initial value:
+                -- 0 = string, 1 = boolean, 2 = float. This was val = '', which
+                -- is not a recognised code, so the box could not round-trip
+                -- through axr_options.ltx and get_ignored_other() always saw
+                -- its '' default -- the free-text ignore list never protected
+                -- anything the player typed into it.
                 id = 'other',
                 type = "input",
-                val = '',
+                val = 0,
                 def = '',
             },
             {
