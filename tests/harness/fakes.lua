@@ -1,0 +1,486 @@
+-- Fake engine globals: the minimum surface the baseline tests touch.
+--
+-- Deliberately small. The loader resolves unknown globals to nil rather than
+-- raising, so a missing fake shows up as a clear nil-index failure in the test
+-- that needs it -- add it then, not speculatively.
+--
+-- CAVEAT: these tests validate mod logic against OUR ASSUMPTIONS about the
+-- engine. A wrong constant here becomes a permanently green test. Every value
+-- below that came from the engine source is cited; values that are guesses are
+-- marked GUESS and should be pinned against a real game before being trusted.
+
+local M = {}
+
+M.calls = {}          -- recorder name -> list of arg tables
+
+-- ------------------------------------------------------------------ helpers
+
+local function recorder(name, ret)
+    M.calls[name] = {}
+    return function(...)
+        local t = M.calls[name]
+        t[#t + 1] = { n = select("#", ...), ... }
+        return ret
+    end
+end
+M.recorder = recorder
+
+function M.calls_to(name) return M.calls[name] or {} end
+function M.call_count(name) return #(M.calls[name] or {}) end
+function M.last_call(name)
+    local t = M.calls[name] or {}
+    return t[#t]
+end
+
+-- ------------------------------------------------------------- clock / RNG
+
+local now_ms = 0
+
+function M.set_time(ms) now_ms = ms end
+function M.advance_time(ms) now_ms = now_ms + ms end
+function M.now() return now_ms end
+
+-- Deterministic RNG control. The real math.random is never used in tests.
+local random_impl = nil
+
+-- Replace math.random wholesale with fn(...) -> number.
+function M.set_random(fn) random_impl = fn end
+
+-- Return values from `seq` in order. Errors past the end so an unexpected
+-- extra roll is a loud failure rather than a silent reuse.
+function M.set_random_sequence(seq)
+    local i = 0
+    random_impl = function()
+        i = i + 1
+        if seq[i] == nil then
+            error("math.random called " .. i .. " times but only " ..
+                  #seq .. " values were queued", 2)
+        end
+        return seq[i]
+    end
+end
+
+-- Always returns v, ignoring range args. Handy for "always pick bucket 1".
+function M.set_random_const(v)
+    random_impl = function() return v end
+end
+
+-- Real-ish deterministic fallback: lowest legal value for the given call form.
+function M.set_random_min()
+    random_impl = function(a, b)
+        if a == nil then return 0.0 end
+        if b == nil then return 1 end
+        return a
+    end
+end
+
+local function fake_random(a, b)
+    if not random_impl then
+        error("math.random called before fakes.set_random*() -- tests must be deterministic", 2)
+    end
+    return random_impl(a, b)
+end
+
+-- --------------------------------------------------------------- installer
+
+function M.install(env)
+    env = env or _G
+
+    ---- constants ------------------------------------------------------------
+
+    -- ALife::EHitType, xrServerEntities/alife_space.h:92. Exact values.
+    env.hit = {
+        burn          = 0,
+        shock         = 1,
+        chemical_burn = 2,
+        radiation     = 3,
+        telepatic     = 4,
+        wound         = 5,
+        fire_wound    = 6,
+        strike        = 7,
+        explosion     = 8,
+        wound_2       = 9,
+        light_burn    = 10,
+    }
+
+    env.AC_ID        = 0        -- actor id; 0 in Anomaly
+    env.GAME_VERSION = "test"
+    env.VEC_ZERO     = { x = 0, y = 0, z = 0 }
+
+    -- State-machine enums passed to npc:set_mental_state / set_body_state /
+    -- set_movement_type / set_sight by TrackAmbusher. Only identity matters --
+    -- specs assert which constant was handed over, never its numeric value.
+    env.anim = { look_around = 1, danger = 2, free = 3 }
+    env.move = { standing = 1, stand = 2, walk = 3, run = 4, crouch = 5 }
+    env.look = { search = 1, danger = 2, path_dir = 3 }
+
+    ---- clock / rng ----------------------------------------------------------
+
+    env.time_global = function() return now_ms end
+    math.random = fake_random           -- shared global table, as in-engine
+
+    ---- string ---------------------------------------------------------------
+
+    env.strformat = string.format
+
+    ---- level ----------------------------------------------------------------
+
+    -- Object registry backing level.object_by_id. Populate via M.register_object.
+    M.objects = {}
+
+    env.level = {
+        name              = function() return M.level_name end,
+        object_by_id      = function(id) return M.objects[id] end,
+        get_time_hours    = function() return M.time_hours end,
+        get_time_minutes  = function() return M.time_minutes end,
+        add_cam_effector       = recorder("level.add_cam_effector"),
+        add_pp_effector        = recorder("level.add_pp_effector"),
+        change_game_time       = recorder("level.change_game_time"),
+        map_add_object_spot_ser= recorder("level.map_add_object_spot_ser"),
+        map_remove_object_spot = recorder("level.map_remove_object_spot"),
+    }
+    M.level_name   = "zaton"
+    M.time_hours   = 12
+    M.time_minutes = 30
+
+    ---- game -----------------------------------------------------------------
+
+    -- Identity translation keeps message assertions readable: an assertion
+    -- reads as the string id, not a localized sentence.
+    env.game = {
+        translate_string = function(s) return s end,
+        get_game_time    = function()
+            return { get = function(_, Y, M_, D, h) return 2012, 5, 12, 14 end }
+        end,
+    }
+
+    ---- db -------------------------------------------------------------------
+
+    env.db = {
+        actor          = nil,      -- set per-test via M.set_actor
+        storage        = {},
+        OnlineStalkers = {},
+    }
+
+    ---- predicates -----------------------------------------------------------
+    --
+    -- Objects built by builders.lua carry a `_kind` tag; these read it. Real
+    -- engine predicates dispatch on clsid, which we do not model.
+
+    local function kind_is(k)
+        return function(obj, cls)
+            if obj == nil then return false end
+            return obj._kind == k
+        end
+    end
+
+    env.IsStalker  = kind_is("stalker")
+    env.IsMonster  = kind_is("monster")
+    env.IsAnomaly  = kind_is("anomaly")
+    env.IsWeapon   = kind_is("weapon")
+    env.IsOutfit   = kind_is("outfit")
+    env.IsHeadgear = kind_is("headgear")
+    env.IsArtefact = kind_is("artefact")
+    env.IsGrenade  = kind_is("grenade")
+    env.IsInvbox   = kind_is("invbox")
+    env.IsToolkit  = function(o, s) return (o and o._kind == "toolkit") or false end
+
+    -- SYS_GetParam(type, section, param) -> ltx lookup. Backed by M.ltx.
+    M.ltx = {}
+    env.SYS_GetParam = function(_, section, param)
+        local sec = M.ltx[section]
+        return sec and sec[param] or nil
+    end
+
+    ---- module stubs ---------------------------------------------------------
+
+    env.utils_data = { debug_write = recorder("debug_write") }
+
+    env.news_manager = {
+        send_tip   = recorder("send_tip"),
+        tips_icons = setmetatable({}, { __index = function() return "icon" end }),
+    }
+
+    env.actor_menu    = { set_msg = recorder("set_msg") }
+    env.exec_console_cmd = recorder("exec_console_cmd")
+
+    env.utils_xml = {
+        get_color       = function(c) return "%c[" .. tostring(c) .. "]" end,
+        get_special_txt = function(s) return tostring(s) end,
+        is_widescreen   = function() return false end,
+    }
+
+    -- Single most valuable fake: every one of soulslike_mcm's 60+ getters
+    -- funnels through ui_mcm.get (soulslike_mcm.script:939), so faking this one
+    -- function makes the real 1215-line MCM module work. Returning nil for a
+    -- key exercises that getter's declared default.
+    M.mcm = {}
+    env.ui_mcm = {
+        get = function(path) return M.mcm[path] end,
+    }
+
+    -- Backs soulslike.get_soulslike_state().
+    M.game_state = {}
+    env.alife_storage_manager = {
+        get_state = function() return M.game_state end,
+        decode    = function(_) return nil end,
+    }
+
+    env.alife = function() return M.sim end
+    M.sim = nil
+
+    ---- persistence ----------------------------------------------------------
+
+    -- Real storage, not no-ops: HealActor writes grw_in_water
+    -- (soulslike_scenarios.script:376) and create_new reads it
+    -- (soulslike_scenario_logic_factory.script:343), so the round-trip has to
+    -- work or that branch is untestable.
+    M.vars = {}
+    env.save_var = function(obj, key, value)
+        local id = obj and (type(obj.id) == "function" and obj:id() or obj.id) or "_"
+        M.vars[id] = M.vars[id] or {}
+        M.vars[id][key] = value
+    end
+    env.load_var = function(obj, key, default)
+        local id = obj and (type(obj.id) == "function" and obj:id() or obj.id) or "_"
+        local t = M.vars[id]
+        local v = t and t[key]
+        if v == nil then return default end
+        return v
+    end
+
+    ---- info portions / story ------------------------------------------------
+
+    M.infos = {}          -- info_id -> true
+    M.story_ids = {}      -- object id -> story id
+
+    env.has_alife_info    = function(id) return M.infos[id] == true end
+    env.disable_info      = function(id) M.infos[id] = nil end
+    env.give_info_portion = function(id) M.infos[id] = true end
+    env.get_object_story_id = function(id) return M.story_ids[id] end
+
+    ---- misc engine globals --------------------------------------------------
+
+    env.printf     = function() end
+    env.normalize  = function(v, lo, hi)
+        if hi == lo then return 0 end
+        return (v - lo) / (hi - lo)
+    end
+    env.bit_or     = function(a, b) return a + b end   -- flag combining only
+    env.hide_hud_inventory = recorder("hide_hud_inventory")
+    env.get_console_cmd    = function(_, name) return M.console[name] end
+    M.console = { snd_volume_music = 1, snd_volume_eff = 1 }
+
+    env.ChangeLevel = recorder("ChangeLevel")
+
+    env.device = function()
+        return {
+            is_paused = function() return M.paused end,
+            pause     = function(_, v) M.paused = v end,
+        }
+    end
+    M.paused = false
+
+    -- game_graph():vertex(id):level_id()
+    env.game_graph = function()
+        return {
+            vertex = function(_, gvid)
+                return { level_id = function() return M.gvid_level[gvid] or 1 end }
+            end,
+        }
+    end
+    M.gvid_level = {}
+
+    -- system.ltx reader. Backed by the same M.ltx table SYS_GetParam uses.
+    env.ini_sys = {
+        r_string_ex = function(_, section, key, default)
+            local sec = M.ltx[section]
+            local v = sec and sec[key]
+            if v == nil then return default end
+            return v
+        end,
+        r_bool_ex = function(_, section, key, default)
+            local sec = M.ltx[section]
+            local v = sec and sec[key]
+            if v == nil then return default end
+            return v == true or v == "true" or v == 1
+        end,
+    }
+
+    env.SIMBOARD = { setup_squad_and_group = recorder("setup_squad_and_group") }
+
+    ---- file system ----------------------------------------------------------
+    --
+    -- Only what on_console_execute's save-pruning walk touches
+    -- (soulslike.script:652-695). M.saves maps a bare file name to its decoded
+    -- save table, so a spec can stage siblings with matching/mismatching uuids.
+
+    M.saves = {}
+    env.FS = { FS_ListFiles = 1, FS_RootOnly = 2 }
+    env.getFS = function()
+        return {
+            update_path = function(_, _, tail) return "saves/" .. tostring(tail) end,
+            file_copy   = recorder("fs.file_copy"),
+            file_list_open_ex = function()
+                local names = {}
+                for name in pairs(M.saves) do names[#names + 1] = name end
+                table.sort(names)
+                return {
+                    Size  = function() return #names end,
+                    GetAt = function(_, i)
+                        local n = names[i + 1]
+                        return { NameFull = function() return n .. ".scoc" end }
+                    end,
+                }
+            end,
+        }
+    end
+
+    ---- module stubs (engine-side scripts the mod calls into) ----------------
+
+    env.xr_effects = {
+        enable_ui  = recorder("xr_effects.enable_ui"),
+        disable_ui = recorder("xr_effects.disable_ui"),
+    }
+
+    env.bind_stalker_ext = { invulnerable_time = 0 }
+
+    env.level_weathers = { valid_levels = { zaton = true, jupiter = true,
+                                            pripyat = true, escape = true } }
+
+    env.actor_status = {
+        activate_hud   = recorder("actor_status.activate_hud"),
+        deactivate_hud = recorder("actor_status.deactivate_hud"),
+    }
+
+    env.game_statistics = {
+        increment_statistic        = recorder("increment_statistic"),
+        get_statistic_count        = function() return M.stats_count end,
+        check_for_rank_change      = recorder("check_for_rank_change"),
+        check_for_reputation_change= recorder("check_for_reputation_change"),
+    }
+    M.stats_count = 1
+
+    -- utils_item.degrade RELEASES the item when its condition reaches 0.
+    -- ApplyItemConditionLoss depends on that: it is how story.items_were_lost
+    -- gets set for gear degraded into nothing (soulslike_scenarios.script:460).
+    -- Returning a number without destroying anything would make that branch
+    -- untestable.
+    env.utils_item = {
+        is_degradable = function(item, sec)
+            local t = M.ltx[sec or (item and item:section())]
+            if t and t.degradable ~= nil then return t.degradable end
+            return true
+        end,
+        degrade = function(item, percent)
+            local cond = item:condition() * (1 - (percent or 0))
+            if cond < 0.005 then cond = 0 end
+            item._condition = cond
+            if cond == 0 and _G.alife_release then _G.alife_release(item) end
+            return cond
+        end,
+    }
+
+    env.ui_item        = { get_sec_name = function(s) return s end }
+    env.ui_load_dialog = { delete_save_game = recorder("delete_save_game") }
+    env.utils_obj      = { graph_distance = function() return M.graph_distance end }
+    M.graph_distance   = 500
+    env.utils_stpk     = {
+        get_item_data = function() return {} end,
+        set_item_data = recorder("set_item_data"),
+    }
+    env.simulation_objects = { is_on_the_same_level = function() return true end }
+    env.surge_manager      = { stop_surge = recorder("stop_surge") }
+    env.psi_storm_manager  = {
+        get_psi_storm_manager = function()
+            return { started = M.psi_storm_started, finish = recorder("psi_storm.finish") }
+        end,
+    }
+    M.psi_storm_started = false
+
+    env.IsHardcoreMode = function() return M.hardcore_mode end
+    M.hardcore_mode = false
+    -- IsItem(kind, section) -- used by soulslike_note to test for "letter"
+    env.IsItem = function(kind, section, obj)
+        local sec = section or (obj and obj:section())
+        local t = M.ltx[sec]
+        return (t and t.kind) == kind
+    end
+
+    -- axr_main.config: IsSoulslikeMode reads new_game_soulslike_mode from it
+    -- (soulslike.script:193). axr_main itself is created by dispatch.install,
+    -- so extend rather than replace.
+    env.axr_main = env.axr_main or {}
+    M.config = {}
+    env.axr_main.config = {
+        r_value = function(_, sec, key, _, default)
+            local t = M.config[sec]
+            local v = t and t[key]
+            if v == nil then return default end
+            return v
+        end,
+        w_value = function(_, sec, key, value)
+            M.config[sec] = M.config[sec] or {}
+            M.config[sec][key] = value
+        end,
+        save = recorder("axr_main.config.save"),
+        section_exist = function(_, sec) return M.config[sec] ~= nil end,
+    }
+
+    return env
+end
+
+-- ------------------------------------------------------------ per-test setup
+
+function M.set_actor(actor) _G.db.actor = actor end
+
+function M.register_object(obj)
+    assert(obj and obj.id, "register_object needs an object with an id() or id field")
+    local id = type(obj.id) == "function" and obj:id() or obj.id
+    M.objects[id] = obj
+    return obj
+end
+
+-- Set an MCM value as ui_mcm.get would return it. Key omits the "soulslike/"
+-- prefix that get_config prepends.
+function M.set_mcm(key, value) M.mcm["soulslike/" .. key] = value end
+
+function M.set_ltx(section, params) M.ltx[section] = params end
+
+function M.set_info(id, on) M.infos[id] = on and true or nil end
+function M.set_config(section, key, value)
+    M.config[section] = M.config[section] or {}
+    M.config[section][key] = value
+end
+
+-- Enable soulslike mode the way the mod actually detects it
+-- (soulslike.script:192): either the character-creation config flag or the
+-- persisted save flag. Nearly every handler early-returns without this.
+function M.enable_soulslike_mode()
+    M.set_config("character_creation", "new_game_soulslike_mode", true)
+end
+
+function M.reset()
+    M.calls = {}
+    M.objects = {}
+    M.ltx = {}
+    M.mcm = {}
+    M.game_state = {}
+    M.sim = nil
+    M.vars = {}
+    M.infos = {}
+    M.story_ids = {}
+    M.saves = {}
+    M.config = {}
+    M.gvid_level = {}
+    M.paused = false
+    M.hardcore_mode = false
+    M.psi_storm_started = false
+    M.stats_count = 1
+    M.graph_distance = 500
+    now_ms = 0
+    random_impl = nil
+    M.install(_G)
+end
+
+return M
