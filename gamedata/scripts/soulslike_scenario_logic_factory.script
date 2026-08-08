@@ -161,18 +161,31 @@ function create_new(hits)
     local se_actor  = alife():actor()
     local distance_from_spawn
 
+    -- A spawn point with no coordinates cannot be measured against. Building a
+    -- vector out of nils is not a catchable error in a release build: NDEBUG
+    -- compiles out luabind's no-matching-overload guard, so the call runs off
+    -- the end of the overload table and takes the process with it.
+    local has_spawn_position = spawn_loc.position
+        and spawn_loc.position.x and spawn_loc.position.y and spawn_loc.position.z
+
     if spawn_loc.level and se_actor and spawn_loc.game_vertex_id
-       and spawn_loc.level == level.name() then
+       and spawn_loc.level == level.name() and has_spawn_position then
         -- Same level: local coords are valid and the most precise.
         local spawn_position = vector():set(spawn_loc.position.x, spawn_loc.position.y, spawn_loc.position.z)
         distance_from_spawn = spawn_position:distance_to(db.actor:position())
     elseif spawn_loc.game_vertex_id and se_actor then
         -- Different level (or unknown): use the global game-graph frame for a true cross-level distance.
         distance_from_spawn = utils_obj.graph_distance(spawn_loc.game_vertex_id, se_actor.m_game_vertex_id)
-    else
-        -- Spawn never recorded a game vertex; fall back to local so behavior degrades gracefully.
+    elseif has_spawn_position then
+        -- No game vertex recorded; fall back to local so behavior degrades gracefully.
         local spawn_position = vector():set(spawn_loc.position.x, spawn_loc.position.y, spawn_loc.position.z)
         distance_from_spawn = spawn_position:distance_to(db.actor:position())
+    else
+        -- Nothing was ever recorded. Treat the death as far from spawn: that
+        -- runs the normal death scenario, where the alternative would silently
+        -- gift a no-loss death on the strength of missing data.
+        soulslike.warn("No spawn location recorded; treating death as distant.")
+        distance_from_spawn = math.huge
     end
     
     if soulslike_mcm.debug_the_noloss_scenario() then
@@ -248,7 +261,13 @@ function create_new(hits)
            hit.fatal_hit.draftsman:general_goodwill(db.actor) >= soulslike.RELATIONS.NEUTRALS then
         soulslike.debug("Friendly/Neutral Stalker killed the player.")
 
-        rescuer = hit.draftsman
+        -- The killer stands over the body and patches the player up. Read from
+        -- fatal_hit, not from the aggregate: compute_fatal_hit_info builds each
+        -- bucket as {draftsman_type, power, fatal_hit} (:59-65, :81-83) and
+        -- never puts `draftsman` on it, so hit.draftsman was always nil and
+        -- this arm produced no rescuer at all. Same expression SetKiller uses
+        -- correctly at :398.
+        rescuer = hit.fatal_hit.draftsman
         looter = nil
         scenario_loot_scalar = 0.0
 
