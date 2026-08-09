@@ -232,6 +232,104 @@ describe("e2e: a death across a level change", function()
         end)
     end)
 
+    -- The relocation fallback must online the hidden stash holding the
+    -- items, not the linked box (se_box) it's being moved to match --
+    -- onlining the wrong one leaves the actual item container's online
+    -- status to the engine's default distance-based logic even after being
+    -- teleported.
+    describe("on_game_load: hidden stash relocation", function()
+        local BOX_ID, STASH_ID = 9001, 9002
+
+        local function set_up_hidden_stash()
+            H.world.container("treasure_box", {
+                id = BOX_ID,
+                position = B.make_vector{ x = 300, y = 0, z = 400 },
+                online = true,
+            })
+            H.world.container("hidden_box", {
+                id = STASH_ID,
+                position = B.make_vector{ x = 0, y = 0, z = 0 },
+            })
+            H.world.hide(STASH_ID)
+            soulslike.get_soulslike_state().hidden_stashes[BOX_ID] = { stash_id = STASH_ID }
+        end
+
+        beforeEach(function()
+            boot_on_level("zaton")
+            set_up_hidden_stash()
+        end)
+
+        it("forces the hidden stash itself online, not the linked box", function()
+            SendScriptCallback("on_game_load")
+
+            local onlined = {}
+            for _, call in ipairs(H.fakes.calls_to("alife.set_switch_online")) do
+                onlined[call[2]] = true
+            end
+
+            expect(onlined[STASH_ID]).toBe(true)
+        end)
+
+        it("makes the hidden stash findable via level.object_by_id afterwards", function()
+            SendScriptCallback("on_game_load")
+            expect(level.object_by_id(STASH_ID)).toBeDefined()
+        end)
+
+        it("moves the hidden stash to the linked box's position", function()
+            SendScriptCallback("on_game_load")
+            expect(H.world.server(STASH_ID).position.x).toBe(300)
+            expect(H.world.server(STASH_ID).position.z).toBe(400)
+        end)
+    end)
+
+    -- A save carrying a hidden stash still at the death position (not yet
+    -- relocated to the treasure position its marker points at) has to
+    -- recover across a real level change, not just an in-place on_game_load
+    -- call: the fallback runs, then the player has to actually be able to
+    -- open the box and get their items.
+    describe("a hidden stash still at the wrong position, across a real level change", function()
+        local BOX_ID, STASH_ID = 9201, 9202
+
+        local function register_far_side_objects()
+            H.world.container("treasure_box", {
+                id = BOX_ID,
+                position = B.make_vector{ x = 300, y = 0, z = 400 },
+                online = true,
+            })
+            H.world.container("hidden_box", {
+                id = STASH_ID,
+                position = B.make_vector{ x = 0, y = 0, z = 0 },
+            })
+            H.world.give("hidden_box", "wpn_ak74")
+            H.world.hide(STASH_ID)
+        end
+
+        it("lets the player retrieve their items after the level changes", function()
+            boot_on_level("zaton")
+            register_far_side_objects()
+            soulslike.get_soulslike_state().hidden_stashes[BOX_ID] = { stash_id = STASH_ID }
+
+            SendScriptCallback("save_state", {})
+            change_level_to("jupiter")
+
+            -- The real engine reconstructs every alife object from the save
+            -- on load (m_flags survives, m_bOnline does not -- xray-monolith
+            -- xrServer_Objects_ALife.cpp:366/427-476). The harness's world
+            -- model only carries the mod's own game_state across H.reboot,
+            -- so the stale objects are rebuilt here to model that reload.
+            register_far_side_objects()
+
+            SendScriptCallback("load_state", {})
+            SendScriptCallback("on_game_load")
+
+            local box = H.world.object(BOX_ID)
+            SendScriptCallback("physic_object_on_use_callback", box, nil)
+            H.tick()
+
+            expect(H.world.contents("treasure_box")).toEqual({ "wpn_ak74" })
+        end)
+    end)
+
     describe("given the save has no scenario in progress", function()
         it("loads cleanly on the far side", function()
             boot_on_level("zaton")

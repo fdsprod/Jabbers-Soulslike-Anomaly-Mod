@@ -47,6 +47,28 @@ local function boot(distance)
     return factory
 end
 
+local function give_backpack()
+    H.fakes.set_ltx("itm_actor_backpack", { kind = "i_backpack" })
+    H.world.give("actor", "itm_actor_backpack")
+end
+
+--- Configures both scenarios enabled with a weight that dominates the 0.05
+--- NoLoss slice, then picks a roll that reliably lands past it -- enough to
+--- prove the arm is reachable at all without depending on exactly which of
+--- the two (RF vs Hidden) the roll lands on.
+local function disable_rf_and_hidden()
+    H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", false)
+    H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", false)
+end
+
+local function make_rf_and_hidden_reachable()
+    H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", true)
+    H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 1.0)
+    H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", true)
+    H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 1.0)
+    H.fakes.set_random_const(0.5)
+end
+
 --- One hit whose draftsman resolves to `obj`, flagged fatal.
 local function fatal_hit_from(obj)
     if obj then H.fakes.register_object(obj) end
@@ -113,27 +135,23 @@ describe("soulslike_scenario_logic_factory.create_new()", function()
         end)
     end)
 
-    -- DEAD CODE: debug_the_rf_scenario and debug_the_hidden_stash_scenario
-    -- hard-return false (soulslike_mcm.script:1138, :1142) with the real
-    -- expression commented out, so these two arms cannot be reached. Those
-    -- scenarios are only ever constructed via create_by_id on a save reload.
-    describe("DEAD CODE: the rf and hidden-stash debug flags", function()
-        it("does not reach the rf arm even with the flag set", function()
+    describe("the rf and hidden-stash debug flags", function()
+        it("forces the rf arm when the flag is set", function()
             H.fakes.set_mcm("debug/is_enabled", true)
             H.fakes.set_mcm("debug/debug_the_rf_scenario", true)
             local s = factory.create_new(fatal_hit_from(enemy_mutant))
-            expect(s.logic_state.scenario_id).never.toBe(SCENARIOS.RFDetectorStash)
+            expect(s.logic_state.scenario_id).toBe(SCENARIOS.RFDetectorStash)
         end)
 
-        it("does not reach the hidden-stash arm even with the flag set", function()
+        it("forces the hidden-stash arm when the flag is set", function()
             H.fakes.set_mcm("debug/is_enabled", true)
             H.fakes.set_mcm("debug/debug_the_hidden_stash_scenario", true)
             local s = factory.create_new(fatal_hit_from(enemy_mutant))
-            expect(s.logic_state.scenario_id).never.toBe(SCENARIOS.HiddenStash)
+            expect(s.logic_state.scenario_id).toBe(SCENARIOS.HiddenStash)
         end)
 
-        it("keeps the getters hard-returning false", function()
-            H.fakes.set_mcm("debug/is_enabled", true)
+        it("ignores both flags with debug off", function()
+            H.fakes.set_mcm("debug/is_enabled", false)
             H.fakes.set_mcm("debug/debug_the_rf_scenario", true)
             H.fakes.set_mcm("debug/debug_the_hidden_stash_scenario", true)
             expect(soulslike_mcm.debug_the_rf_scenario()).toBe(false)
@@ -236,17 +254,34 @@ describe("soulslike_scenario_logic_factory.create_new()", function()
 
         describe("and carries a backpack", function()
             it("can run the Default scenario", function()
-                H.fakes.set_ltx("itm_actor_backpack", { kind = "i_backpack" })
-                H.world.give("actor", "itm_actor_backpack")
+                give_backpack()
                 H.fakes.set_random_const(0.99)   -- weight the roll to Default
+                expect(suicide().logic_state.scenario_id).toBe(SCENARIOS.Default)
+            end)
+
+            it("excludes RF Detector and Hidden Stash regardless of weight", function()
+                give_backpack()
+                H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", true)
+                H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 1.0)
+                H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", true)
+                H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 1.0)
+                H.fakes.set_random_const(0.99)
                 expect(suicide().logic_state.scenario_id).toBe(SCENARIOS.Default)
             end)
         end)
 
         describe("and carries no backpack", function()
-            it("can only run NoLoss", function()
+            it("can only run NoLoss when RF Detector/Hidden Stash are disabled", function()
+                disable_rf_and_hidden()
                 H.fakes.set_random_const(0.99)
                 expect(suicide().logic_state.scenario_id).toBe(SCENARIOS.NoLoss)
+            end)
+
+            it("makes RF Detector/Hidden Stash reachable when enabled", function()
+                make_rf_and_hidden_reachable()
+                local id = suicide().logic_state.scenario_id
+                expect(id == SCENARIOS.RFDetectorStash or id == SCENARIOS.HiddenStash)
+                    .toBe(true)
             end)
         end)
     end)
@@ -332,6 +367,33 @@ describe("soulslike_scenario_logic_factory.create_new()", function()
             expect(s.logic_state.killer_id).toBe(killer:id())
             expect(s.logic_state.killer_type).toBe(soulslike.entity_type.Stalker)
         end)
+
+        describe("and carries no backpack", function()
+            it("can only run NoLoss when RF Detector/Hidden Stash are disabled", function()
+                disable_rf_and_hidden()
+                H.fakes.set_random_const(0.99)
+                expect(murdered().logic_state.scenario_id).toBe(SCENARIOS.NoLoss)
+            end)
+
+            it("makes RF Detector/Hidden Stash reachable when enabled", function()
+                make_rf_and_hidden_reachable()
+                local id = murdered().logic_state.scenario_id
+                expect(id == SCENARIOS.RFDetectorStash or id == SCENARIOS.HiddenStash)
+                    .toBe(true)
+            end)
+        end)
+
+        describe("and carries a backpack", function()
+            it("excludes RF Detector and Hidden Stash regardless of weight", function()
+                give_backpack()
+                H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", true)
+                H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 1.0)
+                H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", true)
+                H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 1.0)
+                H.fakes.set_random_const(0.99)
+                expect(murdered().logic_state.scenario_id).toBe(SCENARIOS.Default)
+            end)
+        end)
     end)
 
     describe("given a mutant killed the player", function()
@@ -353,6 +415,15 @@ describe("soulslike_scenario_logic_factory.create_new()", function()
         it("records the looter as a monster", function()
             expect(mauled().logic_state.looter_type).toBe(soulslike.entity_type.Monster)
         end)
+
+        describe("and carries no backpack", function()
+            it("makes RF Detector/Hidden Stash reachable when enabled", function()
+                make_rf_and_hidden_reachable()
+                local id = mauled().logic_state.scenario_id
+                expect(id == SCENARIOS.RFDetectorStash or id == SCENARIOS.HiddenStash)
+                    .toBe(true)
+            end)
+        end)
     end)
 
     describe("given an anomaly killed the player", function()
@@ -368,6 +439,33 @@ describe("soulslike_scenario_logic_factory.create_new()", function()
         it("takes the looter from the generic enemy finder", function()
             burned()
             expect(B.finder_count("enemy")).toBe(1)
+        end)
+
+        describe("and carries no backpack", function()
+            it("can only run NoLoss when RF Detector/Hidden Stash are disabled", function()
+                disable_rf_and_hidden()
+                H.fakes.set_random_const(0.99)
+                expect(burned().logic_state.scenario_id).toBe(SCENARIOS.NoLoss)
+            end)
+
+            it("makes RF Detector/Hidden Stash reachable when enabled", function()
+                make_rf_and_hidden_reachable()
+                local id = burned().logic_state.scenario_id
+                expect(id == SCENARIOS.RFDetectorStash or id == SCENARIOS.HiddenStash)
+                    .toBe(true)
+            end)
+        end)
+
+        describe("and carries a backpack", function()
+            it("excludes RF Detector and Hidden Stash regardless of weight", function()
+                give_backpack()
+                H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", true)
+                H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 1.0)
+                H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", true)
+                H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 1.0)
+                H.fakes.set_random_const(0.99)
+                expect(burned().logic_state.scenario_id).toBe(SCENARIOS.Default)
+            end)
         end)
     end)
 

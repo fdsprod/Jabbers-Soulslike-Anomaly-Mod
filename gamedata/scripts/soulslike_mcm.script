@@ -651,24 +651,36 @@ function on_mcm_load()
                 text = "ui_mcm_soulslike_scenarios_description",
                 clr = {255, 255 ,255 ,255},
             },
-            -- {
-            --     id = "rf_detector_scenario_weight",
-            --     type = "track",
-            --     val = 2,
-            --     min = 0.0,
-            --     max = 1.0,
-            --     step = 0.01,
-            --     def = 0.10
-            -- },
-            -- {
-            --     id = "hidden_stash_scenario_weight",
-            --     type = "track",
-            --     val = 2,
-            --     min = 0.0,
-            --     max = 1.0,
-            --     step = 0.01,
-            --     def = 0.10
-            -- },
+            {
+                id = "enable_rf_detector_scenario",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "rf_detector_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
+            {
+                id = "enable_hidden_stash_scenario",
+                type = "check",
+                val = 1,
+                def = true
+            },
+            {
+                id = "hidden_stash_scenario_weight",
+                type = "track",
+                val = 2,
+                min = 0.0,
+                max = 1.0,
+                step = 0.01,
+                def = 0.10
+            },
             {
                 id = "looter_npcs_marked",
                 type = "check",
@@ -873,12 +885,12 @@ function on_mcm_load()
                 val = 1,
                 def = false
             },
-            -- {
-            --     id = "debug_hidden_stashes",
-            --     type = "check",
-            --     val = 1,
-            --     def = false
-            -- },
+            {
+                id = "debug_hidden_stashes",
+                type = "check",
+                val = 1,
+                def = false
+            },
             {
                 id = "debug_squad_spawns",
                 type = "check",
@@ -915,18 +927,18 @@ function on_mcm_load()
                 val = 1,
                 def = false
             },
-            -- {
-            --     id = "debug_the_rf_scenario",
-            --     type = "check",
-            --     val = 1,
-            --     def = false
-            -- },
-            -- {
-            --     id = "debug_the_hidden_stash_scenario",
-            --     type = "check",
-            --     val = 1,
-            --     def = false
-            -- },
+            {
+                id = "debug_the_rf_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_the_hidden_stash_scenario",
+                type = "check",
+                val = 1,
+                def = false
+            },
             {
                 id = "debug_always_spawn_ambush",
                 type = "check",
@@ -964,12 +976,18 @@ function are_looter_npcs_marked()
 end 
 
 function rf_detector_scenario_weight()
-    return  0.0 --get_config("scenarios/rf_detector_scenario_weight", 0.10)
-end 
+    if not get_config("scenarios/enable_rf_detector_scenario", true) then
+        return 0.0
+    end
+    return get_config("scenarios/rf_detector_scenario_weight", 0.10)
+end
 
 function hidden_stash_scenario_weight()
-    return 0.0 --get_config("scenarios/hidden_stash_scenario_weight", 0.10)
-end 
+    if not get_config("scenarios/enable_hidden_stash_scenario", true) then
+        return 0.0
+    end
+    return get_config("scenarios/hidden_stash_scenario_weight", 0.10)
+end
 
 function scattered_stash_scenario_weight()
     return  0.0 --get_config("scenarios/scattered_stash_scenario_weight", 0.02)
@@ -1141,12 +1159,12 @@ function debug_the_default_scenario()
 end 
 
 function debug_the_rf_scenario()
-    return false -- is_debug_enabled() and get_config("debug/debug_the_rf_scenario", false)
-end 
+    return is_debug_enabled() and get_config("debug/debug_the_rf_scenario", false)
+end
 
 function debug_the_hidden_stash_scenario()
-    return false -- is_debug_enabled() and get_config("debug/debug_the_hidden_stash_scenario", false)
-end 
+    return is_debug_enabled() and get_config("debug/debug_the_hidden_stash_scenario", false)
+end
 
 function debug_always_spawn_ambush()
     return is_debug_enabled() and get_config("debug/debug_always_spawn_ambush", false)

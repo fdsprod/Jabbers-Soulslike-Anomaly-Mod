@@ -713,7 +713,6 @@ local function physic_object_on_use_callback(box, who)
     local id = box:id()
     local stash_data = data.hidden_stashes[id]
     local stash_id = stash_data.stash_id
-    local se_obj = alife_object(stash_id)
 	local stash = level.object_by_id(stash_id)
     
     if not stash then        
@@ -727,12 +726,12 @@ local function physic_object_on_use_callback(box, who)
 
     if not sim then return end
 
-    if se_obj and not se_obj.online then 
-        se_obj:switch_online()
-    end
-    
+    -- Do not call se_obj:switch_online() -- se_invbox (the hidden_box's own
+    -- class, se_item.script:382-402) has no such method, unlike se_item/
+    -- se_monster/se_stalker. alife():set_switch_online is the only
+    -- confirmed-safe API for this (alife_simulator_script.cpp:481-482).
     sim:set_switch_online(stash_id,true)
-    sim:set_switch_offline(stash_id,false)  
+    sim:set_switch_offline(stash_id,false)
     
     try_send_inventory_examined_message(stash_id)
 
@@ -828,11 +827,16 @@ local function on_game_load()
             elseif not se_box then 
                 debug("Unable to find box id "..tostring(box_id))
             else
+                -- Defensive fallback in case the stash isn't already at the
+                -- box's position and online. Online the hidden stash itself,
+                -- not the linked box (se_box) -- the box is a pre-existing
+                -- treasure stash, not the item container the player is
+                -- trying to open.
                 debug("Moving hidden stash"..tostring(value.stash_id))
                 sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
                 debug("Setting hidden stash online")
-                if not se_box.online then
-                    se_box:switch_online()
+                if not se_hidden_stash.online then
+                    sim:set_switch_online(value.stash_id, true)
                 end
                 
                 for i=1,65534 do
@@ -842,7 +846,7 @@ local function on_game_load()
                         sim:teleport_object(i, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
                         if not se_obj.online then
                             debug("Setting "..se_obj.section.." online")
-                            se_obj:switch_online()
+                            sim:set_switch_online(i, true)
                         end
                     end
                 end

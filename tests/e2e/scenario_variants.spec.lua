@@ -6,8 +6,11 @@
 --
 --   Default      backpack dropped where they died, marked straight on the PDA
 --   RFDetector   gear hidden in a treasure stash, located by radio frequency
---   HiddenStash  gear hidden at the death site, marked on the PDA
+--   HiddenStash  gear hidden in a treasure stash, marked straight on the PDA
 --   NoLoss       nothing taken at all
+--
+-- Both hidden variants spawn (and force online) at the treasure's own alife
+-- position, matching where their PDA marker/radio note actually points.
 --
 -- Both hidden variants monkey-patch treasure_manager.box_in_same_map and
 -- restore it (:1414-1421, :1500-1508). The restore runs BEFORE the nil check,
@@ -111,7 +114,10 @@ describe("e2e: scenario variants", function()
         end)
 
         it("forces the stash online", function()
-            expect(se_stash).toBeDefined()
+            expect(H.fakes.call_count("alife.set_switch_online")).toBe(1)
+            local call = H.fakes.last_call("alife.set_switch_online")
+            expect(call[2]).toBe(se_stash.id)
+            expect(call[3]).toBe(true)
         end)
 
         it("wires the hidden stash to its radio", function()
@@ -177,6 +183,23 @@ describe("e2e: scenario variants", function()
 
         it("creates a hidden box", function()
             expect(H.world.created[1].section).toBe("hidden_box")
+        end)
+
+        -- The PDA marker (ApplyTransferItemsPostConditions, below) points at
+        -- the treasure location, so the stash itself has to live there too.
+        it("places it at the treasure, not at the body", function()
+            expect(H.world.created[1].container).toBeDefined()
+            expect(s.logic_state.treasure_stash_id).toBe(TREASURE_ID)
+            local treasure_pos = H.world.server(TREASURE_ID).position
+            expect(se_stash.position.x).toBeCloseTo(treasure_pos.x)
+            expect(se_stash.position.z).toBeCloseTo(treasure_pos.z)
+        end)
+
+        it("forces the stash online", function()
+            expect(H.fakes.call_count("alife.set_switch_online")).toBe(1)
+            local call = H.fakes.last_call("alife.set_switch_online")
+            expect(call[2]).toBe(se_stash.id)
+            expect(call[3]).toBe(true)
         end)
 
         it("registers the stash in the save", function()

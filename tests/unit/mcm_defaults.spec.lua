@@ -286,24 +286,54 @@ describe("soulslike_mcm defaults", function()
         end)
     end)
 
-    describe("DEAD CODE: the disabled scenario weights", function()
-        -- These three hard-return 0.0 with the real get_config call commented
-        -- out (:961-971), and the two debug scenario getters hard-return false
-        -- (:1138, :1142). The RF Detector and Hidden Stash scenarios are
-        -- therefore unreachable through create_new; they exist only for saves
-        -- that already selected them.
-        it("keeps the weights at zero whatever is configured", function()
-            H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 1.0)
-            H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 1.0)
+    describe("DEAD CODE: the scattered stash weight", function()
+        -- Hard-returns 0.0 with the real get_config call commented out
+        -- (:986-988). Unlike RF Detector/Hidden Stash, this scenario has no
+        -- SCENARIOS enum entry and nothing in the factory ever reads it --
+        -- out of scope for the RF Detector/Hidden Stash re-enable.
+        it("keeps the weight at zero whatever is configured", function()
             H.fakes.set_mcm("scenarios/scattered_stash_scenario_weight", 1.0)
+            expect(soulslike_mcm.scattered_stash_scenario_weight()).toBe(0.0)
+        end)
+    end)
+
+    describe("the RF Detector and Hidden Stash scenario options", function()
+        it("weight defaults to 0.10 with its enable flag left at the default", function()
+            expect(soulslike_mcm.rf_detector_scenario_weight()).toBeCloseTo(0.10)
+            expect(soulslike_mcm.hidden_stash_scenario_weight()).toBeCloseTo(0.10)
+        end)
+
+        it("reads the configured weight when enabled", function()
+            H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", true)
+            H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 0.5)
+            H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", true)
+            H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 0.75)
+
+            expect(soulslike_mcm.rf_detector_scenario_weight()).toBeCloseTo(0.5)
+            expect(soulslike_mcm.hidden_stash_scenario_weight()).toBeCloseTo(0.75)
+        end)
+
+        it("forces the weight to zero when its enable flag is off", function()
+            H.fakes.set_mcm("scenarios/enable_rf_detector_scenario", false)
+            H.fakes.set_mcm("scenarios/rf_detector_scenario_weight", 0.5)
+            H.fakes.set_mcm("scenarios/enable_hidden_stash_scenario", false)
+            H.fakes.set_mcm("scenarios/hidden_stash_scenario_weight", 0.75)
 
             expect(soulslike_mcm.rf_detector_scenario_weight()).toBe(0.0)
             expect(soulslike_mcm.hidden_stash_scenario_weight()).toBe(0.0)
-            expect(soulslike_mcm.scattered_stash_scenario_weight()).toBe(0.0)
         end)
 
-        it("keeps the debug scenario flags false even with debug on", function()
+        it("reads the debug scenario flags when debug is on", function()
             H.fakes.set_mcm("debug/is_enabled", true)
+            H.fakes.set_mcm("debug/debug_the_rf_scenario", true)
+            H.fakes.set_mcm("debug/debug_the_hidden_stash_scenario", true)
+
+            expect(soulslike_mcm.debug_the_rf_scenario()).toBe(true)
+            expect(soulslike_mcm.debug_the_hidden_stash_scenario()).toBe(true)
+        end)
+
+        it("ignores the debug scenario flags when debug is off", function()
+            H.fakes.set_mcm("debug/is_enabled", false)
             H.fakes.set_mcm("debug/debug_the_rf_scenario", true)
             H.fakes.set_mcm("debug/debug_the_hidden_stash_scenario", true)
 
