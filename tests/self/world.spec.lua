@@ -210,12 +210,9 @@ describe("harness/world", function()
     end)
 
     describe("alife():set_switch_online() / set_switch_offline() / teleport_object()", function()
-        -- These back the online/offline fix ported from
-        -- RFDetectorSoulslikeScenarioLogic to HiddenStashSoulslikeScenarioLogic
-        -- (soulslike_scenarios.script:1440-1441) and the relocation loop in
-        -- on_game_load (soulslike.script:832). They used to be no-ops, which
-        -- made specs asserting "forces the stash online" toothless -- they only
-        -- checked the stash existed, never that onlining was requested.
+        -- Recording these calls (rather than modeling them as no-ops) is
+        -- what lets a spec assert "forces the stash online" for real, instead
+        -- of only checking the stash exists.
         describe("set_switch_online()", function()
             it("records the call", function()
                 local se = alife_create("hidden_box", actor:position(), 1, 1)
@@ -236,20 +233,39 @@ describe("harness/world", function()
         end)
 
         describe("set_switch_offline()", function()
-            it("hides the object from level.object_by_id when passed true", function()
+            -- The real engine call is a flag setter, not an immediate action
+            -- (CALifeUpdateManager::set_switch_offline,
+            -- alife_update_manager.cpp:333-345): passing true only
+            -- re-enables ELIGIBILITY for future distance-based offlining
+            -- (CSE_ALifeDynamicObject::try_switch_offline,
+            -- alife_dynamic_object.cpp:166-181), it does not force the
+            -- object offline on the spot. The harness has no distance model
+            -- to act on that eligibility, so this is a recorded no-op.
+            it("does not hide the object when passed true", function()
                 local se = alife_create("hidden_box", actor:position(), 1, 1)
                 alife():set_switch_offline(se.id, true)
-                expect(level.object_by_id(se.id)).toBeNil()
+                expect(level.object_by_id(se.id)).toBeDefined()
             end)
 
+            -- Passing false is the actual "pin online forever" mechanism: it
+            -- makes can_switch_offline() return false, so try_switch_online's
+            -- fast path force-onlines the object with no distance check, and
+            -- try_switch_offline's first check refuses to ever offline it
+            -- again (alife_dynamic_object.cpp:130-181). RFDetectorSoulslike
+            -- ScenarioLogic:CreateStash calls this right after forcing it
+            -- online (soulslike_scenarios.script:1441) -- it must not undo
+            -- the online request.
             it("leaves it visible when passed false", function()
-                -- RFDetectorSoulslikeScenarioLogic:CreateStash calls this with
-                -- false right after forcing it online (soulslike_scenarios.script:1441)
-                -- -- it must not undo the online request.
                 local se = alife_create("hidden_box", actor:position(), 1, 1)
                 alife():set_switch_online(se.id, true)
                 alife():set_switch_offline(se.id, false)
                 expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+
+            it("marks the server object pinned online", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_offline(se.id, false)
+                expect(se.pinned_online).toBe(true)
             end)
         end)
 

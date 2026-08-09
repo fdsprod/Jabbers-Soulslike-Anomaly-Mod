@@ -401,11 +401,6 @@ describe("soulslike_mcm.on_mcm_load()", function()
         --   scenarios/nearby_dead_stalker_scenario_weight
         --     Getter defined at soulslike_mcm.script:973 and called by nothing
         --     at all: a scenario that was never built.
-        --
-        -- debug/debug_hidden_stashes used to be listed here too -- its tree
-        -- entry was commented out, alongside the rest of the RF Detector/
-        -- Hidden Stash cluster. Both are live now (soulslike_mcm.script's
-        -- scenarios/debug groups), so this key is reachable again.
         local KNOWN_UNREACHABLE = {
             ["scenarios/nearby_dead_stalker_scenario_weight"] = true,
         }

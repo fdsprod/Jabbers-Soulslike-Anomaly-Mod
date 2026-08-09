@@ -418,9 +418,30 @@ function M.install(env)
             end
         end,
 
-        -- Forces (or requests) online/offline status. Mutates M.hidden so the
-        -- effect is observable through level.object_by_id, the same primitive
-        -- M.hide/M.reveal already drive for the "stash not online yet" retry.
+        -- alife():set_switch_online/offline are pure FLAG setters in the real
+        -- engine, not immediate actions (CALifeUpdateManager::set_switch_online
+        -- /set_switch_offline, alife_update_manager.cpp:333-345 -- each just
+        -- calls can_switch_online(bool)/can_switch_offline(bool), which toggle
+        -- bits in m_flags, xrServer_Objects_ALife.cpp:603-611). Every object is
+        -- constructed with every flag on (xrServer_Objects_ALife.cpp:374), so
+        -- normal distance-based switching is the default.
+        --
+        -- The flag that matters for this mod is can_switch_offline: when it is
+        -- false, try_switch_online's fast path force-onlines the object on the
+        -- next tick with NO distance check, and try_switch_offline's first
+        -- check refuses to ever offline it again -- it stays online permanently
+        -- (CSE_ALifeDynamicObject::try_switch_online/try_switch_offline,
+        -- alife_dynamic_object.cpp:130-181). That is the mechanism
+        -- set_switch_online(id,true) + set_switch_offline(id,false) relies on
+        -- (soulslike.script:734-735, soulslike_scenarios.script:1440-1441): it
+        -- is not "reveal now", it is "pin online forever", and the harness
+        -- collapses the one-tick delay to immediate since nothing here depends
+        -- on the gap.
+        --
+        -- set_switch_offline(id,true) is the inverse -- it only re-enables
+        -- ELIGIBILITY for future distance-based offlining. It does not force
+        -- the object offline immediately, and the harness has no distance
+        -- model to act on that eligibility, so it is a recorded no-op here.
         set_switch_online = function(self, id, online)
             record_online(self, id, online)
             local se = servers[id]
@@ -432,9 +453,8 @@ function M.install(env)
         set_switch_offline = function(self, id, offline)
             record_offline(self, id, offline)
             local se = servers[id]
-            if offline ~= false then
-                if se then se.online = false end
-                M.hide(id)
+            if offline == false then
+                if se then se.pinned_online = true end
             end
         end,
         release           = function(_, o) M.queue_release(o) end,

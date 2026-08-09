@@ -434,12 +434,10 @@ matches bare `medkit`/`bandage` while Anomaly ships variants (a balance
 decision, not a code bug).
 
 Currently marked dead: `scenarios/nearby_dead_stalker_scenario_weight`, a
-getter nothing calls. The RF-detector and hidden-stash selection arms used to
-be listed here too — their weight getters hard-returned `false`/`0.0` and
-`debug/debug_hidden_stashes`'s tree entry was commented out. Both scenarios are
-reachable again: real `enable_rf_detector_scenario`/`enable_hidden_stash_scenario`
-checkboxes and weight sliders gate them in `soulslike_scenario_logic_factory
-.create_new`, restricted to deaths where the player has no backpack equipped.
+getter nothing calls. The RF-detector and hidden-stash scenarios are gated by
+real `enable_rf_detector_scenario`/`enable_hidden_stash_scenario` checkboxes
+and weight sliders in `soulslike_scenario_logic_factory.create_new`,
+restricted to deaths where the player has no backpack equipped.
 
 ## Localisation
 

@@ -9,10 +9,8 @@
 --   HiddenStash  gear hidden in a treasure stash, marked straight on the PDA
 --   NoLoss       nothing taken at all
 --
--- HiddenStash used to spawn its stash at the death position instead, with the
--- PDA marker pointing at the treasure location -- two different places. Fixed
--- to match RFDetector: both now spawn (and force online) at the treasure's own
--- alife position, so the marker and the loot are never in different places.
+-- Both hidden variants spawn (and force online) at the treasure's own alife
+-- position, matching where their PDA marker/radio note actually points.
 --
 -- Both hidden variants monkey-patch treasure_manager.box_in_same_map and
 -- restore it (:1414-1421, :1500-1508). The restore runs BEFORE the nil check,
@@ -187,10 +185,8 @@ describe("e2e: scenario variants", function()
             expect(H.world.created[1].section).toBe("hidden_box")
         end)
 
-        -- Was spawned at the actor's death position instead: the PDA marker
-        -- (ApplyTransferItemsPostConditions, below) points at the treasure
-        -- location, so a stash sitting at the death spot was simply the wrong
-        -- place -- independent of the online/offline bug this also caused.
+        -- The PDA marker (ApplyTransferItemsPostConditions, below) points at
+        -- the treasure location, so the stash itself has to live there too.
         it("places it at the treasure, not at the body", function()
             expect(H.world.created[1].container).toBeDefined()
             expect(s.logic_state.treasure_stash_id).toBe(TREASURE_ID)

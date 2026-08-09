@@ -1527,6 +1527,18 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
             -- The PDA marker below points at the treasure location, so the
             -- stash has to actually live there, online, or the marker sends
             -- the player somewhere with no items to find.
+            --
+            -- set_switch_offline(id, false) is what actually pins this: it
+            -- makes can_switch_offline() false, so the engine's own distance
+            -- check never applies again -- the object force-onlines on the
+            -- next alife tick and is never switched back offline, regardless
+            -- of how far the player travels or how many levels change
+            -- (CSE_ALifeDynamicObject::try_switch_online/try_switch_offline,
+            -- alife_dynamic_object.cpp:130-181, xray-monolith). The pin
+            -- itself is a serialized flag on the object (m_flags,
+            -- xrServer_Objects_ALife.cpp:427-476) and survives every level
+            -- change; only its live client-object state resets, which the
+            -- next switch tick immediately restores.
             sim:set_switch_online(se_stash.id,true)
             sim:set_switch_offline(se_stash.id,false)
         end
