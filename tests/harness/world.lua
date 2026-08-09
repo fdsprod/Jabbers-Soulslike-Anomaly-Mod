@@ -385,6 +385,11 @@ function M.install(env)
 
     env.alife = function() return M.sim end
 
+    local fakes = require("harness.fakes")
+    local record_teleport = fakes.recorder("alife.teleport_object")
+    local record_online   = fakes.recorder("alife.set_switch_online")
+    local record_offline  = fakes.recorder("alife.set_switch_offline")
+
     M.sim = {
         actor = function()
             local a = env.db and env.db.actor
@@ -399,9 +404,39 @@ function M.install(env)
         end,
         object            = function(_, id) return servers[id] end,
         level_name        = function(_, _) return M.level_name_for_gvid end,
-        teleport_object   = function() end,
-        set_switch_online = function() end,
-        set_switch_offline= function() end,
+
+        -- Server-side, offline-safe repositioning (soulslike.script:832/842).
+        -- Mutates the server object's own position/vertex fields, which is
+        -- what the mod reads back afterwards (e.g. se_box.position).
+        teleport_object = function(self, id, gvid, lvid, pos)
+            record_teleport(self, id, gvid, lvid, pos)
+            local se = servers[id]
+            if se then
+                se.m_game_vertex_id = gvid
+                se.m_level_vertex_id = lvid
+                se.position = pos
+            end
+        end,
+
+        -- Forces (or requests) online/offline status. Mutates M.hidden so the
+        -- effect is observable through level.object_by_id, the same primitive
+        -- M.hide/M.reveal already drive for the "stash not online yet" retry.
+        set_switch_online = function(self, id, online)
+            record_online(self, id, online)
+            local se = servers[id]
+            if online ~= false then
+                if se then se.online = true end
+                M.reveal(id)
+            end
+        end,
+        set_switch_offline = function(self, id, offline)
+            record_offline(self, id, offline)
+            local se = servers[id]
+            if offline ~= false then
+                if se then se.online = false end
+                M.hide(id)
+            end
+        end,
         release           = function(_, o) M.queue_release(o) end,
 
         -- register() FREES its argument and returns a NEW pointer

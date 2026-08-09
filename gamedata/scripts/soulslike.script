@@ -828,11 +828,18 @@ local function on_game_load()
             elseif not se_box then 
                 debug("Unable to find box id "..tostring(box_id))
             else
+                -- This is a defensive fallback for saves made before
+                -- HiddenStashSoulslikeScenarioLogic:CreateStash started
+                -- spawning already-correct, already-online stashes; a freshly
+                -- created stash never needs it. Online the hidden stash
+                -- itself, not the linked box (se_box) -- the box is a
+                -- pre-existing treasure stash, not the item container the
+                -- player is trying to open.
                 debug("Moving hidden stash"..tostring(value.stash_id))
                 sim:teleport_object(value.stash_id, se_box.m_game_vertex_id, se_box.m_level_vertex_id, se_box.position)
                 debug("Setting hidden stash online")
-                if not se_box.online then
-                    se_box:switch_online()
+                if not se_hidden_stash.online then
+                    sim:set_switch_online(value.stash_id, true)
                 end
                 
                 for i=1,65534 do

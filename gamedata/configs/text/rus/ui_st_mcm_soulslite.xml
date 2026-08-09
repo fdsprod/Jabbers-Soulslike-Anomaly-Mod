@@ -123,7 +123,30 @@
     <string id="ui_mcm_soulslike_scenarios_description">
         <text>Сценарии мода по своей натуре динамичны. Обстоятельства вашего возрождения зависят от того, кто вас убил, как вас убили, где и насколько далеко от вашего спавна вы погибли, были ли вы в тот момент во внутренней локации, и многих других факторов. Эти опции позволят вам настроить как вам придётся доставать ваши вещи. Сценарий по умолчанию оставляет все предметы с вами (в зависимости от обстоятельств), но может быть вам придётся идти к месту смерти, где будет рюкзак с вашим снаряжением. Опции ниже будут добавлены к этим двум, и их вероятность настраиваема.</text>
      </string>
-     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
+    <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario">
+        <text>Включить сценарий РЧ-детектора</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario_desc">
+        <text>Если вы умираете без рюкзака, ваше снаряжение может быть спрятано в тайнике вместо того, чтобы остаться на месте смерти. Вам дадут записку с радиочастотой, чтобы помочь его найти. Действует только когда у вас нет рюкзака.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight">
+        <text>Вес сценария РЧ-детектора</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+        <text>Как часто выбирается сценарий РЧ-детектора относительно других сценариев, которые могут произойти, если у вас нет рюкзака.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario">
+        <text>Включить сценарий скрытого тайника</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario_desc">
+        <text>Если вы умираете без рюкзака, ваше снаряжение может быть спрятано в тайнике вместо того, чтобы остаться на месте смерти. Место тайника будет отмечено на КПК. Действует только когда у вас нет рюкзака.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
+        <text>Вес сценария скрытого тайника</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
+        <text>Как часто выбирается сценарий скрытого тайника относительно других сценариев, которые могут произойти, если у вас нет рюкзака.</text>
+    </string>     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Помечать мародёров на КПК</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked_desc">
@@ -224,7 +247,12 @@
     <string id="ui_mcm_soulslike_debug_enable_tips">
         <text>Показывать сообщения КПК</text>
     </string>    
-    <string id="ui_mcm_soulslike_debug_debug_item_loss">
+    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes">
+        <text>Отладка скрытых тайников</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes_desc">
+        <text>Отмечает на КПК все места РЧ-детектора/скрытых тайников, даже те, о которых вам ещё не сообщили.</text>
+    </string>    <string id="ui_mcm_soulslike_debug_debug_item_loss">
         <text>Отладка потери предметов</text>
     </string>
     <string id="ui_mcm_soulslike_debug_debug_the_tarkov_looter">
@@ -236,7 +264,12 @@
     <string id="ui_mcm_soulslike_debug_debug_the_default_scenario">
         <text>Отладка сценария по умолчанию</text>
     </string>
-    <string id="ui_mcm_soulslike_items_outfit_loss_chance">
+    <string id="ui_mcm_soulslike_debug_debug_the_rf_scenario">
+        <text>Отладка сценария РЧ-детектора</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
+        <text>Отладка сценария скрытого тайника</text>
+    </string>    <string id="ui_mcm_soulslike_items_outfit_loss_chance">
         <text>Шанс потери брони</text>
     </string>
     <string id="ui_mcm_soulslike_items_outfit_loss_chance_desc">

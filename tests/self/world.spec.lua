@@ -209,6 +209,62 @@ describe("harness/world", function()
         end)
     end)
 
+    describe("alife():set_switch_online() / set_switch_offline() / teleport_object()", function()
+        -- These back the online/offline fix ported from
+        -- RFDetectorSoulslikeScenarioLogic to HiddenStashSoulslikeScenarioLogic
+        -- (soulslike_scenarios.script:1440-1441) and the relocation loop in
+        -- on_game_load (soulslike.script:832). They used to be no-ops, which
+        -- made specs asserting "forces the stash online" toothless -- they only
+        -- checked the stash existed, never that onlining was requested.
+        describe("set_switch_online()", function()
+            it("records the call", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                world.hide(se.id)
+                alife():set_switch_online(se.id, true)
+                expect(H.fakes.call_count("alife.set_switch_online")).toBe(1)
+                local call = H.fakes.last_call("alife.set_switch_online")
+                expect(call[2]).toBe(se.id)
+                expect(call[3]).toBe(true)
+            end)
+
+            it("makes a hidden object findable via level.object_by_id again", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                world.hide(se.id)
+                alife():set_switch_online(se.id, true)
+                expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+        end)
+
+        describe("set_switch_offline()", function()
+            it("hides the object from level.object_by_id when passed true", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_offline(se.id, true)
+                expect(level.object_by_id(se.id)).toBeNil()
+            end)
+
+            it("leaves it visible when passed false", function()
+                -- RFDetectorSoulslikeScenarioLogic:CreateStash calls this with
+                -- false right after forcing it online (soulslike_scenarios.script:1441)
+                -- -- it must not undo the online request.
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_online(se.id, true)
+                alife():set_switch_offline(se.id, false)
+                expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+        end)
+
+        describe("teleport_object()", function()
+            it("moves the server object's position and vertex ids", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                local new_pos = require("harness.builders").make_vector({ x = 10, y = 0, z = 20 })
+                alife():teleport_object(se.id, 5, 7, new_pos)
+                expect(se.m_game_vertex_id).toBe(5)
+                expect(se.m_level_vertex_id).toBe(7)
+                expect(se.position).toBe(new_pos)
+            end)
+        end)
+    end)
+
     describe("alife_create_item()", function()
         describe("given an owner", function()
             it("puts the item in that owner's container", function()

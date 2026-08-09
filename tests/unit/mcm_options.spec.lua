@@ -395,23 +395,18 @@ describe("soulslike_mcm.on_mcm_load()", function()
         -- a control that does nothing; a key read by a getter but absent from
         -- the tree is a setting the player cannot reach.
 
-        -- DEAD CODE. Two getters read keys that the tree does not declare, so
-        -- neither can ever be anything but its default. Both belong to the
-        -- disabled scenario cluster and are listed rather than ignored, so
-        -- re-enabling that cluster surfaces them as part of the work.
-        --
-        --   debug/debug_hidden_stashes
-        --     Tree entry commented out at soulslike_mcm.script:872. Its only
-        --     consumer is RFDetectorSoulslikeScenarioLogic
-        --     :ApplyTransferItemsPostConditions (soulslike_scenarios.script
-        --     :1473), and that scenario is unreachable through create_new --
-        --     its weight and debug flag both hard-return zero/false.
+        -- DEAD CODE. One getter reads a key the tree does not declare, so it
+        -- can never be anything but its default.
         --
         --   scenarios/nearby_dead_stalker_scenario_weight
         --     Getter defined at soulslike_mcm.script:973 and called by nothing
         --     at all: a scenario that was never built.
+        --
+        -- debug/debug_hidden_stashes used to be listed here too -- its tree
+        -- entry was commented out, alongside the rest of the RF Detector/
+        -- Hidden Stash cluster. Both are live now (soulslike_mcm.script's
+        -- scenarios/debug groups), so this key is reachable again.
         local KNOWN_UNREACHABLE = {
-            ["debug/debug_hidden_stashes"] = true,
             ["scenarios/nearby_dead_stalker_scenario_weight"] = true,
         }
 

@@ -433,10 +433,13 @@ loot scalar at 1.0 where every other no-loss arm sets 0 · the ignore list
 matches bare `medkit`/`bandage` while Anomaly ships variants (a balance
 decision, not a code bug).
 
-Currently marked dead: the RF-detector and hidden-stash selection arms, whose
-MCM getters hard-return `false`/`0.0` · `debug/debug_hidden_stashes`, whose tree
-entry is commented out · `scenarios/nearby_dead_stalker_scenario_weight`, a
-getter nothing calls.
+Currently marked dead: `scenarios/nearby_dead_stalker_scenario_weight`, a
+getter nothing calls. The RF-detector and hidden-stash selection arms used to
+be listed here too — their weight getters hard-returned `false`/`0.0` and
+`debug/debug_hidden_stashes`'s tree entry was commented out. Both scenarios are
+reachable again: real `enable_rf_detector_scenario`/`enable_hidden_stash_scenario`
+checkboxes and weight sliders gate them in `soulslike_scenario_logic_factory
+.create_new`, restricted to deaths where the player has no backpack equipped.
 
 ## Localisation
 

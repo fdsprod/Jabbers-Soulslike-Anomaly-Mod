@@ -1510,27 +1510,42 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
     -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
     if not id then return nil end
 
-    soulslike.debug("Random stash found: "..tostring(id))    
+    soulslike.debug("Random stash found: "..tostring(id))
 
-    local actor = db.actor
-    local se_stash = alife_create("hidden_box", actor:position(), actor:level_vertex_id(), actor:game_vertex_id())
+    local se_treasure = alife_object(id)
+
+    -- If we could not grab a ransom stash, we need to return nil so we don't transfer anything
+    if not se_treasure then return nil end
+
+    local se_stash = alife_create("hidden_box", se_treasure.position, se_treasure.m_level_vertex_id, se_treasure.m_game_vertex_id)
 
     if (se_stash) then
+        local sim = alife()
+
+        if sim then
+            -- force strictly online, same as RFDetectorSoulslikeScenarioLogic.
+            -- The PDA marker below points at the treasure location, so the
+            -- stash has to actually live there, online, or the marker sends
+            -- the player somewhere with no items to find.
+            sim:set_switch_online(se_stash.id,true)
+            sim:set_switch_offline(se_stash.id,false)
+        end
+
         self.game_state.created_stashes[se_stash.id] = {
             lost_items = {},
             examine = false
-        } 
+        }
 
         if not self.game_state.hidden_stashes then
             self.game_state.hidden_stashes = {}
         end
-    
+
         self.logic_state.hidden_stash_id = se_stash.id
         self.logic_state.treasure_stash_id = id
-    
+
         self.game_state.hidden_stashes[id] = {
             stash_id = se_stash.id,
-        } 
+        }
     end
 
     return se_stash

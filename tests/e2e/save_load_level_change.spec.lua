@@ -232,6 +232,58 @@ describe("e2e: a death across a level change", function()
         end)
     end)
 
+    -- Regression: HiddenStashSoulslikeScenarioLogic used to spawn its stash at
+    -- the death position and rely entirely on this relocation to move it to
+    -- where the PDA marker actually points (the linked treasure box). The bug
+    -- was in the fallback itself: it force-onlined the linked box (se_box),
+    -- not the hidden stash holding the items (soulslike.script:834-836) --
+    -- so the actual item container's online status was left to the engine's
+    -- default distance-based logic even after being teleported.
+    describe("on_game_load: hidden stash relocation", function()
+        local BOX_ID, STASH_ID = 9001, 9002
+
+        local function set_up_hidden_stash()
+            H.world.container("treasure_box", {
+                id = BOX_ID,
+                position = B.make_vector{ x = 300, y = 0, z = 400 },
+                online = true,
+            })
+            H.world.container("hidden_box", {
+                id = STASH_ID,
+                position = B.make_vector{ x = 0, y = 0, z = 0 },
+            })
+            H.world.hide(STASH_ID)
+            soulslike.get_soulslike_state().hidden_stashes[BOX_ID] = { stash_id = STASH_ID }
+        end
+
+        beforeEach(function()
+            boot_on_level("zaton")
+            set_up_hidden_stash()
+        end)
+
+        it("forces the hidden stash itself online, not the linked box", function()
+            SendScriptCallback("on_game_load")
+
+            local onlined = {}
+            for _, call in ipairs(H.fakes.calls_to("alife.set_switch_online")) do
+                onlined[call[2]] = true
+            end
+
+            expect(onlined[STASH_ID]).toBe(true)
+        end)
+
+        it("makes the hidden stash findable via level.object_by_id afterwards", function()
+            SendScriptCallback("on_game_load")
+            expect(level.object_by_id(STASH_ID)).toBeDefined()
+        end)
+
+        it("moves the hidden stash to the linked box's position", function()
+            SendScriptCallback("on_game_load")
+            expect(H.world.server(STASH_ID).position.x).toBe(300)
+            expect(H.world.server(STASH_ID).position.z).toBe(400)
+        end)
+    end)
+
     describe("given the save has no scenario in progress", function()
         it("loads cleanly on the far side", function()
             boot_on_level("zaton")
