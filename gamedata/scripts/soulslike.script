@@ -683,16 +683,20 @@ local function on_console_execute(name, ...)
                                 file_name = string.lower(file_name)
                                 if file_name ~= last_save_file_name then
                                     debug("~ Soulslike mode | delete save file: "..file_name)
-            
-                                    local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
-                                    local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
-                                    local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
-            
-                                    fs:file_copy(scoc_path, scoc_path_bak)
-                                    fs:file_copy(scop_path, scop_path_bak)
-                                    fs:file_copy(dds_path, dds_path_bak)
-            
-                                    ui_load_dialog.delete_save_game(file_name)			
+
+                                    -- Weak-Willed Mode skips the backup: the deleted
+                                    -- save is gone for good, on purpose.
+                                    if not soulslike_mcm.is_weak_willed_mode_enabled() then
+                                        local scoc_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scoc"
+                                        local scop_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".scop"
+                                        local dds_path_bak = fs:update_path('$game_saves$', '').."soulslike-backup/"..file_name..".dds"
+
+                                        fs:file_copy(scoc_path, scoc_path_bak)
+                                        fs:file_copy(scop_path, scop_path_bak)
+                                        fs:file_copy(dds_path, dds_path_bak)
+                                    end
+
+                                    ui_load_dialog.delete_save_game(file_name)
                                 end
                             end
                         end

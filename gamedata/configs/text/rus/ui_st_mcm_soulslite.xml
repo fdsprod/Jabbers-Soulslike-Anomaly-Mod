@@ -233,6 +233,12 @@
     <string id="ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc">
         <text>Если эта опция включена, вы потеряете ВСЕ предметы при смерти. Эта опция игнорирует все настройки из категории Предметы.</text>
     </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode">
+        <text>Слабовольный режим</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode_desc">
+        <text>Отключает страховку. Режим хардкорных сохранений обычно делает резервную копию каждого удаляемого файла сохранения в папку soulslike-backup, чтобы вы могли восстановить его вручную, если передумаете. Слабовольный режим пропускает это резервное копирование: удалённое сохранение исчезает навсегда. Требует включённого режима хардкорных сохранений.</text>
+    </string>
 
     <!--Debug-->
     <string id="ui_mcm_soulslike_debug">

@@ -854,6 +854,18 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = false
+            },
+            {
+                id = "weak_willed_mode_desc",
+                type = "desc",
+                text = "ui_mcm_soulslike_hardcore_weak_willed_mode_desc",
+                clr = {255, 255 ,255 ,0},
+            },
+            {
+                id = "weak_willed_mode",
+                type = "check",
+                val = 1,
+                def = false
             }
         },
     }
@@ -966,8 +978,12 @@ function is_hardcore_save_enabled()
     return get_config("hardcore/is_enabled", false)
 end
 
-function override_campfire_hardcore_saves() 
+function override_campfire_hardcore_saves()
     return get_config("hardcore/override_campfire_hardcore_saves", false)
+end
+
+function is_weak_willed_mode_enabled()
+    return get_config("hardcore/weak_willed_mode", false)
 end
 
 -- Scenarios

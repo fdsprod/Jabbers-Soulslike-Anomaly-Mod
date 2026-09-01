@@ -46,10 +46,12 @@ describe("soulslike_mcm defaults", function()
                 "is_hardcore_save_enabled",
                 "override_campfire_hardcore_saves",
                 "lose_all_items_on_death",
+                "is_weak_willed_mode_enabled",
             }).toEqual{
                 is_hardcore_save_enabled = false,
                 override_campfire_hardcore_saves = false,
                 lose_all_items_on_death = false,
+                is_weak_willed_mode_enabled = false,
             }
         end)
 

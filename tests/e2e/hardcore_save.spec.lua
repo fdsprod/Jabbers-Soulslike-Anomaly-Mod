@@ -206,6 +206,27 @@ describe("e2e: hardcore saves", function()
             end)
         end)
 
+        describe("given Weak-Willed Mode is enabled", function()
+            -- Weak-Willed Mode is the "no safety net" option: the pruning
+            -- walk still deletes every sibling save, it just skips copying
+            -- each one into soulslike-backup/ first (soulslike.script:684).
+            beforeEach(function()
+                boot()
+                H.fakes.set_mcm("hardcore/weak_willed_mode", true)
+                H.fakes.set_save("current", { soulslike = { uuid = UUID } })
+                H.fakes.set_save("older",   { soulslike = { uuid = UUID } })
+                save_as("current")
+            end)
+
+            it("still deletes the older sibling", function()
+                expect(deleted_saves()).toEqual({ "older" })
+            end)
+
+            it("does not back it up first", function()
+                expect(H.fakes.call_count("fs.file_copy")).toBe(0)
+            end)
+        end)
+
         describe("given soulslike mode is off", function()
             it("deletes nothing", function()
                 boot{ soulslike_mode = false }

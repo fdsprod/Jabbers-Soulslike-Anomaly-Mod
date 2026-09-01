@@ -244,6 +244,12 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc">
         <text>If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.</text>
     </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode">
+        <text>Weak-Willed Mode</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode_desc">
+        <text>Turns off the safety net. Hardcore Saves normally backs up every save file it deletes into the soulslike-backup folder, so you can put one back by hand if you change your mind. Weak-Willed Mode skips that backup: a deleted save is gone for good. Requires Hardcore Saves to be enabled.</text>
+    </string>
 
     <!--Debug-->
     <string id="ui_mcm_soulslike_debug">
