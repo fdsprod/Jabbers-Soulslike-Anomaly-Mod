@@ -300,9 +300,9 @@ describe("soulslike_mcm defaults", function()
     end)
 
     describe("the RF Detector and Hidden Stash scenario options", function()
-        it("weight defaults to 0.10 with its enable flag left at the default", function()
-            expect(soulslike_mcm.rf_detector_scenario_weight()).toBeCloseTo(0.10)
-            expect(soulslike_mcm.hidden_stash_scenario_weight()).toBeCloseTo(0.10)
+        it("weight defaults to zero with its enable flag left at the default (off)", function()
+            expect(soulslike_mcm.rf_detector_scenario_weight()).toBe(0.0)
+            expect(soulslike_mcm.hidden_stash_scenario_weight()).toBe(0.0)
         end)
 
         it("reads the configured weight when enabled", function()
