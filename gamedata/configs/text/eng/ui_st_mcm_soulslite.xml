@@ -133,10 +133,10 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
         <text>Soulslike scenarios are dynamic by nature.  Respawn events occur based on who killed you, how you were killed, where, how close to your spawn you are when you died, whether you are inside or outside, just to name a few.  These settings exist to allow you to customize the ways you want to try and recover your gear.  The default scenario's that always exist are that you may end up having all of your items on you on respawn (again, based on events), or you may find that your items are in a backpack on the ground where your body was found.  The options below are in addition to those and weight can be changed to make them more or less frequent.</text>
      </string>
     <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario">
-        <text>Enable the RF Detector scenario</text>
+        <text>Enable the RF Detector scenario (Alpha)</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario_desc">
-        <text>When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. You will be given a note with a radio frequency to help you find it. Only applies when you have no backpack equipped.</text>
+        <text>Alpha: this scenario is new and may have bugs. When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. You will be given a note with a radio frequency to help you find it. Only applies when you have no backpack equipped.</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight">
         <text>RF Detector scenario weight</text>
@@ -145,10 +145,10 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
         <text>How often the RF Detector scenario is chosen relative to the other scenarios that can happen when you have no backpack.</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario">
-        <text>Enable the Hidden Stash scenario</text>
+        <text>Enable the Hidden Stash scenario (Alpha)</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario_desc">
-        <text>When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. The stash location will be marked on your PDA. Only applies when you have no backpack equipped.</text>
+        <text>Alpha: this scenario is new and may have bugs. When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. The stash location will be marked on your PDA. Only applies when you have no backpack equipped.</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
         <text>Hidden Stash scenario weight</text>
