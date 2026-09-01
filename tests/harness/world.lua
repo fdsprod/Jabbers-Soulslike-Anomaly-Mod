@@ -385,6 +385,11 @@ function M.install(env)
 
     env.alife = function() return M.sim end
 
+    local fakes = require("harness.fakes")
+    local record_teleport = fakes.recorder("alife.teleport_object")
+    local record_online   = fakes.recorder("alife.set_switch_online")
+    local record_offline  = fakes.recorder("alife.set_switch_offline")
+
     M.sim = {
         actor = function()
             local a = env.db and env.db.actor
@@ -399,9 +404,59 @@ function M.install(env)
         end,
         object            = function(_, id) return servers[id] end,
         level_name        = function(_, _) return M.level_name_for_gvid end,
-        teleport_object   = function() end,
-        set_switch_online = function() end,
-        set_switch_offline= function() end,
+
+        -- Server-side, offline-safe repositioning (soulslike.script:832/842).
+        -- Mutates the server object's own position/vertex fields, which is
+        -- what the mod reads back afterwards (e.g. se_box.position).
+        teleport_object = function(self, id, gvid, lvid, pos)
+            record_teleport(self, id, gvid, lvid, pos)
+            local se = servers[id]
+            if se then
+                se.m_game_vertex_id = gvid
+                se.m_level_vertex_id = lvid
+                se.position = pos
+            end
+        end,
+
+        -- alife():set_switch_online/offline are pure FLAG setters in the real
+        -- engine, not immediate actions (CALifeUpdateManager::set_switch_online
+        -- /set_switch_offline, alife_update_manager.cpp:333-345 -- each just
+        -- calls can_switch_online(bool)/can_switch_offline(bool), which toggle
+        -- bits in m_flags, xrServer_Objects_ALife.cpp:603-611). Every object is
+        -- constructed with every flag on (xrServer_Objects_ALife.cpp:374), so
+        -- normal distance-based switching is the default.
+        --
+        -- The flag that matters for this mod is can_switch_offline: when it is
+        -- false, try_switch_online's fast path force-onlines the object on the
+        -- next tick with NO distance check, and try_switch_offline's first
+        -- check refuses to ever offline it again -- it stays online permanently
+        -- (CSE_ALifeDynamicObject::try_switch_online/try_switch_offline,
+        -- alife_dynamic_object.cpp:130-181). That is the mechanism
+        -- set_switch_online(id,true) + set_switch_offline(id,false) relies on
+        -- (soulslike.script:734-735, soulslike_scenarios.script:1440-1441): it
+        -- is not "reveal now", it is "pin online forever", and the harness
+        -- collapses the one-tick delay to immediate since nothing here depends
+        -- on the gap.
+        --
+        -- set_switch_offline(id,true) is the inverse -- it only re-enables
+        -- ELIGIBILITY for future distance-based offlining. It does not force
+        -- the object offline immediately, and the harness has no distance
+        -- model to act on that eligibility, so it is a recorded no-op here.
+        set_switch_online = function(self, id, online)
+            record_online(self, id, online)
+            local se = servers[id]
+            if online ~= false then
+                if se then se.online = true end
+                M.reveal(id)
+            end
+        end,
+        set_switch_offline = function(self, id, offline)
+            record_offline(self, id, offline)
+            local se = servers[id]
+            if offline == false then
+                if se then se.pinned_online = true end
+            end
+        end,
         release           = function(_, o) M.queue_release(o) end,
 
         -- register() FREES its argument and returns a NEW pointer

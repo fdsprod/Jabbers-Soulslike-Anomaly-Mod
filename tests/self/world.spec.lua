@@ -209,6 +209,78 @@ describe("harness/world", function()
         end)
     end)
 
+    describe("alife():set_switch_online() / set_switch_offline() / teleport_object()", function()
+        -- Recording these calls (rather than modeling them as no-ops) is
+        -- what lets a spec assert "forces the stash online" for real, instead
+        -- of only checking the stash exists.
+        describe("set_switch_online()", function()
+            it("records the call", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                world.hide(se.id)
+                alife():set_switch_online(se.id, true)
+                expect(H.fakes.call_count("alife.set_switch_online")).toBe(1)
+                local call = H.fakes.last_call("alife.set_switch_online")
+                expect(call[2]).toBe(se.id)
+                expect(call[3]).toBe(true)
+            end)
+
+            it("makes a hidden object findable via level.object_by_id again", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                world.hide(se.id)
+                alife():set_switch_online(se.id, true)
+                expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+        end)
+
+        describe("set_switch_offline()", function()
+            -- The real engine call is a flag setter, not an immediate action
+            -- (CALifeUpdateManager::set_switch_offline,
+            -- alife_update_manager.cpp:333-345): passing true only
+            -- re-enables ELIGIBILITY for future distance-based offlining
+            -- (CSE_ALifeDynamicObject::try_switch_offline,
+            -- alife_dynamic_object.cpp:166-181), it does not force the
+            -- object offline on the spot. The harness has no distance model
+            -- to act on that eligibility, so this is a recorded no-op.
+            it("does not hide the object when passed true", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_offline(se.id, true)
+                expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+
+            -- Passing false is the actual "pin online forever" mechanism: it
+            -- makes can_switch_offline() return false, so try_switch_online's
+            -- fast path force-onlines the object with no distance check, and
+            -- try_switch_offline's first check refuses to ever offline it
+            -- again (alife_dynamic_object.cpp:130-181). RFDetectorSoulslike
+            -- ScenarioLogic:CreateStash calls this right after forcing it
+            -- online (soulslike_scenarios.script:1441) -- it must not undo
+            -- the online request.
+            it("leaves it visible when passed false", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_online(se.id, true)
+                alife():set_switch_offline(se.id, false)
+                expect(level.object_by_id(se.id)).toBeDefined()
+            end)
+
+            it("marks the server object pinned online", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                alife():set_switch_offline(se.id, false)
+                expect(se.pinned_online).toBe(true)
+            end)
+        end)
+
+        describe("teleport_object()", function()
+            it("moves the server object's position and vertex ids", function()
+                local se = alife_create("hidden_box", actor:position(), 1, 1)
+                local new_pos = require("harness.builders").make_vector({ x = 10, y = 0, z = 20 })
+                alife():teleport_object(se.id, 5, 7, new_pos)
+                expect(se.m_game_vertex_id).toBe(5)
+                expect(se.m_level_vertex_id).toBe(7)
+                expect(se.position).toBe(new_pos)
+            end)
+        end)
+    end)
+
     describe("alife_create_item()", function()
         describe("given an owner", function()
             it("puts the item in that owner's container", function()

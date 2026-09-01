@@ -132,6 +132,30 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_scenarios_description">
         <text>Soulslike scenarios are dynamic by nature.  Respawn events occur based on who killed you, how you were killed, where, how close to your spawn you are when you died, whether you are inside or outside, just to name a few.  These settings exist to allow you to customize the ways you want to try and recover your gear.  The default scenario's that always exist are that you may end up having all of your items on you on respawn (again, based on events), or you may find that your items are in a backpack on the ground where your body was found.  The options below are in addition to those and weight can be changed to make them more or less frequent.</text>
      </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario">
+        <text>Enable the RF Detector scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_rf_detector_scenario_desc">
+        <text>When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. You will be given a note with a radio frequency to help you find it. Only applies when you have no backpack equipped.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight">
+        <text>RF Detector scenario weight</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_rf_detector_scenario_weight_desc">
+        <text>How often the RF Detector scenario is chosen relative to the other scenarios that can happen when you have no backpack.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario">
+        <text>Enable the Hidden Stash scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_hidden_stash_scenario_desc">
+        <text>When you die without a backpack, your gear may be hidden in a stash instead of dropped where you died. The stash location will be marked on your PDA. Only applies when you have no backpack equipped.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight">
+        <text>Hidden Stash scenario weight</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_hidden_stash_scenario_weight_desc">
+        <text>How often the Hidden Stash scenario is chosen relative to the other scenarios that can happen when you have no backpack.</text>
+    </string>
     <string id="ui_mcm_soulslike_scenarios_looter_npcs_marked">
         <text>Mark looting NPCs on the PDA</text>
     </string>
@@ -220,6 +244,12 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     <string id="ui_mcm_soulslike_hardcore_lose_all_items_on_death_desc">
         <text>If enabled, you will lose ALL items on death. This setting overrides all other settings in the Items category.</text>
     </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode">
+        <text>Weak-Willed Mode</text>
+    </string>
+    <string id="ui_mcm_soulslike_hardcore_weak_willed_mode_desc">
+        <text>Turns off the safety net. Hardcore Saves normally backs up every save file it deletes into the soulslike-backup folder, so you can put one back by hand if you change your mind. Weak-Willed Mode skips that backup: a deleted save is gone for good. Requires Hardcore Saves to be enabled.</text>
+    </string>
 
     <!--Debug-->
     <string id="ui_mcm_soulslike_debug">
@@ -233,7 +263,13 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>  
     <string id="ui_mcm_soulslike_debug_enable_tips">
         <text>Show PDA Messages</text>
-    </string>    
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes">
+        <text>Debug Hidden Stashes</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_hidden_stashes_desc">
+        <text>Marks every RF Detector/Hidden Stash location on the PDA, even ones you have not been told about yet.</text>
+    </string>
     <string id="ui_mcm_soulslike_debug_debug_item_loss">
         <text>Debug Item Loss</text>
     </string>
@@ -245,6 +281,12 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     </string>
     <string id="ui_mcm_soulslike_debug_debug_the_default_scenario">
         <text>Debug Default Loss Scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_rf_scenario">
+        <text>Debug RF Detector Scenario</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_the_hidden_stash_scenario">
+        <text>Debug Hidden Stash Scenario</text>
     </string>
     <string id="ui_mcm_soulslike_debug_debug_squad_spawns">
         <text>Debug Squad Spawns</text>
