@@ -508,4 +508,36 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
 		<text>When "Allow Artifact Loss" is enabled, this slider sets the chance that your artifact will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
 	</string>
     
+    <!--Vendetta squads-->
+    <string id="ui_mcm_soulslike_scenarios_vendetta_description">
+        <text>Vendetta squads sit on top of the scenarios above rather than replacing them. If you kill a member of a squad and that same squad then kills you, it comes looking for you after you respawn instead of the usual death-site ambush. It stands down while you are in a safe zone.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_vendetta_squads">
+        <text>Enable vendetta squads</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_vendetta_hunt_hours">
+        <text>Hunt duration (game hours)</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_vendetta_hunt_hours_desc">
+        <text>How long a squad keeps hunting you before it gives up and goes back to normal. Counted from your death.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_max_vendetta_squads">
+        <text>Maximum squads hunting at once</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_max_vendetta_squads_desc">
+        <text>Once this many squads are hunting you, no new grudge starts another one until an old hunt ends.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_squads">
+        <text>Log vendetta squads</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_squads_desc">
+        <text>Logs every grudge, every hunt that starts, every stand down, and every hunt that ends. Lines are prefixed VENDETTA.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_map_spots">
+        <text>Show hunting squads on the map</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_map_spots_desc">
+        <text>Puts a map marker on each squad currently hunting you, so you can watch them close in. Needs the option above.</text>
+    </string>
+
 </string_table>

@@ -493,4 +493,36 @@
     <string id="ui_mcm_soulslike_items_artifact_keep_chance_desc">
         <text>Если включена опция «Разрешить потерю артефактов», этот ползунок задаёт шанс, что артефакт останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
     </string>
+    <!--Vendetta squads-->
+    <string id="ui_mcm_soulslike_scenarios_vendetta_description">
+        <text>Отряды мстителей работают вместе со сценариями выше, а не вместо них. Если вы убили бойца отряда, а этот же отряд затем убил вас, он пойдёт искать вас после возрождения вместо обычной засады на месте смерти. В безопасной зоне отряд отступает.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_enable_vendetta_squads">
+        <text>Включить отряды мстителей</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_vendetta_hunt_hours">
+        <text>Длительность охоты (игровые часы)</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_vendetta_hunt_hours_desc">
+        <text>Сколько отряд продолжает охоту, прежде чем сдаётся и вернётся к обычным делам. Отсчёт идёт с момента вашей смерти.</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_max_vendetta_squads">
+        <text>Максимум отрядов одновременно</text>
+    </string>
+    <string id="ui_mcm_soulslike_scenarios_max_vendetta_squads_desc">
+        <text>Когда за вами охотится столько отрядов, новая обида не начнёт ещё одну охоту, пока старая не закончится.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_squads">
+        <text>Лог отрядов мстителей</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_squads_desc">
+        <text>Записывает каждую обиду, каждое начало охоты, каждое отступление и каждое завершение. Строки начинаются с VENDETTA.</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_map_spots">
+        <text>Показывать охотников на карте</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_vendetta_map_spots_desc">
+        <text>Ставит метку на карте для каждого отряда, который охотится за вами, чтобы вы видели, как они приближаются. Требует опцию выше.</text>
+    </string>
+
 </string_table>

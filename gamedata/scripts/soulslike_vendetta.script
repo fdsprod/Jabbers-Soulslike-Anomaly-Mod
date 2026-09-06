@@ -1,0 +1,587 @@
+--[[
+    Jabbers
+    06SEP2026
+    Jabbers' Soulslike Anomaly Mod
+
+    Vendetta squads.
+
+    Kill a member of a squad, then let that same squad kill you, and the squad
+    remembers. After you respawn it drops whatever it was doing and comes
+    looking for you.
+
+    This is additive. It does not compete with the loot scenarios and it is not
+    rolled: if the grudge was earned, the hunt happens. The one thing it does
+    replace is the death-site ambush, so a vendetta death sends the squad that
+    actually killed you instead of a fresh squad standing over your body.
+
+    How the hunt works. Two fields on the squad server object:
+
+        squad.scripted_target = "actor"    routes it to you through alife
+        squad.rush_to_target  = true       members run, and go to danger
+                                           mental state inside 100 m
+
+    The actor is a first-class simulation target (simulation_objects.script:257),
+    so this works offline and across levels. sim_squad_bounty.script is the
+    stock precedent -- it is how bounty hunters find you.
+
+    Only scripted_target survives a save (sim_squad_scripted.script:940).
+    rush_to_target and the relation do not, so the tick re-asserts them.
+
+    Brakes, because a squad that follows you forever is a save you stop loading:
+
+      - a hunt window in game hours, counted from your death
+      - hunters stand down while you are in a safe level or safe smart, and
+        pick the trail back up when you leave
+      - a cap on how many squads can hunt at once
+      - the grudge dies with the squad: wipe them and nobody remembers
+
+    Turn the log on in MCM: Debug -> Enable debug, then Vendetta squads. Every
+    line is prefixed "VENDETTA |".
+--]]
+
+local NO_SQUAD = 65535
+local TICK_SECONDS = 10
+local MAP_SPOT = "secondary_task_location"
+
+-- Read from the stock bounty config so "safe" means the same thing here as it
+-- does for bounty hunters. The file lives in the packed base db and this only
+-- ever reads it. If it is missing, the counts logged at load are zero and the
+-- brake simply does not engage.
+local safe_levels = {}
+local safe_smarts = {}
+
+-- Set by record_actor_death, read once by the scenario logic to decide whether
+-- to skip the ambush. Not persisted: it only has to survive one death.
+local pending_hunt = false
+
+----------------------------------------
+-- Logging
+----------------------------------------
+
+local function fmt(template, ...)
+    local n = select("#", ...)
+    local args = {}
+
+    for i = 1, n do
+        local value = select(i, ...)
+        if type(value) == "number" then
+            args[i] = value
+        else
+            args[i] = tostring(value)
+        end
+    end
+
+    local ok, text = pcall(string.format, template, unpack(args, 1, n))
+    return ok and text or (template .. " <malformed log line>")
+end
+
+local function log(template, ...)
+    if not soulslike_mcm.debug_vendetta_squads() then
+        return
+    end
+
+    soulslike.debug("VENDETTA | " .. fmt(template, ...))
+end
+
+----------------------------------------
+-- State
+----------------------------------------
+
+-- Same contract as soulslike.get_soulslike_state: create anything missing, so
+-- an old save loads without a migration step.
+function get_vendetta_state()
+    local state = soulslike.get_soulslike_state()
+
+    if not state.vendetta then
+        state.vendetta = {}
+    end
+
+    if not state.vendetta.grudges then
+        state.vendetta.grudges = {}
+    end
+
+    if not state.vendetta.hunters then
+        state.vendetta.hunters = {}
+    end
+
+    return state.vendetta
+end
+
+----------------------------------------
+-- Helpers
+----------------------------------------
+
+-- Accepts a game_object (id is a method) or a server object (id is a number),
+-- the same two shapes SoulslikeScenarioLogic:SetKiller handles.
+local function object_id(obj)
+    if not obj then
+        return nil
+    end
+
+    if type(obj.id) == "function" then
+        return obj:id()
+    end
+
+    return obj.id
+end
+
+local function squad_id_of(obj)
+    local id = object_id(obj)
+
+    if not id then
+        return nil
+    end
+
+    local se_obj = alife_object(id)
+
+    if not se_obj then
+        return nil
+    end
+
+    local group_id = se_obj.group_id
+
+    if not group_id or group_id == NO_SQUAD then
+        return nil
+    end
+
+    return group_id
+end
+
+local function describe_squad(squad)
+    if not squad then
+        return "<released squad>"
+    end
+
+    local name = "?"
+    local section = "?"
+    local faction = "?"
+    local members = "?"
+
+    pcall(function() name = squad:name() end)
+    pcall(function() section = squad:section_name() end)
+    pcall(function() faction = squad.player_id end)
+    pcall(function() members = squad:npc_count() end)
+
+    return fmt("id=%s name=%s section=%s faction=%s members=%s",
+               object_id(squad), name, section, faction, members)
+end
+
+local function elapsed_game_seconds(started)
+    if not started then
+        return nil
+    end
+
+    local ok, seconds = pcall(function()
+        return game.get_game_time():diffSec(utils_data.CTime_from_table(started))
+    end)
+
+    return ok and seconds or nil
+end
+
+local function count(tbl)
+    local n = 0
+
+    for _ in pairs(tbl) do
+        n = n + 1
+    end
+
+    return n
+end
+
+----------------------------------------
+-- Safe zones
+----------------------------------------
+
+-- Mirrors sim_squad_bounty.state_timer: a safe level, or standing within 40 m
+-- of a smart terrain named in the safe list.
+local function actor_is_somewhere_safe()
+    if not db.actor then
+        return false
+    end
+
+    if safe_levels[level.name()] then
+        return true, fmt("safe level %s", level.name())
+    end
+
+    -- SIMBOARD exists well before its smart list is populated, so both need a
+    -- guard or the first tick after a load throws.
+    if not (SIMBOARD and SIMBOARD.smarts_by_names) then
+        return false
+    end
+
+    local se_actor = alife():actor()
+    local pos = db.actor:position()
+
+    for name, smart in pairs(SIMBOARD.smarts_by_names) do
+        if safe_smarts[name] and simulation_objects.is_on_the_same_level(se_actor, smart) then
+            if smart.position:distance_to(pos) < 40 then
+                return true, fmt("safe smart %s", name)
+            end
+        end
+    end
+
+    return false
+end
+
+----------------------------------------
+-- Map spots
+----------------------------------------
+
+local function show_on_map(squad_id, hunt)
+    if not soulslike_mcm.debug_vendetta_map_spots() then
+        return
+    end
+
+    if hunt.spotted then
+        return
+    end
+
+    local ok = pcall(function()
+        if level.map_has_object_spot(squad_id, MAP_SPOT) == 0 then
+            level.map_add_object_spot_ser(squad_id, MAP_SPOT,
+                "DEBUG: Vendetta " .. tostring(hunt.faction or "?"))
+        end
+    end)
+
+    hunt.spotted = ok or nil
+
+    if ok then
+        log("map spot added for squad %s", squad_id)
+    end
+end
+
+local function hide_from_map(squad_id, hunt)
+    if not (hunt and hunt.spotted) then
+        return
+    end
+
+    pcall(function()
+        if level.map_has_object_spot(squad_id, MAP_SPOT) == 1 then
+            level.map_remove_object_spot(squad_id, MAP_SPOT)
+        end
+    end)
+
+    hunt.spotted = nil
+end
+
+----------------------------------------
+-- Driving a hunt
+----------------------------------------
+
+local function start_hunting(squad, hunt)
+    squad.scripted_target = "actor"
+    squad.rush_to_target = true
+
+    -- Without this a neutral squad walks the whole map to reach you and then
+    -- stands there, because nothing made it hostile.
+    pcall(function() squad:set_squad_relation("enemy") end)
+end
+
+local function stand_down(squad)
+    if not squad then
+        return
+    end
+
+    squad.scripted_target = nil
+    squad.rush_to_target = false
+end
+
+----------------------------------------
+-- Recording
+----------------------------------------
+
+-- The player killed a squad member. Fires before the member is removed, so the
+-- squad is still whole here (sim_squad_scripted.script:493).
+function record_squad_member_kill(squad, se_npc, killer)
+    if not (squad and killer) then
+        return
+    end
+
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    if not soulslike_mcm.are_vendetta_squads_enabled() then
+        return
+    end
+
+    if object_id(killer) ~= AC_ID then
+        return
+    end
+
+    local squad_id = object_id(squad)
+
+    if not squad_id then
+        return
+    end
+
+    local vstate = get_vendetta_state()
+    local grudge = vstate.grudges[squad_id] or { kills = 0 }
+
+    grudge.kills = grudge.kills + 1
+    grudge.faction = squad.player_id
+    pcall(function() grudge.squad_name = squad:name() end)
+
+    vstate.grudges[squad_id] = grudge
+
+    log("grudge %s now at %s kill(s) by the player", describe_squad(squad), grudge.kills)
+end
+
+local function record_actor_death_impl(killer)
+
+    if not IsSoulslikeMode() then
+        return false
+    end
+
+    if not soulslike_mcm.are_vendetta_squads_enabled() then
+        return false
+    end
+
+    local squad_id = squad_id_of(killer)
+
+    if not squad_id then
+        log("death: killer is in no squad, nothing to hold a grudge")
+        return false
+    end
+
+    local vstate = get_vendetta_state()
+    local grudge = vstate.grudges[squad_id]
+    local squad = alife_object(squad_id)
+
+    if not squad then
+        log("death: killer squad %s is already released", squad_id)
+        return false
+    end
+
+    local existing = vstate.hunters[squad_id]
+
+    if not grudge and not existing then
+        log("death: %s killed you but owes you nothing, no hunt", describe_squad(squad))
+        return false
+    end
+
+    local limit = soulslike_mcm.max_vendetta_squads()
+
+    if not existing and count(vstate.hunters) >= limit then
+        log("death: %s earned a hunt but %s squads are already hunting (cap %s)",
+            describe_squad(squad), count(vstate.hunters), limit)
+        return false
+    end
+
+    vstate.hunters[squad_id] = {
+        started = utils_data.CTime_to_table(game.get_game_time()),
+        faction = squad.player_id,
+        squad_name = squad:name(),
+        kills = grudge and grudge.kills or (existing and existing.kills) or 0,
+        spotted = existing and existing.spotted or nil,
+    }
+
+    vstate.grudges[squad_id] = nil
+    pending_hunt = true
+
+    if existing then
+        log("death: %s killed you again, hunt window refreshed", describe_squad(squad))
+    else
+        log("death: %s killed you after losing %s member(s) to you. They are coming.",
+            describe_squad(squad), vstate.hunters[squad_id].kills)
+    end
+
+    return true
+end
+
+-- Called from SoulslikeScenarioLogic:SetKiller, while the killer is still live.
+-- Returns true when a hunt started, which is also what makes the caller skip
+-- the death-site ambush.
+--
+-- This runs inside the death flow. Nothing here is worth breaking a respawn
+-- over, so any failure is logged and swallowed: the player still wakes up, they
+-- just do not get hunted.
+function record_actor_death(killer)
+    pending_hunt = false
+
+    local ok, started = pcall(record_actor_death_impl, killer)
+
+    if not ok then
+        soulslike.error("VENDETTA | record_actor_death failed, no hunt: " .. tostring(started))
+        pending_hunt = false
+        return false
+    end
+
+    return started == true
+end
+
+-- Read once by the scenario logic. A vendetta death sends the squad that killed
+-- you instead of spawning a fresh ambush over your body.
+function consume_pending_hunt()
+    local value = pending_hunt
+    pending_hunt = false
+    return value
+end
+
+function is_hunting(squad_id)
+    return get_vendetta_state().hunters[squad_id] ~= nil
+end
+
+function get_hunters()
+    return get_vendetta_state().hunters
+end
+
+----------------------------------------
+-- Tick
+----------------------------------------
+
+local function release(vstate, squad_id, hunt, reason)
+    hide_from_map(squad_id, hunt)
+    stand_down(alife_object(squad_id))
+    vstate.hunters[squad_id] = nil
+
+    log("hunt over for squad %s (%s), %s still hunting",
+        squad_id, reason, count(vstate.hunters))
+end
+
+function tick()
+    ResetTimeEvent("soulslike_vendetta", "tick", TICK_SECONDS)
+
+    if not (IsSoulslikeMode() and db.actor) then
+        return false
+    end
+
+    local vstate = get_vendetta_state()
+
+    -- Turning the option off mid-game must let every hunter go, or squads stay
+    -- locked onto you with nothing left to release them.
+    if not soulslike_mcm.are_vendetta_squads_enabled() then
+        for squad_id, hunt in pairs(vstate.hunters) do
+            release(vstate, squad_id, hunt, "option disabled")
+        end
+        return false
+    end
+
+    local window = soulslike_mcm.vendetta_hunt_hours() * 3600
+    local safe, why = actor_is_somewhere_safe()
+
+    for squad_id, hunt in pairs(vstate.hunters) do
+        local squad = alife_object(squad_id)
+
+        if not squad then
+            release(vstate, squad_id, hunt, "squad released")
+        elseif squad.npc_count and squad:npc_count() == 0 then
+            release(vstate, squad_id, hunt, "squad wiped")
+        else
+            local elapsed = elapsed_game_seconds(hunt.started)
+
+            if elapsed and elapsed >= window then
+                release(vstate, squad_id, hunt,
+                        fmt("window expired after %s game hours", soulslike_mcm.vendetta_hunt_hours()))
+            elseif safe then
+                stand_down(squad)
+                hide_from_map(squad_id, hunt)
+
+                if not hunt.stood_down then
+                    hunt.stood_down = true
+                    log("squad %s stands down, you are in a %s", squad_id, why)
+                end
+            else
+                if hunt.stood_down then
+                    hunt.stood_down = nil
+                    log("squad %s picks the trail back up", squad_id)
+                end
+
+                -- rush_to_target and the relation do not survive a save, so
+                -- they get re-asserted every tick rather than set once.
+                start_hunting(squad, hunt)
+                show_on_map(squad_id, hunt)
+            end
+        end
+    end
+
+    return false
+end
+
+----------------------------------------
+-- Callbacks
+----------------------------------------
+
+local function server_entity_on_unregister(se_obj)
+    if not se_obj then
+        return
+    end
+
+    local state = soulslike.get_soulslike_state()
+
+    -- Squad ids get recycled after release, the same trap the ambusher table
+    -- hit. Drop both records the moment the object goes.
+    if not (state and state.vendetta) then
+        return
+    end
+
+    state.vendetta.grudges[se_obj.id] = nil
+
+    local hunt = state.vendetta.hunters[se_obj.id]
+
+    if hunt then
+        hide_from_map(se_obj.id, hunt)
+        state.vendetta.hunters[se_obj.id] = nil
+        log("squad %s unregistered while hunting, record dropped", se_obj.id)
+    end
+end
+
+local function on_game_load()
+    CreateTimeEvent("soulslike_vendetta", "tick", TICK_SECONDS, tick)
+
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    local vstate = get_vendetta_state()
+
+    log("loaded. %s squad(s) hold a grudge, %s hunting. window %s game hours, cap %s. safe: %s level(s), %s smart(s)",
+        count(vstate.grudges), count(vstate.hunters),
+        soulslike_mcm.vendetta_hunt_hours(), soulslike_mcm.max_vendetta_squads(),
+        count(safe_levels), count(safe_smarts))
+
+    for squad_id, hunt in pairs(vstate.hunters) do
+        local elapsed = elapsed_game_seconds(hunt.started)
+        log("  still hunting: squad %s faction=%s kills=%s elapsed=%s game seconds",
+            squad_id, hunt.faction, hunt.kills, elapsed or "?")
+    end
+end
+
+-- Read the stock bounty lists so "safe" means what it already means in game.
+local function load_safe_zones()
+    local ok = pcall(function()
+        local ini = ini_file("plugins\\bounty_squad.ltx")
+
+        if not ini then
+            return
+        end
+
+        local n = ini:line_count("safe_levels")
+        for i = 0, n - 1 do
+            local result, id = ini:r_line_ex("safe_levels", i, "", "")
+            if id then
+                safe_levels[id] = true
+            end
+        end
+
+        n = ini:line_count("safe_smarts")
+        for i = 0, n - 1 do
+            local result, id = ini:r_line_ex("safe_smarts", i, "", "")
+            if id then
+                safe_smarts[id] = true
+            end
+        end
+    end)
+
+    if not ok then
+        soulslike.warn("VENDETTA | could not read plugins\\bounty_squad.ltx, safe zones are not loaded")
+    end
+end
+
+function on_game_start()
+    load_safe_zones()
+
+    RegisterScriptCallback("on_game_load", on_game_load)
+    RegisterScriptCallback("squad_on_npc_death", record_squad_member_kill)
+    RegisterScriptCallback("server_entity_on_unregister", server_entity_on_unregister)
+end

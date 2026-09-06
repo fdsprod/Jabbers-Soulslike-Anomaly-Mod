@@ -177,11 +177,59 @@ function M.install(env)
 
     -- Identity translation keeps message assertions readable: an assertion
     -- reads as the string id, not a localized sentence.
+    -- Game clock.
+    --
+    -- CTime is opaque in the engine; scripts only ever construct it, read it
+    -- field-by-field with get(), set() it back, and subtract two of them with
+    -- diffSec (utils_data.script:288-300 does exactly this round trip). So the
+    -- fake carries absolute seconds and decomposes on demand.
+    --
+    -- GUESS, and a deliberate simplification: the calendar is a fixed
+    -- 2012-05-12 epoch with day/hour/minute/second carried and Y/M pinned. A
+    -- to_table -> from_table round trip is therefore lossless only inside one
+    -- month. Nothing in the mod compares times more than a few game days apart
+    -- (the vendetta hunt window caps at 72 game hours), so this holds. A spec
+    -- that needs to cross a month boundary needs a better clock, not a longer
+    -- delay.
+    M.game_seconds = 14 * 3600  -- 2012-05-12 14:00:00, matching the old stub
+
+    local function make_ctime(seconds)
+        local ct = { _seconds = seconds or 0 }
+
+        function ct:get(Y, M_, D, h, m, s, ms)
+            local total = self._seconds
+            local day = math.floor(total / 86400)
+            local rem = total - day * 86400
+            return 2012, 5, 12 + day,
+                   math.floor(rem / 3600),
+                   math.floor((rem % 3600) / 60),
+                   math.floor(rem % 60),
+                   0
+        end
+
+        function ct:set(Y, M_, D, h, m, s, ms)
+            self._seconds = (D - 12) * 86400 + h * 3600 + m * 60 + s
+        end
+
+        function ct:diffSec(other)
+            return self._seconds - (other and other._seconds or 0)
+        end
+
+        return ct
+    end
+
+    M.make_ctime = make_ctime
+
+    --- Move the game clock forward. Specs use this to age a hunt past its
+    --- window without waiting.
+    function M.advance_game_seconds(seconds)
+        M.game_seconds = M.game_seconds + seconds
+    end
+
     env.game = {
         translate_string = function(s) return s end,
-        get_game_time    = function()
-            return { get = function(_, Y, M_, D, h) return 2012, 5, 12, 14 end }
-        end,
+        get_game_time    = function() return make_ctime(M.game_seconds) end,
+        CTime            = function() return make_ctime(0) end,
     }
 
     ---- db -------------------------------------------------------------------
@@ -239,7 +287,22 @@ function M.install(env)
 
     ---- module stubs ---------------------------------------------------------
 
-    env.utils_data = { debug_write = recorder("debug_write") }
+    -- CTime_to_table / CTime_from_table are utils_data.script:288-298. They are
+    -- a plain field-by-field round trip through game.CTime, so the fakes mirror
+    -- that shape rather than modelling calendar arithmetic.
+    env.utils_data = {
+        debug_write = recorder("debug_write"),
+        CTime_to_table = function(ct)
+            local Y, M, D, h, m, s, ms = 0, 0, 0, 0, 0, 0, 0
+            Y, M, D, h, m, s, ms = ct:get(Y, M, D, h, m, s, ms)
+            return { Y = Y, M = M, D = D, h = h, m = m, s = s, ms = ms }
+        end,
+        CTime_from_table = function(t)
+            local ct = env.game.CTime()
+            ct:set(t.Y, t.M, t.D, t.h, t.m, t.s, t.ms)
+            return ct
+        end,
+    }
 
     env.news_manager = {
         send_tip   = recorder("send_tip"),
