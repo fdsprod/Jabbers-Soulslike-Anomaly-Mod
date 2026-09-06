@@ -510,10 +510,10 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
     
     <!--Vendetta squads-->
     <string id="ui_mcm_soulslike_scenarios_vendetta_description">
-        <text>Vendetta squads sit on top of the scenarios above rather than replacing them. If you kill a member of a squad and that same squad then kills you, it comes looking for you after you respawn instead of the usual death-site ambush. It stands down while you are in a safe zone.</text>
+        <text>Alpha: this scenario is new and may have bugs. Vendetta squads sit on top of the scenarios above rather than replacing them. If you kill a member of a squad and that same squad then kills you, it comes looking for you after you respawn instead of the usual death-site ambush. It stands down while you are in a safe zone.</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_enable_vendetta_squads">
-        <text>Enable vendetta squads</text>
+        <text>Enable vendetta squads (Alpha)</text>
     </string>
     <string id="ui_mcm_soulslike_scenarios_vendetta_hunt_hours">
         <text>Hunt duration (game hours)</text>
