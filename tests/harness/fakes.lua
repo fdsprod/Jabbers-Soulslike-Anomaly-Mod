@@ -158,20 +158,38 @@ function M.install(env)
     -- Object registry backing level.object_by_id. Populate via M.register_object.
     M.objects = {}
 
+    -- One clock, three doors into it.
+    --
+    -- level.get_time_hours, level.change_game_time and game.get_game_time are
+    -- the same clock in the engine: change_game_time calls
+    -- CLevel::ChangeGameTime, which shifts the alife time that every other
+    -- reader sees. Modelling them as three independent values is the exact
+    -- "wrong fake" this suite is built to avoid -- a spec could advance time one
+    -- way and read it back another, stay green, and describe a game that does
+    -- not exist. So all three read and write M.game_seconds.
+    --
+    -- change_game_time still records its arguments, because specs assert on the
+    -- delta the mod asked for as well as on where the clock ended up.
+    local change_game_time = recorder("level.change_game_time")
+
     env.level = {
         name              = function() return M.level_name end,
         object_by_id      = function(id) return M.objects[id] end,
-        get_time_hours    = function() return M.time_hours end,
-        get_time_minutes  = function() return M.time_minutes end,
+        get_time_hours    = function() return math.floor((M.game_seconds % 86400) / 3600) end,
+        get_time_minutes  = function() return math.floor((M.game_seconds % 3600) / 60) end,
+        change_game_time  = function(days, hours, minutes)
+            change_game_time(days, hours, minutes)
+            M.game_seconds = M.game_seconds
+                + (days or 0) * 86400
+                + (hours or 0) * 3600
+                + (minutes or 0) * 60
+        end,
         add_cam_effector       = recorder("level.add_cam_effector"),
         add_pp_effector        = recorder("level.add_pp_effector"),
-        change_game_time       = recorder("level.change_game_time"),
         map_add_object_spot_ser= recorder("level.map_add_object_spot_ser"),
         map_remove_object_spot = recorder("level.map_remove_object_spot"),
     }
     M.level_name   = "zaton"
-    M.time_hours   = 12
-    M.time_minutes = 30
 
     ---- game -----------------------------------------------------------------
 
@@ -191,7 +209,17 @@ function M.install(env)
     -- (the vendetta hunt window caps at 72 game hours), so this holds. A spec
     -- that needs to cross a month boundary needs a better clock, not a longer
     -- delay.
-    M.game_seconds = 14 * 3600  -- 2012-05-12 14:00:00, matching the old stub
+    -- The single clock. 12:30 is the old level-time default; the previous
+    -- game.get_game_time stub said 14:00, and nothing compared the two, which is
+    -- how they drifted apart in the first place.
+    M.game_seconds = 12 * 3600 + 30 * 60
+
+    --- Set the wall clock, keeping the day. Specs that care about the hour use
+    --- this instead of poking a field, so there is one way in.
+    function M.set_game_time(hour, minute)
+        local day = math.floor(M.game_seconds / 86400)
+        M.game_seconds = day * 86400 + (hour or 0) * 3600 + (minute or 0) * 60
+    end
 
     local function make_ctime(seconds)
         local ct = { _seconds = seconds or 0 }

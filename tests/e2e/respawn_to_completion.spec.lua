@@ -210,7 +210,7 @@ describe("e2e: respawn to completion", function()
             H.set_spawn{ level = "zaton" }
             B.stub_finders{}
             H.fakes.set_mcm("character/allow_nighttime_respawn", false)
-            H.fakes.time_hours = hour
+            H.fakes.set_game_time(hour, 0)
             H.fakes.set_random_const(0)     -- no extra scatter
 
             B.make_scenario{}:RespawnActor()
@@ -250,7 +250,7 @@ describe("e2e: respawn to completion", function()
             H.fakes.set_random_min()
             H.set_spawn{ level = "zaton" }
             B.stub_finders{}
-            H.fakes.time_hours = 3
+            H.fakes.set_game_time(3, 0)
 
             B.make_scenario{}:RespawnActor()
             expect(H.fakes.calls_to("level.change_game_time")).toHaveLength(0)
