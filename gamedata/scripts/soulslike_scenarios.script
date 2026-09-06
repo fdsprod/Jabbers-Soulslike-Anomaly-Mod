@@ -883,6 +883,11 @@ function SoulslikeScenarioLogic:SpawnAmbush()
 end
 
 function SoulslikeScenarioLogic:OnComplete()
+    -- The player is up and the clock has already been pushed to daylight by
+    -- RespawnActor, so a vendetta hunt starts counting from here rather than
+    -- from the moment of death.
+    soulslike_vendetta.begin_hunt_window()
+
     self:GiveFoodAndWater()
     self:GiveMeds()
     self:GiveWeapon()

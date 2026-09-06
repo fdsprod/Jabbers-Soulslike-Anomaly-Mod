@@ -37,6 +37,18 @@ function M.install(env)
         return true
     end
 
+    -- _g.script:359-363. Pushes an already-queued event's timer out; a name
+    -- that is not queued is a no-op, not an error. Self-rearming tickers call
+    -- this as their first statement, so it has to exist even when the spec
+    -- drives the tick by hand and nothing is queued at all.
+    env.ResetTimeEvent = function(a, b, delay)
+        local key = tostring(a) .. "/" .. tostring(b)
+        for i = 1, #queue do
+            if queue[i].key == key then queue[i].delay = delay end
+        end
+        return true
+    end
+
     env.RemoveTimeEvent = function(a, b)
         local key = tostring(a) .. "/" .. tostring(b)
         for i = #queue, 1, -1 do

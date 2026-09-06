@@ -374,6 +374,9 @@ local function record_actor_death_impl(killer)
         squad_name = squad:name(),
         kills = grudge and grudge.kills or (existing and existing.kills) or 0,
         spotted = existing and existing.spotted or nil,
+        -- Re-armed by begin_hunt_window once the player is back up. Killing the
+        -- player again clears it so the window restarts from the new respawn.
+        window_started = false,
     }
 
     vstate.grudges[squad_id] = nil
@@ -408,6 +411,41 @@ function record_actor_death(killer)
     end
 
     return started == true
+end
+
+-- Called from SoulslikeScenarioLogic:OnComplete, once the player is back on
+-- their feet.
+--
+-- The window has to be stamped here rather than at death, because RespawnActor
+-- pushes the clock to daylight when nighttime respawns are disabled
+-- (soulslike_scenarios.script:906-920). Dying at 21:00 advances 10 to 12 game
+-- hours. Stamped at death, a 12 hour window is spent before the player stands
+-- up and the squad never hunts at all.
+--
+-- record_actor_death still stamps a time, so a hunt that somehow never reaches
+-- this call expires on its own rather than running forever.
+function begin_hunt_window()
+    local ok, err = pcall(function()
+        if not (IsSoulslikeMode() and soulslike_mcm.are_vendetta_squads_enabled()) then
+            return
+        end
+
+        local vstate = get_vendetta_state()
+        local now = utils_data.CTime_to_table(game.get_game_time())
+
+        for squad_id, hunt in pairs(vstate.hunters) do
+            if not hunt.window_started then
+                hunt.started = now
+                hunt.window_started = true
+                log("squad %s starts its %s game hour window now that you are up",
+                    squad_id, soulslike_mcm.vendetta_hunt_hours())
+            end
+        end
+    end)
+
+    if not ok then
+        soulslike.error("VENDETTA | begin_hunt_window failed: " .. tostring(err))
+    end
 end
 
 -- Read once by the scenario logic. A vendetta death sends the squad that killed
