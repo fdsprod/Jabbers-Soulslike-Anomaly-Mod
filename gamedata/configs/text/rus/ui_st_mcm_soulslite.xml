@@ -493,4 +493,58 @@
     <string id="ui_mcm_soulslike_items_artifact_keep_chance_desc">
         <text>Если включена опция «Разрешить потерю артефактов», этот ползунок задаёт шанс, что артефакт останется у вас при возрождении. 0 = всегда терять, 1 = всегда сохранять.</text>
     </string>
+    <!--AI Personalities-->
+    <string id="ui_mcm_soulslike_ai">
+        <text>Личности ИИ</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_title">
+        <text>Личности ИИ</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_description">
+        <text>Даёт каждому сталкеру постоянную боевую личность при первом появлении. Личность меняет скорость стрельбы, точность, дальность обзора и то, идёт ли сталкер в атаку или держит позицию. Выбирается один раз и больше не меняется.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_alpha">
+        <text>Альфа-версия. Часть вызовов движка за этими настройками не проверена. Отключите это, если бой с NPC станет вести себя странно.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personalities_enabled">
+        <text>Включить личности ИИ</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_aggressive_weight">
+        <text>Агрессивный: процент сталкеров</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_aggressive_weight_desc">
+        <text>Идёт в атаку. Стреляет быстро и точно, не прячется от пуль рядом. Поставьте 0, чтобы убрать эту личность.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_cautious_weight">
+        <text>Осторожный: процент сталкеров</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_cautious_weight_desc">
+        <text>Держит позицию и ждёт вас. Стреляет редко, из укрытия и прицельно. Поставьте 0, чтобы убрать эту личность.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_inexperienced_weight">
+        <text>Неопытный: процент сталкеров</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_inexperienced_weight_desc">
+        <text>Новичок. Долго целится, стреляет очередями в молоко, плохо видит и ломается под огнём. Поставьте 0, чтобы убрать эту личность.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_force_personality_combat_type">
+        <text>Переопределять боевую логику NPC</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_force_personality_combat_type_desc">
+        <text>У многих NPC боевой стиль уже задан их собственной логикой, а некоторые моды задают его почти всем. Оставьте включённым, и личности заменят его. Выключите, и личности будут работать только там, где стиль не задан: безопаснее, но намного реже.</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_debug_debug_ai_personalities">
+        <text>Лог личностей ИИ</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personalities_desc">
+        <text>Записывает каждый выбор личности и всё, что применено к NPC, включая значения, которые возвращает движок. Строки начинаются с "AI |".</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personality_combat">
+        <text>Лог личностей ИИ в бою</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personality_combat_desc">
+        <text>Записывает изменения точности стрельбы и подавленные реакции на опасность во время боя. Одна строка на NPC раз в пять секунд. Требует опцию выше.</text>
+    </string>
+
 </string_table>

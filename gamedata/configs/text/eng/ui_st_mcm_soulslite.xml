@@ -508,4 +508,58 @@ You can tweak this scalar to reflect your desired level of item condition loss. 
 		<text>When "Allow Artifact Loss" is enabled, this slider sets the chance that your artifact will stay with you when you respawn. 0 = always lose, 1 = always keep.</text>
 	</string>
     
+    <!--AI Personalities-->
+    <string id="ui_mcm_soulslike_ai">
+        <text>AI Personalities</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_title">
+        <text>AI Personalities</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_description">
+        <text>Gives each stalker a fixed combat personality when it first spawns. The personality changes how fast it shoots, how accurate it is, how far it sees, and whether it pushes you or holds an angle. It is rolled once per stalker and never changes.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_alpha">
+        <text>Alpha. Some of the engine calls behind these settings are untested. Turn this off if NPC combat starts behaving strangely.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personalities_enabled">
+        <text>Enable AI personalities</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_aggressive_weight">
+        <text>Aggressive: percent of stalkers</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_aggressive_weight_desc">
+        <text>Pushes. Shoots fast and accurately, and does not take cover when rounds land near it. Set to 0 to remove this personality.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_cautious_weight">
+        <text>Cautious: percent of stalkers</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_cautious_weight_desc">
+        <text>Holds an angle and waits for you. Fires rarely, from cover, and aimed. Set to 0 to remove this personality.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_inexperienced_weight">
+        <text>Inexperienced: percent of stalkers</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_personality_inexperienced_weight_desc">
+        <text>Green. Slow onto target, sprays, does not see far, and breaks under fire. Set to 0 to remove this personality.</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_force_personality_combat_type">
+        <text>Override existing NPC combat logic</text>
+    </string>
+    <string id="ui_mcm_soulslike_ai_force_personality_combat_type_desc">
+        <text>Many NPCs already have a combat style set by their own logic, and some mods set one on nearly every NPC. Leave this on and personalities replace it. Turn it off and personalities only apply where nothing else claimed the slot, which is safer but much rarer.</text>
+    </string>
+
+    <string id="ui_mcm_soulslike_debug_debug_ai_personalities">
+        <text>Log AI personalities</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personalities_desc">
+        <text>Logs every personality roll and everything applied to an NPC, including what each engine call reads back. Lines are prefixed "AI |".</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personality_combat">
+        <text>Log AI personalities in combat</text>
+    </string>
+    <string id="ui_mcm_soulslike_debug_debug_ai_personality_combat_desc">
+        <text>Logs shot accuracy changes and suppressed danger reactions while NPCs fight. Sampled to one line per NPC every five seconds. Needs the option above.</text>
+    </string>
+
 </string_table>

@@ -1,0 +1,629 @@
+--[[
+    Jabbers
+    04SEP2026
+    Jabbers' Soulslike Anomaly Mod
+
+    Per-NPC combat personalities.
+
+    No config file ships with this and no stock script is overwritten. A
+    personality is rolled once per stalker server object, kept in that object's
+    alife storage, and re-applied through callbacks every time the NPC loads in.
+
+    Engine calls used here, and where stock proves each one:
+
+      npc:set_range(n)                  trans_outfit.script:33
+      npc:sniper_fire_mode(bool)        xr_effects.script:2547
+      npc:use_smart_covers_only(bool)   state_mgr_smartcover.script:98
+      npc:aim_time(wpn, ms)             state_mgr_weapon.script:295-313
+      npc:set_custom_panic_threshold(n) UNPROVEN - no stock or GAMMA caller
+
+    Every setter goes through engine_call, which catches a missing export and
+    reads the value straight back out of the engine. A line reading
+
+        set_range(60) ok, reads back 60
+
+    proves the call landed. A line reading
+
+        set_custom_panic_threshold(0.35) ok, no getter to verify
+
+    means only that nothing threw. That one has no getter, so the log cannot
+    tell you whether it did anything.
+
+    Turn the log on in MCM: Debug -> Enable debug, then AI personalities. Every
+    line is prefixed "AI |" so the whole feature greps out of the log at once.
+--]]
+
+PERSONALITIES = {
+    Normal        = "normal",
+    Aggressive    = "aggressive",
+    Cautious      = "cautious",
+    Inexperienced = "inexperienced",
+}
+
+-- Danger types a pusher shrugs off. Grenades, being attacked, and taking a hit
+-- are deliberately not in here: an NPC that walks into frags is broken, not
+-- brave.
+--
+-- danger_object holds two enums in one table and their values overlap.
+-- danger:type() returns the first set (bullet_ricochet 0 ... enemy_sound 7).
+-- visual, sound and hit belong to perceive_type() and collide with 0, 1 and 2.
+-- Only name type() members here.
+local IGNORABLE_DANGER = {
+    [danger_object.bullet_ricochet] = true,
+    [danger_object.enemy_sound]     = true,
+    [danger_object.attack_sound]    = true,
+    [danger_object.entity_corpse]   = true,
+    [danger_object.entity_death]    = true,
+}
+
+-- Only for log lines. danger:type() has no name in the engine.
+local DANGER_NAMES = {
+    [danger_object.bullet_ricochet] = "bullet_ricochet",
+    [danger_object.attack_sound]    = "attack_sound",
+    [danger_object.entity_attacked] = "entity_attacked",
+    [danger_object.entity_death]    = "entity_death",
+    [danger_object.entity_corpse]   = "entity_corpse",
+    [danger_object.attacked]        = "attacked",
+    [danger_object.grenade]         = "grenade",
+    [danger_object.enemy_sound]     = "enemy_sound",
+}
+
+local PROFILES = {
+    [PERSONALITIES.Normal] = {
+        dispersion_factor = 1.00,
+        aim_time          = nil,
+        sight_range       = nil,
+        combat_type       = nil,
+        panic_threshold   = nil,
+        ignores_danger    = false,
+        sniper_fire       = false,
+        covers_only       = false,
+    },
+
+    -- Pushes. Accurate, fast on the trigger, and does not break contact when
+    -- rounds crack past it. "monolith" combat drives it toward the last place
+    -- it saw you rather than letting it hold an angle.
+    [PERSONALITIES.Aggressive] = {
+        dispersion_factor = 0.65,
+        aim_time          = 400,
+        sight_range       = nil,
+        combat_type       = "monolith",
+        panic_threshold   = 0.0,
+        ignores_danger    = true,
+        sniper_fire       = false,
+        covers_only       = false,
+    },
+
+    -- Holds an angle and waits. Fires rarely, from cover, and aimed. "camper"
+    -- combat pins it in place and makes it sweep for you instead of chasing.
+    [PERSONALITIES.Cautious] = {
+        dispersion_factor = 0.85,
+        aim_time          = 900,
+        sight_range       = nil,
+        combat_type       = "camper",
+        panic_threshold   = nil,
+        ignores_danger    = false,
+        sniper_fire       = true,
+        covers_only       = true,
+    },
+
+    -- Green. Slow onto target, sprays, spooks easily, and does not see far.
+    [PERSONALITIES.Inexperienced] = {
+        dispersion_factor = 2.20,
+        aim_time          = 1600,
+        sight_range       = 60,
+        combat_type       = nil,
+        panic_threshold   = 0.35,
+        ignores_danger    = false,
+        sniper_fire       = false,
+        covers_only       = false,
+    },
+}
+
+-- id -> profile, for the callbacks that run in the shooting hot path.
+-- Cleared on net_destroy, so a reused object id cannot inherit a stale profile.
+local active = {}
+
+-- Running totals since the level loaded, so one log line answers "what spawned".
+local rolled = {}
+local applied = {}
+
+-- Per-npc throttles for the two hot callbacks, plus the shot counter the
+-- sampled dispersion line reports.
+local shot_log_at = {}
+local shot_count = {}
+local danger_log_at = {}
+
+local SHOT_LOG_INTERVAL = 5000
+local DANGER_LOG_INTERVAL = 5000
+
+----------------------------------------
+-- Logging
+----------------------------------------
+
+-- string.format blows up on a nil, and half of what gets logged here comes back
+-- from the engine. Everything is stringified before it reaches format.
+local function fmt(template, ...)
+    local n = select("#", ...)
+    local args = {}
+
+    for i = 1, n do
+        local value = select(i, ...)
+        if type(value) == "number" then
+            args[i] = value
+        else
+            args[i] = tostring(value)
+        end
+    end
+
+    local ok, text = pcall(string.format, template, unpack(args, 1, n))
+    return ok and text or (template .. " <malformed log line>")
+end
+
+local function ai_log(template, ...)
+    if not soulslike_mcm.debug_ai_personalities() then
+        return
+    end
+
+    soulslike.debug("AI | " .. fmt(template, ...))
+end
+
+local function combat_log(template, ...)
+    if not soulslike_mcm.debug_ai_personality_combat() then
+        return
+    end
+
+    soulslike.debug("AI | " .. fmt(template, ...))
+end
+
+-- Who an NPC is, in one field, for every line that names one.
+local function describe(npc)
+    if not npc then
+        return "<nil npc>"
+    end
+
+    local id = npc:id()
+    local name = npc:name()
+    local community = "?"
+    local rank = "?"
+    local section = "?"
+
+    pcall(function() community = character_community(npc) end)
+    pcall(function() rank = ranks.get_obj_rank_name(npc) end)
+    pcall(function() section = npc:section() end)
+
+    return fmt("id=%s name=%s section=%s community=%s rank=%s",
+               id, name, section, community, rank)
+end
+
+-- The repeating lines (shots, danger, weapon swaps) name the NPC often enough
+-- that the full description drowns the values. The spawn line above them
+-- carries community, rank and section for the same id.
+local function describe_short(npc)
+    if not npc then
+        return "<nil npc>"
+    end
+
+    return fmt("id=%s %s", npc:id(), npc:name())
+end
+
+local function counts_to_string(counts)
+    return fmt("normal=%s aggressive=%s cautious=%s inexperienced=%s",
+               counts[PERSONALITIES.Normal] or 0,
+               counts[PERSONALITIES.Aggressive] or 0,
+               counts[PERSONALITIES.Cautious] or 0,
+               counts[PERSONALITIES.Inexperienced] or 0)
+end
+
+-- Run one engine setter, then read the value straight back. This is the whole
+-- point of the log: it separates "the call exists and took" from "the call is
+-- missing" from "the call took but nothing can confirm it".
+local function engine_call(label, setter, reader)
+    local ok, err = pcall(setter)
+
+    if not ok then
+        ai_log("    %s FAILED: %s", label, err)
+        return false
+    end
+
+    if not reader then
+        ai_log("    %s ok, no getter to verify", label)
+        return true
+    end
+
+    local read_ok, value = pcall(reader)
+
+    if read_ok then
+        ai_log("    %s ok, reads back %s", label, value)
+    else
+        ai_log("    %s ok, getter failed: %s", label, value)
+    end
+
+    return true
+end
+
+----------------------------------------
+-- Rolling
+----------------------------------------
+
+-- Weights are percentages. Whatever is left over after the three is Normal, so
+-- 10/15/20 gives 55% Normal and nothing has to sum to anything.
+--
+-- Returns the personality, the roll, and the cumulative bands, so the caller can
+-- log why a roll landed where it did without rebuilding the table.
+function roll_personality(roll)
+    local weighted = {
+        { name = PERSONALITIES.Aggressive,    weight = soulslike_mcm.personality_aggressive_weight()    },
+        { name = PERSONALITIES.Cautious,      weight = soulslike_mcm.personality_cautious_weight()      },
+        { name = PERSONALITIES.Inexperienced, weight = soulslike_mcm.personality_inexperienced_weight() },
+    }
+
+    local value = roll or math.random(100)
+    local cursor = 0
+    local bands = {}
+    local picked = PERSONALITIES.Normal
+
+    for _, entry in ipairs(weighted) do
+        cursor = cursor + entry.weight
+        bands[#bands + 1] = fmt("%s<=%s", entry.name, cursor)
+
+        if picked == PERSONALITIES.Normal and value <= cursor then
+            picked = entry.name
+        end
+    end
+
+    bands[#bands + 1] = fmt("normal<=100")
+
+    return picked, value, table.concat(bands, " ")
+end
+
+function get_profile(name)
+    return PROFILES[name]
+end
+
+function get_personality(npc)
+    if not npc then
+        return nil
+    end
+
+    local se_obj = alife_object(npc:id())
+    local m_data = se_obj and alife_storage_manager.get_se_obj_state(se_obj)
+
+    return m_data and m_data.soulslike_personality
+end
+
+----------------------------------------
+-- Applying
+----------------------------------------
+
+-- The motivator re-resolves script_combat_type off this condlist about twice a
+-- second (xr_motivator.script:504-528), so writing script_combat_type directly
+-- does not stick. Writing the condlist it reads does.
+local function apply_combat_type(npc, combat_type)
+    if not combat_type then
+        ai_log("    combat_type none for this personality, engine planner left alone")
+        return
+    end
+
+    local st = db.storage[npc:id()]
+
+    if not st then
+        ai_log("    combat_type %s SKIPPED, no db.storage entry", combat_type)
+        return
+    end
+
+    local existing = st.combat and st.combat.combat_type
+    local forcing = soulslike_mcm.force_ai_personality_combat_type()
+
+    -- An NPC whose own logic already names a combat type was placed that way on
+    -- purpose: snipers on outposts, campers on bridges. GAMMA's AI Rework also
+    -- writes one onto nearly every simulation NPC, so forcing here is the
+    -- difference between the feature working on GAMMA and not appearing at all.
+    if existing and not forcing then
+        ai_log("    combat_type %s SKIPPED, npc logic already set one and override is off",
+               combat_type)
+        return
+    end
+
+    local condlist = {
+        condlist = xr_logic.parse_condlist(npc, "combat", "combat_type", combat_type)
+    }
+
+    local targets = {}
+
+    if st.combat then
+        st.combat.combat_type = condlist
+        targets[#targets + 1] = "st.combat"
+    end
+
+    -- overrides win over st.combat when the NPC has an on_combat section.
+    if st.overrides and st.overrides.on_combat then
+        st.overrides.combat_type = condlist
+        targets[#targets + 1] = "st.overrides"
+    end
+
+    if #targets == 0 then
+        ai_log("    combat_type %s SKIPPED, npc has neither st.combat nor st.overrides",
+               combat_type)
+        return
+    end
+
+    ai_log("    combat_type %s applied to %s (was %s, override %s)",
+           combat_type,
+           table.concat(targets, "+"),
+           existing and "set" or "none",
+           forcing and "on" or "off")
+end
+
+local function apply(npc, name, profile)
+    ai_log("apply %s personality=%s", describe(npc), name)
+    ai_log("    profile dispersion=x%s aim_time=%s sight_range=%s panic=%s sniper=%s covers_only=%s ignores_danger=%s",
+           profile.dispersion_factor,
+           profile.aim_time or "default",
+           profile.sight_range or "default",
+           profile.panic_threshold or "default",
+           profile.sniper_fire and "yes" or "no",
+           profile.covers_only and "yes" or "no",
+           profile.ignores_danger and "yes" or "no")
+
+    -- What the engine says before anything is touched, so a later line that
+    -- reads the same value back means something.
+    local before_range = "?"
+    local before_fov = "?"
+    local before_accuracy = "?"
+    pcall(function() before_range = npc:range() end)
+    pcall(function() before_fov = npc:fov() end)
+    pcall(function() before_accuracy = npc:accuracy() end)
+
+    ai_log("    engine before: range=%s fov=%s accuracy=%s",
+           before_range, before_fov, before_accuracy)
+
+    if profile.sight_range then
+        engine_call(fmt("set_range(%s)", profile.sight_range),
+                    function() npc:set_range(profile.sight_range) end,
+                    function() return npc:range() end)
+    end
+
+    if profile.panic_threshold then
+        engine_call(fmt("set_custom_panic_threshold(%s)", profile.panic_threshold),
+                    function() npc:set_custom_panic_threshold(profile.panic_threshold) end,
+                    nil)
+    end
+
+    if profile.sniper_fire then
+        engine_call("sniper_fire_mode(true)",
+                    function() npc:sniper_fire_mode(true) end,
+                    function() return npc:sniper_fire_mode() end)
+    end
+
+    if profile.covers_only then
+        engine_call("use_smart_covers_only(true)",
+                    function() npc:use_smart_covers_only(true) end,
+                    function() return npc:use_smart_covers_only() end)
+    end
+
+    apply_combat_type(npc, profile.combat_type)
+end
+
+----------------------------------------
+-- Callbacks
+----------------------------------------
+
+local function se_stalker_on_spawn(se_obj)
+    if not se_obj then
+        return
+    end
+
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    if not soulslike_mcm.are_ai_personalities_enabled() then
+        return
+    end
+
+    -- The storage manager drops this entry when the object unregisters
+    -- (alife_storage_manager.script:45-50), so it does not grow across a save.
+    local m_data = alife_storage_manager.get_se_obj_state(se_obj, true)
+
+    if not m_data then
+        ai_log("roll SKIPPED id=%s name=%s, no alife storage for this object",
+               se_obj.id, se_obj:name())
+        return
+    end
+
+    if m_data.soulslike_personality then
+        ai_log("roll SKIPPED id=%s name=%s, already has %s",
+               se_obj.id, se_obj:name(), m_data.soulslike_personality)
+        return
+    end
+
+    local name, value, bands = roll_personality()
+
+    m_data.soulslike_personality = name
+    rolled[name] = (rolled[name] or 0) + 1
+
+    ai_log("roll id=%s name=%s section=%s -> %s (roll=%s of 100, bands: %s)",
+           se_obj.id, se_obj:name(), se_obj:section_name(), name, value, bands)
+    ai_log("     rolled so far: %s", counts_to_string(rolled))
+end
+
+local function npc_on_net_spawn(npc, se_obj)
+    if not (npc and se_obj) then
+        return
+    end
+
+    active[npc:id()] = nil
+
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    if not soulslike_mcm.are_ai_personalities_enabled() then
+        return
+    end
+
+    local m_data = alife_storage_manager.get_se_obj_state(se_obj)
+    local name = m_data and m_data.soulslike_personality
+
+    if not name then
+        -- Normal for anything that existed before the option was turned on.
+        ai_log("spawn %s has no personality stamped, left alone", describe(npc))
+        return
+    end
+
+    local profile = PROFILES[name]
+
+    if not profile then
+        soulslike.warn(fmt("AI | spawn %s carries unknown personality %s, left alone",
+                           describe(npc), name))
+        return
+    end
+
+    applied[name] = (applied[name] or 0) + 1
+
+    if name == PERSONALITIES.Normal then
+        ai_log("spawn %s personality=normal, nothing to apply", describe(npc))
+        ai_log("     applied so far: %s", counts_to_string(applied))
+        return
+    end
+
+    active[npc:id()] = profile
+    apply(npc, name, profile)
+
+    ai_log("     applied so far: %s   tracked online: %s",
+           counts_to_string(applied), table.get_length(active))
+end
+
+local function npc_on_net_destroy(npc)
+    if not npc then
+        return
+    end
+
+    local id = npc:id()
+
+    if active[id] then
+        ai_log("release %s", describe_short(npc))
+    end
+
+    active[id] = nil
+    shot_log_at[id] = nil
+    shot_count[id] = nil
+    danger_log_at[id] = nil
+end
+
+-- state_mgr saves whatever aim_time it finds and restores it after a state ends
+-- (state_mgr_weapon.script:295-313). Setting ours here makes it the value
+-- state_mgr restores to, so the two compose instead of fighting.
+local function npc_on_weapon_unstrapped(npc, wpn)
+    local profile = npc and active[npc:id()]
+
+    if not (profile and profile.aim_time and wpn) then
+        return
+    end
+
+    local before = "?"
+    pcall(function() before = npc:aim_time(wpn) end)
+
+    ai_log("aim_time %s weapon=%s was %s", describe_short(npc), wpn:section(), before)
+
+    engine_call(fmt("aim_time(%s, %s)", wpn:section(), profile.aim_time),
+                function() npc:aim_time(wpn, profile.aim_time) end,
+                function() return npc:aim_time(wpn) end)
+end
+
+local function npc_shot_dispersion(npc, wpn, body_state, move_type, temp)
+    local profile = npc and active[npc:id()]
+
+    if not (profile and temp and temp.dispersion) then
+        return
+    end
+
+    local before = temp.dispersion
+    temp.dispersion = before * profile.dispersion_factor
+
+    -- This runs on every shot every NPC fires. Sample it: one line per NPC per
+    -- five seconds, carrying the number of shots it stands for.
+    local id = npc:id()
+    shot_count[id] = (shot_count[id] or 0) + 1
+
+    local now = time_global()
+
+    if shot_log_at[id] and now < shot_log_at[id] then
+        return
+    end
+
+    shot_log_at[id] = now + SHOT_LOG_INTERVAL
+
+    combat_log("shot %s weapon=%s dispersion %s -> %s (x%s) [%s shots since last line]",
+               describe_short(npc),
+               wpn and wpn:section() or "none",
+               before,
+               temp.dispersion,
+               profile.dispersion_factor,
+               shot_count[id])
+
+    shot_count[id] = 0
+end
+
+local function npc_on_eval_danger(npc, flags)
+    local profile = npc and active[npc:id()]
+
+    if not (profile and profile.ignores_danger) then
+        return
+    end
+
+    local danger = npc:best_danger()
+
+    if not danger then
+        return
+    end
+
+    local danger_type = danger:type()
+
+    if not IGNORABLE_DANGER[danger_type] then
+        return
+    end
+
+    flags.ret_value = false
+
+    local id = npc:id()
+    local now = time_global()
+
+    if danger_log_at[id] and now < danger_log_at[id] then
+        return
+    end
+
+    danger_log_at[id] = now + DANGER_LOG_INTERVAL
+
+    combat_log("danger %s suppressed %s", describe_short(npc),
+               DANGER_NAMES[danger_type] or danger_type)
+end
+
+local function on_game_load()
+    -- Counters are per session, not per save. Say so, so a small number after a
+    -- reload is not read as NPCs going missing.
+    rolled = {}
+    applied = {}
+
+    if not soulslike_mcm.are_ai_personalities_enabled() then
+        ai_log("personalities are OFF in MCM, nothing will be rolled or applied")
+        return
+    end
+
+    ai_log("personalities ON. weights aggressive=%s cautious=%s inexperienced=%s, remainder normal. combat_type override %s",
+           soulslike_mcm.personality_aggressive_weight(),
+           soulslike_mcm.personality_cautious_weight(),
+           soulslike_mcm.personality_inexperienced_weight(),
+           soulslike_mcm.force_ai_personality_combat_type() and "on" or "off")
+end
+
+function on_game_start()
+    RegisterScriptCallback("on_game_load", on_game_load)
+    RegisterScriptCallback("se_stalker_on_spawn", se_stalker_on_spawn)
+    RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
+    RegisterScriptCallback("npc_on_net_destroy", npc_on_net_destroy)
+    RegisterScriptCallback("npc_on_weapon_unstrapped", npc_on_weapon_unstrapped)
+    RegisterScriptCallback("npc_shot_dispersion", npc_shot_dispersion)
+    RegisterScriptCallback("npc_on_eval_danger", npc_on_eval_danger)
+end

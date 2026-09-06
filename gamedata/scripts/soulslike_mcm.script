@@ -812,6 +812,76 @@ function on_mcm_load()
 
     table.insert(op.gr, ambush)
 
+    local ai = {
+        id = "ai",
+        text = "ui_mcm_soulslike_ai",
+        sh = true,
+        gr = {
+            {
+                id = "ai_header_slide",
+                type = "slide",
+                link = "ui_options_slider_gameplay_diff",
+                text = "ui_mcm_soulslike_ai_title",
+                size = {512,50},
+                spacing = 20
+            },
+            {
+                id = "ai_desc_intro",
+                type = "desc",
+                text = "ui_mcm_soulslike_ai_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "ai_desc_alpha",
+                type = "desc",
+                text = "ui_mcm_soulslike_ai_alpha",
+                clr = {255, 255 ,255 ,0},
+            },
+            {
+                id = "personalities_enabled",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            -- Percentages. Whatever is left over after the three is a normal NPC.
+            {
+                id = "personality_aggressive_weight",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 50,
+                step = 1,
+                def = 10
+            },
+            {
+                id = "personality_cautious_weight",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 50,
+                step = 1,
+                def = 15
+            },
+            {
+                id = "personality_inexperienced_weight",
+                type = "track",
+                val = 2,
+                min = 0,
+                max = 50,
+                step = 1,
+                def = 15
+            },
+            {
+                id = "force_personality_combat_type",
+                type = "check",
+                val = 1,
+                def = true
+            }
+        },
+    }
+
+    table.insert(op.gr, ai)
+
     local hardcore = {
         id = "hardcore", 
         text = "ui_mcm_soulslike_hardcore",
@@ -953,6 +1023,18 @@ function on_mcm_load()
             },
             {
                 id = "debug_always_spawn_ambush",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_ai_personalities",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_ai_personality_combat",
                 type = "check",
                 val = 1,
                 def = false
@@ -1190,6 +1272,14 @@ function debug_always_spawn_ambush()
     return is_debug_enabled() and get_config("debug/debug_always_spawn_ambush", false)
 end
 
+function debug_ai_personalities()
+    return is_debug_enabled() and get_config("debug/debug_ai_personalities", false)
+end
+
+function debug_ai_personality_combat()
+    return is_debug_enabled() and get_config("debug/debug_ai_personality_combat", false)
+end
+
 -- Getter functions for per-type loss chance
 function get_outfit_loss_chance()
     return get_config("items/outfit_loss_chance", 1.0)
@@ -1256,4 +1346,24 @@ end
 -- Hardcore lose all items option
 function lose_all_items_on_death()
     return get_config("hardcore/lose_all_items_on_death", false)
+end
+-- AI personalities
+function are_ai_personalities_enabled()
+    return get_config("ai/personalities_enabled", false)
+end
+
+function personality_aggressive_weight()
+    return get_config("ai/personality_aggressive_weight", 10)
+end
+
+function personality_cautious_weight()
+    return get_config("ai/personality_cautious_weight", 15)
+end
+
+function personality_inexperienced_weight()
+    return get_config("ai/personality_inexperienced_weight", 15)
+end
+
+function force_ai_personality_combat_type()
+    return get_config("ai/force_personality_combat_type", true)
 end
