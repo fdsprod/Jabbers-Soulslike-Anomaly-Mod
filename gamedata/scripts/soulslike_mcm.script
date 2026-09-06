@@ -686,6 +686,36 @@ function on_mcm_load()
                 type = "check",
                 val = 1,
                 def = false
+            },
+            {
+                id = "scenarios_desc_vendetta",
+                type = "desc",
+                text = "ui_mcm_soulslike_scenarios_vendetta_description",
+                clr = {255, 255 ,255 ,255},
+            },
+            {
+                id = "enable_vendetta_squads",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "vendetta_hunt_hours",
+                type = "track",
+                val = 2,
+                min = 1,
+                max = 72,
+                step = 1,
+                def = 12
+            },
+            {
+                id = "max_vendetta_squads",
+                type = "track",
+                val = 2,
+                min = 1,
+                max = 5,
+                step = 1,
+                def = 2
             }
         },
     }
@@ -953,6 +983,18 @@ function on_mcm_load()
             },
             {
                 id = "debug_always_spawn_ambush",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_vendetta_squads",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_vendetta_map_spots",
                 type = "check",
                 val = 1,
                 def = false
@@ -1256,4 +1298,24 @@ end
 -- Hardcore lose all items option
 function lose_all_items_on_death()
     return get_config("hardcore/lose_all_items_on_death", false)
+end
+-- Vendetta squads
+function are_vendetta_squads_enabled()
+    return get_config("scenarios/enable_vendetta_squads", false)
+end
+
+function vendetta_hunt_hours()
+    return get_config("scenarios/vendetta_hunt_hours", 12)
+end
+
+function max_vendetta_squads()
+    return get_config("scenarios/max_vendetta_squads", 2)
+end
+
+function debug_vendetta_squads()
+    return is_debug_enabled() and get_config("debug/debug_vendetta_squads", false)
+end
+
+function debug_vendetta_map_spots()
+    return is_debug_enabled() and get_config("debug/debug_vendetta_map_spots", false)
 end

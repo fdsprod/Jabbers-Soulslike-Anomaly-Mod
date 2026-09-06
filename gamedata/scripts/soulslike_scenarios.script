@@ -368,6 +368,11 @@ function SoulslikeScenarioLogic:SetKiller(npc)
     elseif npc and npc.id then
         self.logic_state.killer_id = npc.id
     end
+
+    -- Resolve the killer's squad here, while the killer is still live. If that
+    -- squad already lost a member to the player, it starts hunting instead of
+    -- going back to whatever it was doing.
+    self.logic_state.vendetta_hunt = soulslike_vendetta.record_actor_death(npc) or nil
 end
 
 function SoulslikeScenarioLogic:SetKillerType(entity_type)
@@ -677,6 +682,14 @@ function SoulslikeScenarioLogic:TrackAmbusher(id, mental_state, body_state, move
 end
 
 function SoulslikeScenarioLogic:SpawnAmbush()
+    -- A vendetta death sends the squad that actually killed you, so there is no
+    -- second squad standing over the body. consume_pending_hunt clears the flag,
+    -- which keeps this to one ambush decision per death.
+    if soulslike_vendetta.consume_pending_hunt() then
+        soulslike.debug("Vendetta hunt started; skipping the death-site ambush.")
+        return
+    end
+
     soulslike.debug("Checking ambush chance.")
     -- Float roll in [0,1) compared directly against the configured chance, as
     -- every other chance roll in this file does. It was math.random(0, 100) --
@@ -870,6 +883,11 @@ function SoulslikeScenarioLogic:SpawnAmbush()
 end
 
 function SoulslikeScenarioLogic:OnComplete()
+    -- The player is up and the clock has already been pushed to daylight by
+    -- RespawnActor, so a vendetta hunt starts counting from here rather than
+    -- from the moment of death.
+    soulslike_vendetta.begin_hunt_window()
+
     self:GiveFoodAndWater()
     self:GiveMeds()
     self:GiveWeapon()
