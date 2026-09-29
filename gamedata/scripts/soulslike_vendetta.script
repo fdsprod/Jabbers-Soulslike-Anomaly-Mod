@@ -416,11 +416,11 @@ end
 -- Called from SoulslikeScenarioLogic:OnComplete, once the player is back on
 -- their feet.
 --
--- The window has to be stamped here rather than at death, because RespawnActor
--- pushes the clock to daylight when nighttime respawns are disabled
--- (soulslike_scenarios.script:906-920). Dying at 21:00 advances 10 to 12 game
--- hours. Stamped at death, a 12 hour window is spent before the player stands
--- up and the squad never hunts at all.
+-- The window has to be stamped here rather than at death, because
+-- soulslike.dream_callback advances the clock 6 to 14 game hours, and further
+-- to daylight when nighttime respawns are disabled. Stamped at death, a 12
+-- hour window can be spent before the player stands up, and the squad never
+-- hunts at all.
 --
 -- record_actor_death still stamps a time, so a hunt that somehow never reaches
 -- this call expires on its own rather than running forever.

@@ -883,8 +883,8 @@ function SoulslikeScenarioLogic:SpawnAmbush()
 end
 
 function SoulslikeScenarioLogic:OnComplete()
-    -- The player is up and the clock has already been pushed to daylight by
-    -- RespawnActor, so a vendetta hunt starts counting from here rather than
+    -- The player is up and the dream has already advanced the clock (to
+    -- daylight, if nighttime respawns are off), so a vendetta hunt starts counting from here rather than
     -- from the moment of death.
     soulslike_vendetta.begin_hunt_window()
 
@@ -909,22 +909,9 @@ end
 function SoulslikeScenarioLogic:RespawnActor()
     soulslike.debug("Respawning actor")
 
-    -- Nighttime respawn logic
-    if not soulslike_mcm.allow_nighttime_respawn() then
-        local hour = level.get_time_hours()
-        -- If it's before 7am or after 21 (9pm), advance to 7-9am
-        if hour < 7 or hour >= 21 then
-            local advance_hours = 7 - hour
-            if advance_hours <= 0 then
-                advance_hours = 24 - hour + 7
-            end
-            -- Add a little randomness between 7-9am
-            advance_hours = advance_hours + math.random(0,2)
-            soulslike.debug("Advancing time for daytime respawn: "..tostring(advance_hours).." hours")
-            level.change_game_time(0, advance_hours, 0)
-        end
-    end
-    
+    -- The nighttime respawn check is in soulslike.dream_callback. The dream
+    -- advances the clock after this, so a check here has no effect.
+
     local spawn = self.game_state.spawn_location
     local spawn_position = spawn and spawn.position
 

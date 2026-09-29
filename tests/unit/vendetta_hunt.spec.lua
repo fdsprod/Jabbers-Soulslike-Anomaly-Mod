@@ -6,9 +6,8 @@
 -- (sim_squad_bounty.script:71-72).
 --
 -- The window is measured in GAME hours, and the respawn moves the game clock:
--- RespawnActor advances to daylight when nighttime respawns are disabled
--- (soulslike_scenarios.script:906-920). That interaction is the point of the
--- last block here.
+-- soulslike.dream_callback advances it, to daylight when nighttime respawns
+-- are disabled. That interaction is the point of the last block here.
 
 local H = require("harness.init")
 local B = H.builders
@@ -138,26 +137,30 @@ describe("vendetta squads", function()
 
     -- The reason the window is stamped at respawn and not at death.
     --
-    -- RespawnActor pushes the clock to daylight when nighttime respawns are
-    -- disabled (soulslike_scenarios.script:906-920). Dying at 21:00 advances
-    -- 10 to 12 hours. Stamped at death, a 12 game hour window is spent before
-    -- the player is back on their feet, and the squad that earned the grudge
-    -- never hunts at all.
+    -- soulslike.dream_callback advances the clock 6 to 14 hours, and further
+    -- to daylight when nighttime respawns are disabled. Dying at 21:00 with a
+    -- 6 hour dream advances 10 hours. Stamped at death, a 12 game hour window
+    -- is mostly spent before the player is back on their feet.
     describe("given the respawn pushes the clock to daylight", function()
         local function die_at_night_and_respawn()
             fakes.set_mcm("character/allow_nighttime_respawn", false)
             fakes.set_game_time(21, 0)
-            fakes.set_random_const(0)
+            -- The shortest dream, and 0 for every other roll (no scatter).
+            fakes.set_random(function(a, b)
+                if a == 6 and b == 14 then return 6 end
+                return 0
+            end)
 
             earn_a_grudge_and_die()
             B.stub_finders{}
 
-            -- The real order: RespawnActor moves the clock, OnComplete runs
-            -- once the player is up. begin_hunt_window is wired into
-            -- OnComplete, so calling both is what proves the wiring rather
-            -- than just the function.
+            -- The real order: RespawnActor, then the dream moves the clock,
+            -- then OnComplete runs once the player is up. begin_hunt_window
+            -- is wired into OnComplete, so calling all three is what proves
+            -- the wiring rather than just the function.
             local scenario = B.make_scenario{}
             scenario:RespawnActor()
+            soulslike.dream_callback()
             scenario:OnComplete()
 
             soulslike_vendetta.tick()
@@ -165,8 +168,9 @@ describe("vendetta squads", function()
 
         it("advances the clock past the window", function()
             die_at_night_and_respawn()
-            -- 21:00 + 10h lands at 07:00, so the whole 12h window would be gone
-            -- if the stamp were taken at death.
+            -- 21:00 + 6h dream lands at 03:00, and the check adds 4h to 07:00.
+            -- 10 of the 12 window hours would be gone if the stamp were taken
+            -- at death.
             expect(H.fakes.call_count("level.change_game_time")).toBe(1)
             expect(level.get_time_hours()).toBe(7)
         end)

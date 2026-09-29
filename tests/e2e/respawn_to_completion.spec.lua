@@ -201,55 +201,123 @@ describe("e2e: respawn to completion", function()
         end)
     end)
 
-    describe("nighttime respawn", function()
-        -- RespawnActor pushes the clock to daylight when nighttime respawns are
-        -- disabled (soulslike_scenarios.script:887-900).
-        local function respawn_at(hour)
+    -- FIXES: nighttime respawn. RespawnActor moved the clock to 7-9am before
+    -- the level change, then dream_callback added its own 6-14 hours with no
+    -- check. The player woke at 13:00-23:00, and at night whenever the dream
+    -- roll ran past 21:00. The check has to run where the clock last moves.
+    describe("given nighttime respawn is disabled", function()
+        -- The highest legal value for every roll: the most hours the dream can
+        -- add, and the latest morning the check can pick.
+        local function roll_max(a, b)
+            if a == nil then return 0.99 end
+            if b == nil then return a end
+            return b
+        end
+
+        local function wake_hour_after_dying_at(hour)
+            boot_mid_death()
+            H.fakes.set_mcm("character/allow_nighttime_respawn", false)
+            H.fakes.set_game_time(hour, 0)
+            H.fakes.set_random(roll_max)
+
+            live_scenario():RespawnActor()
+            SendScriptCallback("on_game_load")
+            soulslike.dream_callback()
+            return level.get_time_hours()
+        end
+
+        it("wakes in daylight after dying at 3am", function()
+            local hour = wake_hour_after_dying_at(3)
+            expect(hour >= 7 and hour < 21).toBe(true)
+        end)
+
+        it("wakes in daylight after dying at midday", function()
+            local hour = wake_hour_after_dying_at(12)
+            expect(hour >= 7 and hour < 21).toBe(true)
+        end)
+
+        it("wakes between 7am and 9am when the dream runs into the night", function()
+            local hour = wake_hour_after_dying_at(12)
+            expect(hour >= 7 and hour <= 9).toBe(true)
+        end)
+
+        it("wakes in daylight after dying at 23:00", function()
+            local hour = wake_hour_after_dying_at(23)
+            expect(hour >= 7 and hour < 21).toBe(true)
+        end)
+
+        it("advances the clock only once", function()
+            wake_hour_after_dying_at(3)
+            expect(H.fakes.call_count("level.change_game_time")).toBe(1)
+        end)
+    end)
+
+    describe("given nighttime respawn is allowed", function()
+        it("keeps the rolled dream length, even into the night", function()
+            boot_mid_death()
+            H.fakes.set_game_time(12, 0)
+            H.fakes.set_random_const(14)
+
+            SendScriptCallback("on_game_load")
+            soulslike.dream_callback()
+            expect(level.get_time_hours()).toBe(2)
+        end)
+    end)
+
+    describe("the nighttime respawn check", function()
+        -- dream_callback rolls the dream length, then adds hours to 7-9am if
+        -- the player would wake at night. The wake hour is the start hour plus
+        -- a 6 hour dream roll, so each case names the hour the dream lands on.
+        local function dream_lands_on(wake_hour, scatter)
+            boot_mid_death()
+            SendScriptCallback("on_game_load")
+            H.fakes.set_mcm("character/allow_nighttime_respawn", false)
+            H.fakes.set_game_time((wake_hour - 6) % 24, 0)
+            H.fakes.set_random_sequence(scatter and { 6, scatter } or { 6 })
+
+            soulslike.dream_callback()
+            return H.fakes.last_call("level.change_game_time")[2]
+        end
+
+        it("adds 4 hours when the dream lands on 3am", function()
+            expect(dream_lands_on(3, 0)).toBe(6 + 4)
+        end)
+
+        it("adds 8 hours when the dream lands on 23:00", function()
+            expect(dream_lands_on(23, 0)).toBe(6 + 8)
+        end)
+
+        it("adds up to 2 more hours of scatter", function()
+            expect(dream_lands_on(3, 2)).toBe(6 + 4 + 2)
+        end)
+
+        it("adds hours when the dream lands on 21:00, the first blocked hour", function()
+            expect(dream_lands_on(21, 0)).toBe(6 + 10)
+        end)
+
+        it("adds nothing when the dream lands on 7am", function()
+            expect(dream_lands_on(7)).toBe(6)
+        end)
+
+        it("adds nothing when the dream lands on midday", function()
+            expect(dream_lands_on(12)).toBe(6)
+        end)
+
+        it("adds nothing when the dream lands on 20:00, the last allowed hour", function()
+            expect(dream_lands_on(20)).toBe(6)
+        end)
+
+        it("reports the full sleep to actor_on_sleep", function()
+            dream_lands_on(3, 0)
+            expect(H.dispatch.sends_of("actor_on_sleep")[1].args[1]).toBe(10)
+        end)
+
+        it("does not move the clock in RespawnActor", function()
             H.boot{ load = MOD_SCRIPTS, soulslike_mode = true }
             H.fakes.set_random_min()
             H.set_spawn{ level = "zaton" }
             B.stub_finders{}
             H.fakes.set_mcm("character/allow_nighttime_respawn", false)
-            H.fakes.set_game_time(hour, 0)
-            H.fakes.set_random_const(0)     -- no extra scatter
-
-            B.make_scenario{}:RespawnActor()
-            return H.fakes.calls_to("level.change_game_time")
-        end
-
-        it("advances from 3am to 7am", function()
-            local calls = respawn_at(3)
-            expect(calls).toHaveLength(1)
-            expect(calls[1][2]).toBe(4)
-        end)
-
-        it("advances from 23:00 to 7am the next day", function()
-            local calls = respawn_at(23)
-            expect(calls).toHaveLength(1)
-            expect(calls[1][2]).toBe(8)
-        end)
-
-        it("advances from 21:00, the first blocked hour", function()
-            expect(respawn_at(21)).toHaveLength(1)
-        end)
-
-        it("does not advance at 7am", function()
-            expect(respawn_at(7)).toHaveLength(0)
-        end)
-
-        it("does not advance at midday", function()
-            expect(respawn_at(12)).toHaveLength(0)
-        end)
-
-        it("does not advance at 20:00, the last allowed hour", function()
-            expect(respawn_at(20)).toHaveLength(0)
-        end)
-
-        it("leaves the clock alone when nighttime respawn is allowed", function()
-            H.boot{ load = MOD_SCRIPTS, soulslike_mode = true }
-            H.fakes.set_random_min()
-            H.set_spawn{ level = "zaton" }
-            B.stub_finders{}
             H.fakes.set_game_time(3, 0)
 
             B.make_scenario{}:RespawnActor()
