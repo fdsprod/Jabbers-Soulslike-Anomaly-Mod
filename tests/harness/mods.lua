@@ -13,8 +13,13 @@
 --             survives. Installed by default.
 --
 --   OPTIONAL  magazine_binder, grok_actor_damage_balancer,
---             demonized_time_events -- genuinely third-party. Absent by
---             default, which is what most installs look like.
+--             demonized_time_events, enhanced_animations -- genuinely
+--             third-party. Absent by default, which is what most installs
+--             look like.
+--
+-- actor_effects (BASE) and enhanced_animations (OPTIONAL) were added later,
+-- for the busy hands specs. They are models of the real scripts, in
+-- harness/models/, not minimal stubs.
 --
 -- Either group can be flipped per spec, so the guard branches stay reachable:
 --
@@ -91,6 +96,11 @@ local DEFAULTS = {
         }
     end,
 
+    -- Models, not stubs: each ports the parts of a real script that lock or
+    -- unlock the player's input. See harness/models/.
+    actor_effects       = function() return require("harness.models.actor_effects")() end,
+    enhanced_animations = function() return require("harness.models.enhanced_animations")() end,
+
     actor_status_thirst = function()
         return {
             get_water_deprivation = function() return 0.1 end,
@@ -106,13 +116,14 @@ table.sort(M.NAMES)
 
 -- Ships with Anomaly: install unless a spec explicitly disables it.
 M.BASE = {
-    "actor_status_thirst", "arszi_psy", "item_parts", "item_radio",
-    "treasure_manager",
+    "actor_effects", "actor_status_thirst", "arszi_psy", "item_parts",
+    "item_radio", "treasure_manager",
 }
 
 -- Third-party: absent unless a spec asks for it.
 M.OPTIONAL = {
-    "demonized_time_events", "grok_actor_damage_balancer", "magazine_binder",
+    "demonized_time_events", "enhanced_animations", "grok_actor_damage_balancer",
+    "magazine_binder",
 }
 
 --- Install the base-Anomaly set. Called by H.boot before mod scripts load.
@@ -158,6 +169,9 @@ function M.enable(name, overrides)
 end
 
 function M.disable(name)
+    -- A model that registered callbacks when it was enabled removes them here.
+    local stub = installed[name]
+    if stub and stub._on_disable then stub._on_disable() end
     _G[name] = nil
     if name == "demonized_time_events" then _G.dte = nil end
     installed[name] = nil

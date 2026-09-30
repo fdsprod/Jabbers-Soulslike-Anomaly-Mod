@@ -111,6 +111,9 @@ M.CALLBACK_NAMES = {
     -- se_stalker:on_unregister (se_stalker.script:116).
     "squad_on_npc_death",
     "server_entity_on_unregister",
+    -- Sent every actor update by bind_stalker_ext.script:104. Animation mods
+    -- (FDDA) register on it; H.run_for sends it once per frame.
+    "actor_on_update",
 }
 
 function M.install(env)

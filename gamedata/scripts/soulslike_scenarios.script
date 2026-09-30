@@ -882,10 +882,32 @@ function SoulslikeScenarioLogic:SpawnAmbush()
     end
 end
 
+-- Clear the input locks an animation mod can leave behind ("busy hands").
+--
+-- FDDA and other animation mods lock input while a HUD animation plays and
+-- unlock it from a timed event when the animation ends. A death mid-animation
+-- sends the player through a level change, and the stock save does not keep
+-- the event queue, so the unlock never runs. The locks are engine globals that
+-- survive the level change, so the player wakes up able to move and nothing
+-- else. This is the same reset actor_effects does on its first update.
+--
+-- The weapon slot block (hide_weapon/restore_weapon) is not touched. The
+-- engine gives no way to read it, and restore_weapon on an unblocked slot
+-- wraps the counter and blocks it instead.
+function SoulslikeScenarioLogic:ReleaseInputLocks()
+    soulslike.debug("Releasing animation input locks")
+    game.only_allow_movekeys(false)
+    game.set_actor_allow_ladder(true)
+    game.stop_hud_motion()
+    game.stop_all_hud_anms(true)
+end
+
 function SoulslikeScenarioLogic:OnComplete()
+    self:ReleaseInputLocks()
+
     -- The player is up and the dream has already advanced the clock (to
-    -- daylight, if nighttime respawns are off), so a vendetta hunt starts counting from here rather than
-    -- from the moment of death.
+    -- daylight, if nighttime respawns are off), so a vendetta hunt starts
+    -- counting from here rather than from the moment of death.
     soulslike_vendetta.begin_hunt_window()
 
     self:GiveFoodAndWater()

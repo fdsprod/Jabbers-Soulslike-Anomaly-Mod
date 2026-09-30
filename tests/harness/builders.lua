@@ -202,6 +202,54 @@ function M.make_actor(opts)
     end
     function o:transfer_item(_, _) end
 
+    -- Hands. opts.active_slot is the slot in the hands, 0 for empty hands.
+    o._active_slot = opts.active_slot or 0
+    function o:active_slot() return self._active_slot end
+    function o:activate_slot(n) self._active_slot = n or 0 end
+    function o:active_item() return self:item_in_slot(self._active_slot) end
+    function o:active_detector() return nil end
+
+    -- hide_weapon / restore_weapon send SetWeaponHideState(INV_STATE_BLOCK_ALL,
+    -- true / false) (script_game_object_inventory_owner.cpp:1452-1467), which
+    -- does nothing unless the actor is alive (Actor_Weapon.cpp:159-169). The
+    -- handler adds or removes one block on every slot (Actor_Events.cpp:290,
+    -- Inventory.cpp:1448-1467). The block is a u8 counter per slot
+    -- (Inventory.h:199), and the underflow check is a VERIFY2 that release
+    -- builds compile out (Inventory.cpp:1539-1546). So restore_weapon on an
+    -- unblocked slot wraps it to 255, which blocks it. BLOCK_ALL moves every
+    -- slot together, so one counter stands in for all of them.
+    o._weapon_block = 0
+    function o:hide_weapon()
+        if self._alive_flag == false then return end
+        self._weapon_block = (self._weapon_block + 1) % 256
+    end
+    function o:restore_weapon()
+        if self._alive_flag == false then return end
+        self._weapon_block = (self._weapon_block - 1) % 256
+    end
+    --- Test aid, not an engine call: are the weapon slots blocked?
+    function o:weapons_blocked() return self._weapon_block > 0 end
+
+    -- CScriptGameObject::eat logs and returns on nil, and CInventory::Eat
+    -- returns false for an item that is not in this inventory
+    -- (script_game_object.cpp:1077-1102, Inventory.cpp:1103-1119). Neither
+    -- raises, so both are recorded no-ops here.
+    function o:eat(item)
+        local F = require("harness.fakes")
+        F.calls["actor.eat"] = F.calls["actor.eat"] or {}
+        local t = F.calls["actor.eat"]
+        t[#t + 1] = { n = 1, item }
+    end
+
+    -- First inventory item with this section, or nil.
+    function o:object(section)
+        local found
+        self:iterate_inventory(function(_, it)
+            if it:section() == section then found = it return true end
+        end)
+        return found
+    end
+
     -- Recorded, not a no-op: this is how the mod delivers the
     -- inventory-examined message listing what did not survive
     -- (soulslike.script:591), which is the player's only account of it.

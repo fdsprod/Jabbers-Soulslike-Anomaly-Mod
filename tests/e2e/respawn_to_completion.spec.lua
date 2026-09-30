@@ -184,6 +184,43 @@ describe("e2e: respawn to completion", function()
         end)
     end)
 
+    -- FIXES: busy hands. An animation mod locks input while a HUD animation
+    -- plays, and a timed event unlocks it when the animation ends. FDDA's
+    -- enhanced_animations.script calls game.only_allow_movekeys(true) in
+    -- anim_prepare and clears it in its call_my_slot_back event. Dying
+    -- mid-animation sends the player through a level change, and the stock
+    -- save does not keep the event queue (alife_storage_manager.script:188 and
+    -- :268 have ProcessEventQueueState commented out), so the unlock never
+    -- runs. The lock itself is a C++ global the level change does not reset.
+    -- The player wakes up able to move and nothing else.
+    describe("given an animation left the player locked", function()
+        beforeEach(function()
+            boot_mid_death()
+            game.only_allow_movekeys(true)
+            game.set_actor_allow_ladder(false)
+            SendScriptCallback("on_game_load")
+            H.fakes.set_random_const(8)
+            soulslike.dream_callback()
+            soulslike.wakeup_callback()
+        end)
+
+        it("lets the player use more than the movement keys", function()
+            expect(game.only_movekeys_allowed()).toBe(false)
+        end)
+
+        it("lets the player climb ladders", function()
+            expect(H.fakes.engine.allow_ladder).toBe(true)
+        end)
+
+        it("stops the scripted HUD motion", function()
+            expect(H.fakes.call_count("game.stop_hud_motion")).toBe(1)
+        end)
+
+        it("force-stops every HUD blend animation", function()
+            expect(H.fakes.last_call("game.stop_all_hud_anms")).toEqual({ n = 1, true })
+        end)
+    end)
+
     describe("given hardcore saves are enabled", function()
         it("force-saves on respawn", function()
             boot_mid_death()
