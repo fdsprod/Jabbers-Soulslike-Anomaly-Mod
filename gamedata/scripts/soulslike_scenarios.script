@@ -368,6 +368,11 @@ function SoulslikeScenarioLogic:SetKiller(npc)
     elseif npc and npc.id then
         self.logic_state.killer_id = npc.id
     end
+
+    -- Resolve the killer's squad here, while the killer is still live. If that
+    -- squad already lost a member to the player, it starts hunting instead of
+    -- going back to whatever it was doing.
+    self.logic_state.vendetta_hunt = soulslike_vendetta.record_actor_death(npc) or nil
 end
 
 function SoulslikeScenarioLogic:SetKillerType(entity_type)
@@ -677,6 +682,14 @@ function SoulslikeScenarioLogic:TrackAmbusher(id, mental_state, body_state, move
 end
 
 function SoulslikeScenarioLogic:SpawnAmbush()
+    -- A vendetta death sends the squad that actually killed you, so there is no
+    -- second squad standing over the body. consume_pending_hunt clears the flag,
+    -- which keeps this to one ambush decision per death.
+    if soulslike_vendetta.consume_pending_hunt() then
+        soulslike.debug("Vendetta hunt started; skipping the death-site ambush.")
+        return
+    end
+
     soulslike.debug("Checking ambush chance.")
     -- Float roll in [0,1) compared directly against the configured chance, as
     -- every other chance roll in this file does. It was math.random(0, 100) --
@@ -869,7 +882,34 @@ function SoulslikeScenarioLogic:SpawnAmbush()
     end
 end
 
+-- Clear the input locks an animation mod can leave behind ("busy hands").
+--
+-- FDDA and other animation mods lock input while a HUD animation plays and
+-- unlock it from a timed event when the animation ends. A death mid-animation
+-- sends the player through a level change, and the stock save does not keep
+-- the event queue, so the unlock never runs. The locks are engine globals that
+-- survive the level change, so the player wakes up able to move and nothing
+-- else. This is the same reset actor_effects does on its first update.
+--
+-- The weapon slot block (hide_weapon/restore_weapon) is not touched. The
+-- engine gives no way to read it, and restore_weapon on an unblocked slot
+-- wraps the counter and blocks it instead.
+function SoulslikeScenarioLogic:ReleaseInputLocks()
+    soulslike.debug("Releasing animation input locks")
+    game.only_allow_movekeys(false)
+    game.set_actor_allow_ladder(true)
+    game.stop_hud_motion()
+    game.stop_all_hud_anms(true)
+end
+
 function SoulslikeScenarioLogic:OnComplete()
+    self:ReleaseInputLocks()
+
+    -- The player is up and the dream has already advanced the clock (to
+    -- daylight, if nighttime respawns are off), so a vendetta hunt starts
+    -- counting from here rather than from the moment of death.
+    soulslike_vendetta.begin_hunt_window()
+
     self:GiveFoodAndWater()
     self:GiveMeds()
     self:GiveWeapon()
@@ -891,22 +931,9 @@ end
 function SoulslikeScenarioLogic:RespawnActor()
     soulslike.debug("Respawning actor")
 
-    -- Nighttime respawn logic
-    if not soulslike_mcm.allow_nighttime_respawn() then
-        local hour = level.get_time_hours()
-        -- If it's before 7am or after 21 (9pm), advance to 7-9am
-        if hour < 7 or hour >= 21 then
-            local advance_hours = 7 - hour
-            if advance_hours <= 0 then
-                advance_hours = 24 - hour + 7
-            end
-            -- Add a little randomness between 7-9am
-            advance_hours = advance_hours + math.random(0,2)
-            soulslike.debug("Advancing time for daytime respawn: "..tostring(advance_hours).." hours")
-            level.change_game_time(0, advance_hours, 0)
-        end
-    end
-    
+    -- The nighttime respawn check is in soulslike.dream_callback. The dream
+    -- advances the clock after this, so a check here has no effect.
+
     local spawn = self.game_state.spawn_location
     local spawn_position = spawn and spawn.position
 
