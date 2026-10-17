@@ -158,29 +158,131 @@ function M.install(env)
     -- Object registry backing level.object_by_id. Populate via M.register_object.
     M.objects = {}
 
+    -- One clock, three doors into it.
+    --
+    -- level.get_time_hours, level.change_game_time and game.get_game_time are
+    -- the same clock in the engine: change_game_time calls
+    -- CLevel::ChangeGameTime, which shifts the alife time that every other
+    -- reader sees. Modelling them as three independent values is the exact
+    -- "wrong fake" this suite is built to avoid -- a spec could advance time one
+    -- way and read it back another, stay green, and describe a game that does
+    -- not exist. So all three read and write M.game_seconds.
+    --
+    -- change_game_time still records its arguments, because specs assert on the
+    -- delta the mod asked for as well as on where the clock ended up.
+    local change_game_time = recorder("level.change_game_time")
+
     env.level = {
         name              = function() return M.level_name end,
         object_by_id      = function(id) return M.objects[id] end,
-        get_time_hours    = function() return M.time_hours end,
-        get_time_minutes  = function() return M.time_minutes end,
+        get_time_hours    = function() return math.floor((M.game_seconds % 86400) / 3600) end,
+        get_time_minutes  = function() return math.floor((M.game_seconds % 3600) / 60) end,
+        change_game_time  = function(days, hours, minutes)
+            change_game_time(days, hours, minutes)
+            M.game_seconds = M.game_seconds
+                + (days or 0) * 86400
+                + (hours or 0) * 3600
+                + (minutes or 0) * 60
+        end,
+        -- Both write g_bDisableAllInput (level_script.cpp:697-713), another
+        -- C++ global that a level change does not reset.
+        disable_input          = function() M.engine.input_disabled = true end,
+        enable_input           = function() M.engine.input_disabled = false end,
         add_cam_effector       = recorder("level.add_cam_effector"),
         add_pp_effector        = recorder("level.add_pp_effector"),
-        change_game_time       = recorder("level.change_game_time"),
         map_add_object_spot_ser= recorder("level.map_add_object_spot_ser"),
         map_remove_object_spot = recorder("level.map_remove_object_spot"),
     }
     M.level_name   = "zaton"
-    M.time_hours   = 12
-    M.time_minutes = 30
 
     ---- game -----------------------------------------------------------------
 
     -- Identity translation keeps message assertions readable: an assertion
     -- reads as the string id, not a localized sentence.
+    -- Game clock.
+    --
+    -- CTime is opaque in the engine; scripts only ever construct it, read it
+    -- field-by-field with get(), set() it back, and subtract two of them with
+    -- diffSec (utils_data.script:288-300 does exactly this round trip). So the
+    -- fake carries absolute seconds and decomposes on demand.
+    --
+    -- GUESS, and a deliberate simplification: the calendar is a fixed
+    -- 2012-05-12 epoch with day/hour/minute/second carried and Y/M pinned. A
+    -- to_table -> from_table round trip is therefore lossless only inside one
+    -- month. Nothing in the mod compares times more than a few game days apart
+    -- (the vendetta hunt window caps at 72 game hours), so this holds. A spec
+    -- that needs to cross a month boundary needs a better clock, not a longer
+    -- delay.
+    -- The single clock. 12:30 is the old level-time default; the previous
+    -- game.get_game_time stub said 14:00, and nothing compared the two, which is
+    -- how they drifted apart in the first place.
+    M.game_seconds = 12 * 3600 + 30 * 60
+
+    --- Set the wall clock, keeping the day. Specs that care about the hour use
+    --- this instead of poking a field, so there is one way in.
+    function M.set_game_time(hour, minute)
+        local day = math.floor(M.game_seconds / 86400)
+        M.game_seconds = day * 86400 + (hour or 0) * 3600 + (minute or 0) * 60
+    end
+
+    local function make_ctime(seconds)
+        local ct = { _seconds = seconds or 0 }
+
+        function ct:get(Y, M_, D, h, m, s, ms)
+            local total = self._seconds
+            local day = math.floor(total / 86400)
+            local rem = total - day * 86400
+            return 2012, 5, 12 + day,
+                   math.floor(rem / 3600),
+                   math.floor((rem % 3600) / 60),
+                   math.floor(rem % 60),
+                   0
+        end
+
+        function ct:set(Y, M_, D, h, m, s, ms)
+            self._seconds = (D - 12) * 86400 + h * 3600 + m * 60 + s
+        end
+
+        function ct:diffSec(other)
+            return self._seconds - (other and other._seconds or 0)
+        end
+
+        return ct
+    end
+
+    M.make_ctime = make_ctime
+
+    --- Move the game clock forward. Specs use this to age a hunt past its
+    --- window without waiting.
+    function M.advance_game_seconds(seconds)
+        M.game_seconds = M.game_seconds + seconds
+    end
+
+    -- Input locks that animation mods (FDDA, actor_effects, and others) set
+    -- while a HUD animation plays. Both flags are plain C++ globals
+    -- (level_script.cpp:72-73, 1689-1702). Nothing in the engine resets them,
+    -- so they outlive a level change: H.reboot carries M.engine across.
+    -- g_block_all_except_movement drops every key but movement, fire, drop,
+    -- pause and a few others (Level_input.cpp:194-198).
+    local stop_hud_motion   = recorder("game.stop_hud_motion")
+    local stop_all_hud_anms = recorder("game.stop_all_hud_anms")
+
     env.game = {
         translate_string = function(s) return s end,
-        get_game_time    = function()
-            return { get = function(_, Y, M_, D, h) return 2012, 5, 12, 14 end }
+        get_game_time    = function() return make_ctime(M.game_seconds) end,
+        CTime            = function() return make_ctime(0) end,
+
+        only_allow_movekeys    = function(b) M.engine.only_movekeys = b and true or false end,
+        only_movekeys_allowed  = function() return M.engine.only_movekeys end,
+        set_actor_allow_ladder = function(b) M.engine.allow_ladder = b and true or false end,
+        -- StopHudMotion stops the scripted HUD motion (level_script.cpp:1642).
+        stop_hud_motion        = stop_hud_motion,
+        -- StopAllBlendAnms takes a bool bForce (level_script.cpp:1679-1682).
+        -- Stock actor_effects calls it with no argument on every load
+        -- (actor_effects.script:1856), so the engine accepts that. What a
+        -- missing bool reads as is a GUESS. The mod passes true explicitly.
+        stop_all_hud_anms      = function(...)
+            stop_all_hud_anms(...)
         end,
     }
 
@@ -239,7 +341,22 @@ function M.install(env)
 
     ---- module stubs ---------------------------------------------------------
 
-    env.utils_data = { debug_write = recorder("debug_write") }
+    -- CTime_to_table / CTime_from_table are utils_data.script:288-298. They are
+    -- a plain field-by-field round trip through game.CTime, so the fakes mirror
+    -- that shape rather than modelling calendar arithmetic.
+    env.utils_data = {
+        debug_write = recorder("debug_write"),
+        CTime_to_table = function(ct)
+            local Y, M, D, h, m, s, ms = 0, 0, 0, 0, 0, 0, 0
+            Y, M, D, h, m, s, ms = ct:get(Y, M, D, h, m, s, ms)
+            return { Y = Y, M = M, D = D, h = h, m = m, s = s, ms = ms }
+        end,
+        CTime_from_table = function(t)
+            local ct = env.game.CTime()
+            ct:set(t.Y, t.M, t.D, t.h, t.m, t.s, t.ms)
+            return ct
+        end,
+    }
 
     env.news_manager = {
         send_tip   = recorder("send_tip"),
@@ -386,9 +503,37 @@ function M.install(env)
 
     ---- module stubs (engine-side scripts the mod calls into) ----------------
 
+    -- Recorded, and with the two side effects that matter to input locks.
+    -- disable_ui stores the active slot, empties the hands and disables input
+    -- (xr_effects.script:1600-1621). enable_ui gives the stored slot back and
+    -- enables input (:1717-1732). ui_active_slot is a module local, so a level
+    -- change (which re-executes xr_effects) forgets it.
+    local ui_active_slot = 0
+    local record_enable  = recorder("xr_effects.enable_ui")
+    local record_disable = recorder("xr_effects.disable_ui")
     env.xr_effects = {
-        enable_ui  = recorder("xr_effects.enable_ui"),
-        disable_ui = recorder("xr_effects.disable_ui"),
+        disable_ui = function(...)
+            record_disable(...)
+            local actor = env.db.actor
+            if actor and actor.active_slot then
+                local slot = actor:active_slot()
+                if slot ~= 0 then
+                    ui_active_slot = slot
+                    actor:activate_slot(0)
+                end
+            end
+            env.level.disable_input()
+        end,
+        enable_ui = function(...)
+            record_enable(...)
+            local actor = env.db.actor
+            if actor and actor.activate_slot and ui_active_slot ~= 0
+               and actor:item_in_slot(ui_active_slot) ~= nil then
+                actor:activate_slot(ui_active_slot)
+            end
+            ui_active_slot = 0
+            env.level.enable_input()
+        end,
     }
 
     env.bind_stalker_ext = { invulnerable_time = 0 }
@@ -602,6 +747,13 @@ function M.reset()
     M.psi_storm_started = false
     M.stats_count = 1
     M.graph_distance = 500
+    -- Engine globals the game.* input locks write (see env.game). A fresh
+    -- process starts with these values: g_block_all_except_movement is a
+    -- zero-initialised static, g_actor_allow_ladder starts true
+    -- (level_script.cpp:72-73).
+    -- input_disabled is g_bDisableAllInput, the flag level.disable_input sets
+    -- (level_script.cpp:697-713).
+    M.engine = { only_movekeys = false, allow_ladder = true, input_disabled = false }
     now_ms = 0
     random_impl = nil
     random_calls = 0

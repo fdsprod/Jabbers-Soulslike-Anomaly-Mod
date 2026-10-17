@@ -131,11 +131,15 @@ end
 --- wipes game_state, so the "reload" would have nothing to restore from.
 --- Persisted-var and info-portion stores are carried across for the same
 --- reason; they live in the save too.
+---
+--- Engine globals (fakes.engine) are carried across for a different reason:
+--- they are C++ statics, so a level change does not touch them.
 function M.reboot(opts)
     local saved = {
-        state = M.fakes.game_state,
-        vars  = M.fakes.vars,
-        infos = M.fakes.infos,
+        state  = M.fakes.game_state,
+        vars   = M.fakes.vars,
+        infos  = M.fakes.infos,
+        engine = M.fakes.engine,
     }
 
     M.boot(opts)
@@ -143,6 +147,7 @@ function M.reboot(opts)
     M.fakes.game_state = saved.state
     M.fakes.vars       = saved.vars
     M.fakes.infos      = saved.infos
+    M.fakes.engine     = saved.engine
     return M
 end
 
@@ -157,6 +162,33 @@ function M.tick(opts)
     local events = M.timeevents.pump(opts)
     local ops = M.world.pump()
     return events, ops
+end
+
+--- Run the game for `ms` milliseconds, one frame at a time. Unlike tick(),
+--- timed events fire only when their delay has passed, so a spec can act
+--- partway through one (die halfway through an animation).
+---
+--- Each frame: move the clock, send actor_on_update
+--- (bind_stalker_ext.script:104), run the due timed events
+--- (ProcessEventQueue, run every frame through AddUniqueCall at
+--- bind_stalker_ext.script:26), then apply queued inventory moves.
+---
+--- opts.frame_ms  frame length, default 20.
+--- opts.stop      function checked after each frame; true ends the run early.
+--- Returns the milliseconds actually run.
+function M.run_for(ms, opts)
+    opts = opts or {}
+    local frame = opts.frame_ms or 20
+    local ran = 0
+    while ran < ms do
+        M.fakes.advance_time(frame)
+        ran = ran + frame
+        SendScriptCallback("actor_on_update", db.actor, frame)
+        M.timeevents.run_due()
+        M.world.pump()
+        if opts.stop and opts.stop() then break end
+    end
+    return ran
 end
 
 return M

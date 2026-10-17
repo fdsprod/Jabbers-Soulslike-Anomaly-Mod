@@ -4,7 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.50-beta"
+local version = "0.52-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -478,11 +478,32 @@ function wakeup_callback()
     data.logic_state = nil
 end
 
+-- Hours to add so the player wakes between 7am and 9am. Zero if `hour` is
+-- already daylight (7:00 to 20:59).
+local function hours_to_daylight(hour)
+    if hour >= 7 and hour < 21 then
+        return 0
+    end
+    return (7 - hour) % 24 + math.random(0,2)
+end
+
 function dream_callback()
     debug("dream_callback")
     level.add_cam_effector("camera_effects\\sleep.anm", 10, false, "soulslike.wakeup_callback")
-	
-	local hours = math.random(6,14)	
+
+	local hours = math.random(6,14)
+
+	-- This is the last place the clock moves before the player wakes up, so
+	-- the nighttime check has to run here.
+	if not soulslike_mcm.allow_nighttime_respawn() then
+		local wake_hour = (level.get_time_hours() + hours) % 24
+		local extra = hours_to_daylight(wake_hour)
+		if extra > 0 then
+			debug("Advancing time for daytime respawn: "..tostring(extra).." more hours")
+			hours = hours + extra
+		end
+	end
+
 	level.change_game_time(0,hours,0)
 	
 	db.actor.power = 1
