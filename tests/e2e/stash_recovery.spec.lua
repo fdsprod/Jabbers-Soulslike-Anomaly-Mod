@@ -217,6 +217,75 @@ describe("e2e: stash recovery", function()
         end)
     end)
 
+    -- iTheon's Autolooter moves items with transfer_item and fires no
+    -- actor_on_item_take_from_box (z_auto_looter.script:373). Any mod that
+    -- empties the backpack that way leaves the cleanup above undone, and
+    -- opening an empty box fires no take callback either. The use callback
+    -- is the last chance to notice.
+    describe("given another mod emptied the backpack and the player uses it", function()
+        local stash
+
+        local function use(box)
+            SendScriptCallback("physic_object_on_use_callback", box, db.actor)
+        end
+
+        describe("and the backpack is empty", function()
+            beforeEach(function()
+                stash = boot{ lost_items = { "wpn_ak74" } }
+                level.map_add_object_spot_ser(STASH_ID, "secondary_task_location", "items")
+                use(stash)
+                H.tick()
+            end)
+
+            it("removes the map marker", function()
+                expect(#H.fakes.spots_on(STASH_ID)).toBe(0)
+            end)
+
+            it("releases the backpack", function()
+                expect(H.world.object(STASH_ID)).toBeNil()
+            end)
+
+            it("shows the examined message", function()
+                expect(examined_message()).toContain("missing the following items")
+            end)
+
+            it("clears the stash from the save", function()
+                expect(soulslike.get_soulslike_state().created_stashes[STASH_ID]).toBeNil()
+            end)
+
+            it("closes the inventory window", function()
+                expect(H.fakes.call_count("hide_hud_inventory")).toBe(1)
+            end)
+        end)
+
+        describe("and the backpack still holds items", function()
+            it("leaves everything in place", function()
+                stash = boot{ contents = { "medkit" }, lost_items = { "wpn_ak74" } }
+                level.map_add_object_spot_ser(STASH_ID, "secondary_task_location", "items")
+                use(stash)
+                H.tick()
+                expect(#H.fakes.spots_on(STASH_ID)).toBe(1)
+                expect(H.world.object(STASH_ID)).toBeDefined()
+                expect(soulslike.get_soulslike_state().created_stashes[STASH_ID]).toBeDefined()
+            end)
+        end)
+
+        describe("and the box is an empty backpack the mod did not create", function()
+            it("is ignored", function()
+                boot{}
+                soulslike.get_soulslike_state().created_stashes[STASH_ID] = nil
+                local other = H.world.container("player_stash", {
+                    id = 5151, section = "inv_backpack",
+                })
+                level.map_add_object_spot_ser(5151, "treasure", "my stash")
+                use(other)
+                H.tick()
+                expect(#H.fakes.spots_on(5151)).toBe(1)
+                expect(H.world.object(5151)).toBeDefined()
+            end)
+        end)
+    end)
+
     describe("given an unrelated stash is removed", function()
         it("is left to the engine", function()
             boot{ lost_items = { "wpn_ak74" } }

@@ -621,29 +621,62 @@ local function try_send_inventory_examined_message(stash_id)
     end
 end
 
+-- Remove the marker, release the box, and close out the stash in the save.
+local function release_empty_stash(id)
+    local state = get_soulslike_state()
+    local se_obj = alife_object(id)
+
+    level.map_remove_object_spot(id, "secondary_task_location")
+
+    if se_obj then
+        alife_release(se_obj)
+        try_send_inventory_examined_message(id)
+        state.created_stashes[id] = nil
+    end
+end
+
 local function actor_on_item_take_from_box(box,obj)
     if not IsSoulslikeMode() then
         return
     end
 
-    local state = get_soulslike_state()
     local id = box:id()
 
 	if (box:section() == "inv_backpack") then
         if (box:is_inv_box_empty()) then
             hide_hud_inventory()
-            
-            local se_obj = alife_object(id)
-
-            level.map_remove_object_spot(id, "secondary_task_location")
-
-            if se_obj then
-                alife_release(se_obj)
-                try_send_inventory_examined_message(id)
-                state.created_stashes[id] = nil
-            end
+            release_empty_stash(id)
         end
 	end
+end
+
+-- A mod that empties the backpack with transfer_item alone, such as iTheon's
+-- Autolooter, fires no actor_on_item_take_from_box, and opening an empty box
+-- fires none either. So check again when the player uses the box. The use
+-- callback can come before the engine opens the inventory window, so wait one
+-- event before closing it.
+local function try_release_used_stash(box)
+    local id = box:id()
+
+    if box:section() ~= "inv_backpack" or not get_soulslike_state().created_stashes[id] then
+        return false
+    end
+
+    local function release_if_still_empty()
+        local obj = level.object_by_id(id)
+        if obj and obj:is_inv_box_empty() and get_soulslike_state().created_stashes[id] then
+            debug("Releasing emptied stash "..tostring(id))
+            hide_hud_inventory()
+            release_empty_stash(id)
+        end
+        return true
+    end
+
+    if box:is_inv_box_empty() then
+        CreateTimeEvent("soulslike", "release_used_stash_"..tostring(id), 0.1, release_if_still_empty)
+    end
+
+    return true
 end
 
 local function actor_on_stash_remove(data)
@@ -741,6 +774,10 @@ end
 
 local function physic_object_on_use_callback(box, who)
     local data = get_soulslike_state()
+
+    if IsSoulslikeMode() and IsInvbox(box) and try_release_used_stash(box) then
+        return
+    end
 
     if not IsInvbox(box) or not data.hidden_stashes or not data.hidden_stashes[box:id()] then
         return
