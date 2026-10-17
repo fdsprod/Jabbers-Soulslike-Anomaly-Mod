@@ -178,6 +178,45 @@ describe("e2e: stash recovery", function()
         end)
     end)
 
+    -- Stock item_backpack, GAMMA's item_backpack and Hideout Furniture all
+    -- fire actor_on_stash_remove only once is_inv_box_empty() is true.
+    -- DotMarks 1.7.5 is different. Its "Pick up backpack" action
+    -- (ui_hud_dotmarks.script:5156-5191) fires it FIRST, with the items still
+    -- inside. If nobody cancels, it takes every item and then releases the
+    -- backpack itself. Cancelling there used to stop the pickup but still
+    -- removed the marker and the save entry, which left a full backpack with
+    -- no marker.
+    describe("given another mod picks up the backpack with items still in it", function()
+        local data
+
+        beforeEach(function()
+            boot{ contents = { "wpn_ak74", "medkit" }, lost_items = { "bread" } }
+            level.map_add_object_spot_ser(STASH_ID, "secondary_task_location", "items")
+            data = { stash_id = STASH_ID, cancel = false }
+            SendScriptCallback("actor_on_stash_remove", data)
+        end)
+
+        it("lets the pickup go ahead", function()
+            expect(data.cancel).toBe(false)
+        end)
+
+        it("removes the map marker", function()
+            expect(#H.fakes.spots_on(STASH_ID)).toBe(0)
+        end)
+
+        it("shows the examined message", function()
+            expect(examined_message()).toContain("missing the following items")
+        end)
+
+        it("clears the stash from the save", function()
+            expect(soulslike.get_soulslike_state().created_stashes[STASH_ID]).toBeNil()
+        end)
+
+        it("leaves the items for the other mod to take", function()
+            expect(H.world.contents("stash")).toEqual({ "wpn_ak74", "medkit" })
+        end)
+    end)
+
     describe("given an unrelated stash is removed", function()
         it("is left to the engine", function()
             boot{ lost_items = { "wpn_ak74" } }

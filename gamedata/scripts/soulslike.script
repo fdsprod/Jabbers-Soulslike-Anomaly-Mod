@@ -4,7 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.52-beta"
+local version = "0.53-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -650,7 +650,13 @@ local function actor_on_stash_remove(data)
     local stash_id = data.stash_id
 
     if stash_id and state.created_stashes[stash_id] then
-        data.cancel = true    
+        -- Stock and GAMMA fire this only once the box is empty. DotMarks'
+        -- "Pick up backpack" fires it first, with the items still inside, and
+        -- takes them itself if nobody cancels. Cancel only the empty case.
+        local box = level.object_by_id(stash_id)
+        if not (box and not box:is_inv_box_empty()) then
+            data.cancel = true
+        end
         level.map_remove_object_spot(stash_id, "secondary_task_location")
         try_send_inventory_examined_message(stash_id)
         state.created_stashes[stash_id] = nil

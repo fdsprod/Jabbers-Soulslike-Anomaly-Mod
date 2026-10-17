@@ -172,6 +172,40 @@ function M.install(env)
     -- delta the mod asked for as well as on where the clock ended up.
     local change_game_time = recorder("level.change_game_time")
 
+    -- The map manager's spot list. Each entry is { id, type, hint }.
+    --
+    -- Two facts from the engine make this a list and not a set. Both are
+    -- counter-intuitive, and both decide whether a marker can outlive its
+    -- object (xray-monolith c57fe5b):
+    --
+    --   * AddMapLocation always appends. It never looks for an existing spot
+    --     of the same type on the same id (map_manager.cpp:125-140). Adding
+    --     twice gives two entries.
+    --   * RemoveMapLocation erases the first match only (map_manager.cpp:
+    --     176-188). One remove after two adds leaves one entry.
+    --
+    -- Releasing the object does not remove its spots either. The only caller
+    -- of OnObjectDestroyNotify is the multiplayer CTeamBaseZone
+    -- (team_base_zone.cpp, net_Destroy). A spot keeps the server object
+    -- pointer it read at construction (map_location.cpp:55) and stays actual
+    -- while that pointer is set (map_location.cpp:367). So alife_release does
+    -- not touch M.map_spots, by design.
+    M.map_spots = {}
+
+    local record_add = recorder("level.map_add_object_spot_ser")
+    local record_remove = recorder("level.map_remove_object_spot")
+
+    --- The spots on `id`, optionally of one type, in the order they were added.
+    function M.spots_on(id, spot_type)
+        local out = {}
+        for _, s in ipairs(M.map_spots) do
+            if s.id == id and (spot_type == nil or s.type == spot_type) then
+                out[#out + 1] = s
+            end
+        end
+        return out
+    end
+
     env.level = {
         name              = function() return M.level_name end,
         object_by_id      = function(id) return M.objects[id] end,
@@ -190,8 +224,24 @@ function M.install(env)
         enable_input           = function() M.engine.input_disabled = false end,
         add_cam_effector       = recorder("level.add_cam_effector"),
         add_pp_effector        = recorder("level.add_pp_effector"),
-        map_add_object_spot_ser= recorder("level.map_add_object_spot_ser"),
-        map_remove_object_spot = recorder("level.map_remove_object_spot"),
+        -- level_script.cpp:445-452 and :461-464, over the list above.
+        map_add_object_spot_ser = function(id, spot_type, hint)
+            record_add(id, spot_type, hint)
+            M.map_spots[#M.map_spots + 1] = { id = id, type = spot_type, hint = hint }
+        end,
+        map_remove_object_spot = function(id, spot_type)
+            record_remove(id, spot_type)
+            for i, s in ipairs(M.map_spots) do
+                if s.id == id and s.type == spot_type then
+                    table.remove(M.map_spots, i)
+                    return
+                end
+            end
+        end,
+        -- level_script.cpp:570-573. Returns u16, so 1 or 0, not a boolean.
+        map_has_object_spot = function(id, spot_type)
+            return #M.spots_on(id, spot_type) > 0 and 1 or 0
+        end,
     }
     M.level_name   = "zaton"
 
