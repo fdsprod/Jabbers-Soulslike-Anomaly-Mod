@@ -1369,7 +1369,10 @@ function SoulslikeScenarioLogic:TransferItems(to_id)
 
         if self.logic_state.are_looter_npcs_marked then
             soulslike.debug("Marking looter on pda")
-            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", enemy_looter:character_name())            
+            level.map_add_object_spot_ser(enemy_looter:id(), "secondary_task_location", enemy_looter:character_name())
+            -- The engine keeps a spot after its object dies or is released, so
+            -- soulslike.npc_on_death_callback removes it.
+            self.game_state.marked_looters[enemy_looter:id()] = true
         end
     end
 end
@@ -1440,6 +1443,11 @@ function RFDetectorSoulslikeScenarioLogic:CreateStash()
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
+        -- A box that already holds a death stash is not free. A second stash
+        -- in it would overwrite the first one's entry and mark the box twice.
+        if self.game_state.hidden_stashes[id] then
+            return false
+        end
         local obj1 = alife():actor()
         local obj2 = alife_object(id)
         return simulation_objects.is_on_the_same_level(obj1, obj2)
@@ -1526,6 +1534,11 @@ function HiddenStashSoulslikeScenarioLogic:CreateStash()
      -- For some reason, "box_in_same_map" doesn't actually mean same map in the treasure_manager.
     local old_box_in_same_map = treasure_manager.box_in_same_map
     treasure_manager.box_in_same_map = function(id)
+        -- A box that already holds a death stash is not free. A second stash
+        -- in it would overwrite the first one's entry and mark the box twice.
+        if self.game_state.hidden_stashes[id] then
+            return false
+        end
         local obj1 = alife():actor()
         local obj2 = alife_object(id)
         return simulation_objects.is_on_the_same_level(obj1, obj2)

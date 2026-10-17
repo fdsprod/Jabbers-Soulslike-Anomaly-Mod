@@ -111,6 +111,9 @@ M.CALLBACK_NAMES = {
     -- se_stalker:on_unregister (se_stalker.script:116).
     "squad_on_npc_death",
     "server_entity_on_unregister",
+    -- Registered by soulslike to clear a looter's marker. Declared at
+    -- axr_main.script:118, sent from xr_motivator.script:396 as (victim, who).
+    "npc_on_death_callback",
     -- Sent every actor update by bind_stalker_ext.script:104. Animation mods
     -- (FDDA) register on it; H.run_for sends it once per frame.
     "actor_on_update",

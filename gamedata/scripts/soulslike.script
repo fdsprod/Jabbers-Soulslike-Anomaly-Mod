@@ -4,7 +4,7 @@
 	Jabbers' Soulslike Anomaly Mod
 --]]
 
-local version = "0.53-beta"
+local version = "0.54-beta"
 
 local tools_list = {
     ["itm_basickit"] = true,
@@ -227,7 +227,8 @@ function get_soulslike_state()
                 },
             note_message_data = {},
             hidden_stashes = {},
-            tracked_ambushers = {}
+            tracked_ambushers = {},
+            marked_looters = {}
         }
     end
 
@@ -242,6 +243,10 @@ function get_soulslike_state()
 
     if not game_state.soulslike.hidden_stashes then
         game_state.soulslike.hidden_stashes = {}
+    end
+
+    if not game_state.soulslike.marked_looters then
+        game_state.soulslike.marked_looters = {}
     end
 
     if not game_state.soulslike.created_stashes then
@@ -1005,6 +1010,21 @@ local function actor_on_first_update()
     debug("actor_on_first_update")
 end
 
+local function npc_on_death_callback(npc, who)
+    if not IsSoulslikeMode() then
+        return
+    end
+
+    local state = get_soulslike_state()
+    local id = npc and npc:id()
+
+    if id and state.marked_looters[id] then
+        debug("Removing looter marker "..tostring(id))
+        level.map_remove_object_spot(id, "secondary_task_location")
+        state.marked_looters[id] = nil
+    end
+end
+
 function on_game_start()
     debug('Version: '..version)
     
@@ -1022,4 +1042,5 @@ function on_game_start()
     RegisterScriptCallback("actor_on_before_hit", actor_on_before_hit)
 	RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
     RegisterScriptCallback("npc_on_net_spawn", npc_on_net_spawn)
+    RegisterScriptCallback("npc_on_death_callback", npc_on_death_callback)
 end
